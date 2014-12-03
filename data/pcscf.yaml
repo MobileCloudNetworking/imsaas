@@ -1,0 +1,61 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Make use of filters: http://docs.openstack.org/havana/config-reference/content/scheduler-filters.html
+
+parameters:
+  pcscf-image:
+    type: string
+    description: Name of image to use for servers
+    default: pcscf
+  flavor:
+    type: string
+    description: Flavor to use for servers
+    default: m1.nano
+  key-name:
+    type: string
+    description: Flavor to use for servers
+    default: stack-mcn
+  mgmt-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: 3ca22fef-a010-459a-bb55-2d6e766315aa
+  net-a-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: 5f4a4472-ea39-4f9b-a106-714f77faeb3a
+  net-b-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: 8e0def3f-a585-4d32-851e-cf699f53f9bc
+  net-c-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: d0386553-c0ad-41e4-915a-a4ee8ce3b567
+  net-d-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: e831d70e-680e-44ab-9507-38b50173019a
+resources:
+  pcscf:
+    type: OS::Nova::Server
+    properties:
+      name: pcscf
+      key_name: {get_param: key-name }
+      image: { get_param: pcscf-image }
+      flavor: { get_param: flavor }
+      networks: [{"network": "net_d","uuid": {get_param: net-d-net-id }, "fixed_ip":"172.19.8.10"},
+      {"network": "mgmt","uuid": {get_param: mgmt-net-id }, "fixed_ip":"192.168.9.10"},
+      {"network": "net_c","uuid": {get_param: net-c-net-id }, "fixed_ip":"172.19.7.10"},
+      {"network": "net_a","uuid": {get_param: net-a-net-id }, "fixed_ip":"172.19.5.10"},
+      {"network": "net_b","uuid": {get_param: net_b-net-id }, "fixed_ip":"172.19.6.10"}
+      ]
+Outputs:
+  ip:
+    Value:
+      Fn::GetAtt: [pcscf, addresses]
+    Description: IP addresses of the Server
+  id:
+    Value:
+      Fn::GetAtt: [pcscf, instance_name]
+    Description: ID of the server

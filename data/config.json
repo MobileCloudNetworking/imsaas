@@ -1,0 +1,199 @@
+{
+    "name":"ims",
+    "service_instances": [
+        {
+            "name":"cscfs",
+            "service_type":"cscfs",
+            "image": "cscfs",
+            "flavor":"m1.mcn",
+            "size": {
+               "min":1,
+               "max":1,
+               "def":1
+            },
+            "config": {
+                "hostname":"cscfs",
+                "key_name":"mcn-key",
+                "networks": [
+                    {
+                        "type":"mgmt",
+                        "id": "2e2bc7f9-c29c-467c-94b6-5ef3724d79ac"
+                    }
+                ],
+                "floating_ip_enable": true
+            },
+            "security_groups": [
+                "1"
+            ],
+            "requirements": [
+            ],
+            "user_data":
+            "#!/bin/bash -v\n
+            HOST_NAME=$(cat /etc/hostname)\n
+            sudo sed -i \"s/^\\([0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*[ \\t]*localhost\\)/\\1 $HOST_NAME/\" /etc/hosts \n
+            sudo sed -i \"s/^\(ServerActive[ \t]*\)=[ \t]*[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*.*$/\1 = $$ZABBIX_IP/\" /etc/zabbix/zabbix_agentd.conf\n
+        },
+        {
+            "name":"hss",
+            "service_type":"hss",
+            "image":"hss",
+            "flavor":"m1.mcn",
+            "size": {
+                "min":1,
+                "max":3,
+                "def":3
+            },
+            "config": {
+                "hostname":"hss",
+                "key_name":"mcn-key",
+                "networks": [
+                    {
+                        "type":"public_net",
+                        "id": "2e2bc7f9-c29c-467c-94b6-5ef3724d79ac"
+                    }
+                ],
+                "floating_ip_enable": false
+            },
+            "policies": [
+                {
+                    "name": "msg_scaleup",
+                    "alarms": [
+                        {
+                            "meter_name": "cpu_util",
+                            "comparison_operator": "gt",
+                            "threshold": 60,
+                            "statistic": "avg",
+                            "period": 60,
+                            "evaluation_periods": 1,
+                            "repeat_actions": true
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "adjustment_type": "ChangeInCapacity",
+                            "scaling_adjustment": 1,
+                            "cooldown": 60
+                        }
+                    ]
+                },
+                {
+                    "name": "msg_scaledown",
+                    "alarms": [
+                        {
+                            "meter_name": "cpu_util",
+                            "comparison_operator": "lt",
+                            "threshold": 10,
+                            "statistic": "avg",
+                            "period": 60,
+                            "evaluation_periods": 1,
+                            "repeat_actions": true
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "adjustment_type": "ChangeInCapacity",
+                            "scaling_adjustment": -1,
+                            "cooldown": 60
+                        }
+                    ]
+                }
+            ],
+            "security_groups": [
+                "1"
+            ],
+            "requirements": [
+
+            ],
+            "user_data":"#!/bin/bash -v \nHOST_NAME=$(cat /etc/hostname) \nsudo sed -i \"s/^\\([0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*[ \\t]*localhost\\)/\\1 $HOST_NAME/\" /etc/hosts \nsudo sed -i \"s/^\(ServerActive[ \t]*\)=[ \t]*[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*.*$/\1 = $$ZABBIX_IP/\" /etc/zabbix/zabbix_agentd.conf\n"
+
+        }
+    ]
+    #"security_groups": [
+    #    {
+    #        "name": "security_group_controller",
+    #        "rules": [
+    #            {
+    #                "name": "rule_icmp",
+    #                "remote_ip_prefix": "0.0.0.0/0",
+    #                "protocol": "icmp"
+    #            },
+    #            {
+    #                "name": "rule_tcp_22",
+    #                "remote_ip_prefix": "0.0.0.0/0",
+    #                "protocol": "tcp",
+    #                "port_range_min": "22",
+    #                "port_range_max": "22"
+    #            },
+    #            {
+    #                "name": "rule_tcp_8887_8888",
+    #                "remote_ip_prefix": "0.0.0.0/0",
+    #                "protocol": "tcp",
+    #                "port_range_min": "8887",
+    #                "port_range_max": "8888"
+    #            },
+    #            {
+    #                "name": "rule_tcp_8080-8090",
+    #                "remote_ip_prefix": "0.0.0.0/0",
+    #                "protocol": "tcp",
+    #                "port_range_min": "8080",
+    #                "port_range_max": "8090"
+    #            }
+    #        ]
+    #    },
+    #    {
+    #        "name": "security_group_broker",
+    #        "rules": [
+    #            {
+    #                "name": "rule_icmp",
+    #                "remote_ip_prefix": "0.0.0.0/0",
+    #                "protocol": "icmp"
+    #            },
+    #            {
+    #                "name": "rule_tcp_22",
+    #                "remote_ip_prefix": "0.0.0.0/0",
+    #                "protocol": "tcp",
+    #                "port_range_min": "22",
+    #                "port_range_max": "22"
+    #            },
+    #            {
+    #                "name": "rule_tcp_5672",
+    #                "remote_ip_prefix": "0.0.0.0/0",
+    #                "protocol": "tcp",
+    #                "port_range_min": "5672",
+    #                "port_range_max": "5672"
+    #            }
+    #        ]
+    #    },
+    #    {
+    #        "name": "security_group_media_server",
+    #        "rules": [
+    #             {
+    #                 "name": "rule_icmp",
+    #                 "remote_ip_prefix": "0.0.0.0/0",
+    #                 "protocol": "icmp"
+    #             },
+    #             {
+    #                 "name": "rule_tcp_22",
+    #                 "remote_ip_prefix": "0.0.0.0/0",
+    #                 "protocol": "tcp",
+    #                 "port_range_min": "22",
+    #                 "port_range_max": "22"
+    #             },
+    #             {
+    #                 "name": "rule_tcp_8888",
+    #                 "remote_ip_prefix": "0.0.0.0/0",
+    #                 "protocol": "tcp",
+    #                 "port_range_min": "8888",
+    #                 "port_range_max": "8888"
+    #             },
+    #             {
+    #                 "name": "rule_udp",
+    #                 "remote_ip_prefix": "0.0.0.0/0",
+    #                 "protocol": "udp",
+    #                 "port_range_min": "1024",
+    #                 "port_range_max": "65535"
+    #             }
+    #         ]
+    #    }
+    #]
+}

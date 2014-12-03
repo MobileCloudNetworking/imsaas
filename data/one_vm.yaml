@@ -1,0 +1,15 @@
+heat_template_version: 2013-05-23
+description: Simple template to deploy a single compute instance 
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      key_name: mcn-key
+      image: 'Ubuntu 12.04 LTS'
+      flavor: m1.small
+      networks: [{"uuid":3ca22fef-a010-459a-bb55-2d6e766315aa,"network":mgmt}]
+      #user_data: {"Fn::Base64": "#!/bin/bash -v\n/opt/aws/bin/cfn-init\n" }
+outputs:
+  instance_ip:
+    description: IP address of the deployed compute instance
+    value: { get_attr: [my_instance, first_address] }

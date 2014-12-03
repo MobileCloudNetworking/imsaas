@@ -1,0 +1,105 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Make use of filters: http://docs.openstack.org/havana/config-reference/content/scheduler-filters.html
+
+parameters:
+  pcscf-image:
+    type: string
+    description: Name of image to use for servers
+    default: pcscf
+  icscf-image:
+    type: string
+    description: Name of image to use for servers
+    default: icscf
+  scscf-image:
+    type: string
+    description: Name of image to use for servers
+    default: scscf
+  flavor:
+    type: string
+    description: Flavor to use for servers
+    default: m1.small
+  key-name:
+    type: string
+    description: Flavor to use for servers
+    default: mcn-key
+  mgmt-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: 30e8fc23-bef0-4e94-bf31-2a136d95ff90
+  net-a-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: 965af1db-b4ad-4411-9b26-c34c69b61743
+  net-b-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: 6200c651-6daa-4893-9d08-ff17bb511a71
+  net-c-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: 7eb17c76-d4af-453b-8cac-cd2f0d781e2a
+  net-d-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: 4f4a855f-6017-44a0-bb1c-e94fdaac55ec
+  public-net-id:
+    type: string
+    description: Flavor to use for servers
+    default: d6ce8ab6-1be8-4c85-8067-9c77d7600ffa
+resources:
+  pcscf:
+    type: OS::Nova::Server
+    properties:
+      name: pcscf
+      key_name: {get_param: key-name }
+      image: { get_param: pcscf-image }
+      flavor: { get_param: flavor }
+      networks: [{"network": "net_d","uuid": {get_param: net-d-net-id }, "fixed_ip":"172.19.8.10"},
+      {"network": "mgmt","uuid": {get_param: mgmt-net-id }, "port": { Ref: pcscf_mgmt_port}},
+      {"network": "net_c","uuid": {get_param: net-c-net-id }, "fixed_ip":"172.19.7.10"},
+      {"network": "net_a","uuid": {get_param: net-a-net-id }, "fixed_ip":"172.19.5.10"},
+      {"network": "net_b","uuid": {get_param: net-b-net-id }, "fixed_ip": "172.19.6.10"}
+      ]
+  pcscf_mgmt_port:
+    Type: OS::Neutron::Port
+    Properties:
+      network_id: { get_param: mgmt-net-id }
+      fixed_ips:
+       - ip_address: "192.168.9.10"
+  pcscf_floating_ip:
+    Type: OS::Neutron::FloatingIP
+    Properties:
+      floating_network_id: { get_param: public-net-id }
+      port_id: { Ref: pcscf_mgmt_port } 
+  icscf:
+    type: OS::Nova::Server
+    properties:
+      name: icscf
+      key_name: {get_param: key-name }
+      image: { get_param: icscf-image }
+      flavor: { get_param: flavor }
+      networks: [{"network": "net_d","uuid": {get_param: net-d-net-id }, "fixed_ip":"172.19.8.11"},
+      {"network": "mgmt","uuid": {get_param: mgmt-net-id }, "fixed_ip":"192.168.9.11"},
+      {"network": "net_c","uuid": {get_param: net-c-net-id }, "fixed_ip":"172.19.7.11"},
+      {"network": "net_a","uuid": {get_param: net-a-net-id }, "fixed_ip":"172.19.5.11"},
+      {"network": "net_b","uuid": {get_param: net-b-net-id }, "fixed_ip":"172.19.6.11"}
+      ]
+  scscf:
+    type: OS::Nova::Server
+    properties:
+      name: scscf
+      key_name: {get_param: key-name }
+      image: { get_param: scscf-image }
+      flavor: { get_param: flavor }
+      networks: [{"network": "net_d","uuid": {get_param: net-d-net-id }, "fixed_ip":"172.19.8.12"},
+      {"network": "mgmt","uuid": {get_param: mgmt-net-id }, "fixed_ip":"192.168.9.12"},
+      {"network": "net_c","uuid": {get_param: net-c-net-id }, "fixed_ip":"172.19.7.12"},
+      {"network": "net_a","uuid": {get_param: net-a-net-id }, "fixed_ip":"172.19.5.12"},
+      {"network": "net_b","uuid": {get_param: net-b-net-id }, "fixed_ip":"172.19.6.12"}
+      ]
+outputs:
+  mcn.endpoint.pcscf:
+    description: Floating IP address of pcscf
+    value: { get_attr: [ pcscf_floating_ip, floating_ip_address ] }
