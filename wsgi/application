@@ -67,7 +67,7 @@ class MyBackend(occi_ext.Backend):
     # Actions
 
     def deploy_me(self, entity, attributes, extras):
-        self.so.so_e.deploy()
+        self.so.so_e.deploy(attributes)
         entity.actions = [occi_ext.PROVISION_ACTION]
 
     def provision_me(self, entity, attributes, extras):

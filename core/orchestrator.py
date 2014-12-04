@@ -31,7 +31,7 @@ class SoExecution(object):
         Constructor
         """
         # read template...
-        f = open(os.path.join(SO_DIR, 'data', 'test.yaml'))
+        f = open(os.path.join(SO_DIR, 'data', 'ims-v2.yaml'))
         self.template = f.read()
         self.token = token
         self.tenant_name = tenant_name
@@ -46,13 +46,17 @@ class SoExecution(object):
         """
         pass
 
-    def deploy(self):
+    def deploy(self, attributes):
         """
         Deploy method
         """
+
+        parameters = {}
+        parameters['maas_ip_address'] = attributes['mcn.endpoint.maas']
+
         print self.token
         if self.stack_id is None:
-            self.stack_id = self.deployer.deploy(self.template, self.token)
+            self.stack_id = self.deployer.deploy(self.template, self.token, parameters=parameters)
 
     def provision(self):
         """
