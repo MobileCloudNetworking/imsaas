@@ -16,10 +16,15 @@
 __author__ = 'giuseppe'
 
 import os
+import logging
+
 
 from sdk.mcn import util
 
 SO_DIR = os.environ.get('OPENSHIFT_REPO_DIR', '.')
+
+logger = logging.getLogger("IMSSO")
+
 
 
 class SoExecution(object):
@@ -30,12 +35,10 @@ class SoExecution(object):
         """
         Constructor
         """
-        # read template...
-        f = open(os.path.join(SO_DIR, 'data', 'ims-v2.yaml'))
-        self.template = f.read()
+
+        self.topology_type = "test.yaml"
         self.token = token
         self.tenant_name = tenant_name
-        f.close()
         self.stack_id = None
         # make sure we can talk to deployer...
         self.deployer = util.get_deployer(self.token, url_type='public', tenant_name=self.tenant_name)
@@ -53,8 +56,17 @@ class SoExecution(object):
 
         parameters = {}
         parameters['maas_ip_address'] = attributes['mcn.endpoint.maas']
+        try:
+            self.topology_type = attributes['mcn.topology.type']
+        except:
+            logger.debug("parameter mcn.topology.type not available, using the standard template imsaas.yaml")
 
-        print self.token
+        logger.info("deploying template %s" %(self.topology_type,))
+        # read template...
+        f = open(os.path.join(SO_DIR, 'data', self.topology_type))
+        self.template = f.read()
+        f.close()
+
         if self.stack_id is None:
             self.stack_id = self.deployer.deploy(self.template, self.token, parameters=parameters)
 
