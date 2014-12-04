@@ -31,7 +31,8 @@ class SoExecution(object):
         Constructor
         """
         # read template...
-        f = open(os.path.join(SO_DIR, 'data', 'ims-v2.yaml'))
+        # f = open(os.path.join(SO_DIR, 'data', 'ims-v2.yaml'))
+        f = open(os.path.join(SO_DIR, 'data', 'test.yaml'))
         self.template = f.read()
         self.token = token
         self.tenant_name = tenant_name
