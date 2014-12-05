@@ -1,5 +1,21 @@
 heat_template_version: 2013-05-23
 
+parameters:
+  key_name:
+    type: string
+    label: Key Name
+    description: Name of key-pair to be used for compute instance
+    default: mcn-key
+  instance_type:
+    type: string
+    label: Instance Type
+    description: Type of instance (flavor) to be used
+    default: m1.small
+  maas_ip_address:
+    type: string
+    description: IP address of Zabbix Server
+    default: 160.85.4.53
+
 # Note that the output parameter names must match those in the Kind definition
 outputs:
   mcn.endpoint.pcscf:
