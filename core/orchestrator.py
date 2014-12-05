@@ -35,7 +35,7 @@ class SoExecution(object):
         """
         Constructor
         """
-        self.topology_type = "test.yaml"
+        self.topology_type = "ims-v2.yaml"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None
