@@ -35,7 +35,6 @@ class SoExecution(object):
         """
         Constructor
         """
-
         self.topology_type = "test.yaml"
         self.token = token
         self.tenant_name = tenant_name
