@@ -91,7 +91,7 @@ class SoExecution(object):
             tmp = self.deployer.details(self.stack_id, self.token)
             return tmp['state'], self.stack_id, tmp['output']
         else:
-            return 'Unknown', 'N/A'
+            return 'Unknown', 'N/A', ''
 
 class SoDecision(object):
     '''
