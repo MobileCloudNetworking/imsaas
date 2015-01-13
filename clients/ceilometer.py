@@ -16,14 +16,16 @@
 __author__ = 'mpa'
 
 from ceilometerclient import client
-from util import util
+from util import SysUtil
 
 
 class Client(object):
     def __init__(self):
-        creds = util.get_credentials()
-        creds['token'] = util.get_token()
-        self.cmclient = client.get_client(version=2, **creds)
+        creds = SysUtil.get_credentials()
+        creds['os_auth_token'] = SysUtil.get_token()
+        #creds['token'] = util.get_token()
+        #creds['ceilometer_url'] = util.get_endpoint(service_type='metering',endpoint_type='publicURL')
+        self.cmclient = client.get_client('2', **creds)
 
     def get_last_sample_value(self, resource_id, meter_name):
         query = [dict(field='resource_id', op='eq', value=resource_id)]
@@ -32,6 +34,14 @@ class Client(object):
             return samples[0]._info['counter_volume']
         else:
             False
+
+    def get_statitics(self, resource_id, meter_name, period, aggregate='avg'):
+        query = [dict(field='resource_id', op='eq', value=resource_id)]
+        statistic = self.cmclient.statistics.list(meter_name=meter_name, q=query, period=period, aggregates = [{'func':aggregate}], groupby = ['resource_id'])
+        item_value = None
+        if statistic:
+            item_value = statistic[-1]._info.get('aggregate').get('avg')
+        return item_value
 
     def get_last_sample_values(self, resource_id, meter_name, limit=1):
         query = [dict(field='resource_id', op='eq', value=resource_id)]

@@ -40,6 +40,7 @@ class SoExecution(object):
         self.tenant_name = tenant_name
         self.stack_id = None
         # make sure we can talk to deployer...
+        print "sending request to the url %s" %os.environ['DESIGN_URI']
         self.deployer = util.get_deployer(self.token, url_type='public', tenant_name=self.tenant_name)
 
     def design(self):

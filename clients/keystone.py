@@ -16,13 +16,14 @@
 
 __author__ = 'mpa'
 
-from util import util
-from keystoneclient.client import Client as KeystoneClient
 from keystoneclient.v2_0.client import Client as KeystoneClient
+
+from util import SysUtil
+
 
 class Client(object):
     def __init__(self):
-        ks_args = util.get_credentials()
+        ks_args = SysUtil.get_credentials()
         self.ksclient = KeystoneClient(**ks_args)
 
     def get_endpoint(self, **kwargs):

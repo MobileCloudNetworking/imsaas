@@ -15,7 +15,7 @@
 #    under the License.
 __author__ = 'mpa'
 
-from util import util
+from util import SysUtil
 from heatclient.client import Client as HeatClient
 from heatclient.common import utils
 from heatclient.common import template_utils
@@ -25,40 +25,54 @@ import json
 
 class Client(object):
     def __init__(self):
-        heat_args = util.get_credentials()
-        heat_args['token'] = util.get_token()
-        endpoint = util.get_endpoint(service_type='orchestration', endpoint_type='publicURL')
+        heat_args = SysUtil.get_credentials()
+        heat_args['token'] = SysUtil.get_token()
+        endpoint = SysUtil.get_endpoint(service_type='orchestration', endpoint_type='publicURL')
         self.client = HeatClient(version='1', endpoint=endpoint, **heat_args)
         #self.client = heat.Client(version='1', auth_url=auth_url, tenant_name=tenant_name, username=username, password=password, token = None)
 
 
-    def deploy(self, name, template, parameters=None, environment = None, disable_rollback=None, timeout = None):
+    def deploy(self, name, template, parameters=None, environment = None, disable_rollback=True, timeout = None):
         kcargs = {
             'stack_name': name,
-            'disable_rollback': not (bool('enable_rollback')),
+            'disable_rollback': disable_rollback,
             'parameters': utils.format_parameters(parameters),
             'template': template,
             #'files' : dict(list(tpl_files.items()) + list(env_files.items())),
             #'files' : dict(list(kwargs.get('environment_file').items())),
             'environment' : environment
         }
-        print json.dumps(kcargs, indent=2)
+        #print json.dumps(kcargs, indent=2)
         if timeout:
             kcargs['timeout_mins'] = timeout
         try:
             stack_details = self.client.stacks.create(**kcargs)
-        except exc.HTTPNotFound:
-            raise exc.CommandError('Stack already exists: %s' % name)
+        except Exception:
+            raise
         return stack_details
 
     def delete(self, stack_id):
         fields = {'stack_id': stack_id}
         try:
             stack_details = self.client.stacks.delete(**fields)
-            return stack_details
-        except exc.HTTPNotFound as e:
-            print(e)
+        except Exception:
+            raise
+        return stack_details
 
+    def update(self, stack_id, template, parameters=None, environment = None, disable_rollback=None, timeout = None):
+        fields = {
+            'stack_id': stack_id,
+            'parameters': utils.format_parameters(parameters),
+            #'existing': args.existing,
+            'template': template,
+            #'files': dict(list(tpl_files.items()) + list(env_files.items())),
+            'environment': environment
+        }
+        try:
+            response = self.client.stacks.update(**fields)
+        except Exception:
+            raise
+        return response
 
     def show(self, stack_id, properties=[]):
         fields = {'stack_id': stack_id}
@@ -66,6 +80,8 @@ class Client(object):
             stack = self.client.stacks.get(**fields)
         except exc.HTTPNotFound:
             raise exc.CommandError('Stack not found: %s' % fields['stack_id'])
+        except Exception:
+            raise
         else:
             tmp_stack = stack.to_dict()
             if properties:
@@ -98,7 +114,10 @@ class Client(object):
         return stacks
 
     def list_resources(self, stack_id):
-        resources_raw = self.client.resources.list(stack_id)
+        try:
+            resources_raw = self.client.resources.list(stack_id)
+        except Exception:
+            raise
         resources = []
         for resource_raw in resources_raw:
             resources.append(resource_raw.to_dict())
