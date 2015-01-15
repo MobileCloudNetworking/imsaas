@@ -13,7 +13,7 @@ from util.SysUtil import SysUtil
 
 __author__ = 'mpa'
 
-logger = logging.getLogger("EMMLogger")
+logger = logging.getLogger("IMSSO")
 
 import threading
 
@@ -45,7 +45,8 @@ class DatabaseManager(ABCDatabaseManager):
             db_url = self.conf['db_url']
             db_name = self.conf['db_name']
             self.info = 'mysql://' + db_username + ':' + db_password + '@' + db_url + '/' + db_name
-            self.engine = create_engine(self.info, echo=False)
+            #self.engine = create_engine(self.info, echo=False)
+            self.engine = create_engine('sqlite://')
             self._scoped_session = scoped_session(sessionmaker(bind=self.engine, expire_on_commit=False))
             self.session = None
             # self.create_session()
@@ -192,4 +193,5 @@ class DatabaseManager(ABCDatabaseManager):
         return res
 
     def create_tables(self):
+        print "db_password is %s" %self.info
         Entities.create_tables(self.instance.engine)

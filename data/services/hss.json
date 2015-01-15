@@ -1,0 +1,13 @@
+{
+    "service_type": "hss",
+    "image": "hss-v2",
+    "flavor": "m1.small",
+    "config": {
+        "hostname": "hss"
+    },
+    "size": {
+        "max": 1,
+        "def": 1,
+        "min": 1
+    }
+}

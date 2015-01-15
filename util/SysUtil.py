@@ -1,10 +1,13 @@
 import json
 import logging
+import os
 from clients.neutron import Client
 from model.Entities import Configuration, new_alchemy_encoder
+
 import FactoryAgent as FactoryAgent
 
-PATH = '/opt/Nubomedia/nubomedia/emm-generic'
+#PATH = '/opt/Nubomedia/nubomedia/emm-generic'
+PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
 __author__ = 'lto'
 
@@ -49,12 +52,11 @@ class SysUtil:
     def init_sys(self):
         logger.info("Starting the System")
         logger.debug('Creating and removing the tables')
-        logger.debug('getting the DbManager')
-
         logger.debug('Retrieving the System Configurations')
         sys_config.props = {}
         sys_config.name = 'SystemConfiguration'
         self._read_properties(sys_config.props)
+        logger.debug('getting the DbManager')
         db = FactoryAgent.FactoryAgent().get_agent(file_name=sys_config.props['database_manager'])
         if sys_config.props['create_tables'] == 'True':
             db.create_tables()

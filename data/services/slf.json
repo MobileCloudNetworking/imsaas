@@ -1,0 +1,13 @@
+{
+    "service_type": "slf",
+    "image": "slf",
+    "flavor": "m1.small",
+    "config": {
+        "hostname": "slf"
+    },
+    "size": {
+        "max": 1,
+        "def": 1,
+        "min": 1
+    }
+}

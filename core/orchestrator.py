@@ -19,7 +19,12 @@ import os
 import logging
 
 
+
 from sdk.mcn import util
+from util.FactoryAgent import FactoryAgent
+from util.SysUtil import SysUtil as sys_util
+from clients.heat import Client as HeatClient
+
 
 SO_DIR = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
@@ -40,14 +45,19 @@ class SoExecution(object):
         self.tenant_name = tenant_name
         self.stack_id = None
         # make sure we can talk to deployer...
-        print "sending request to the url %s" %os.environ['DESIGN_URI']
-        self.deployer = util.get_deployer(self.token, url_type='public', tenant_name=self.tenant_name)
+        logger.debug("sending request to the url %s" %os.environ['DESIGN_URI'])
+        self.heatclient = HeatClient()
+
+        conf = sys_util().get_sys_conf()
+        self.deployer = FactoryAgent().get_agent(conf['deployer'])
+
+        #self.deployer = util.get_deployer(self.token, url_type='public', tenant_name=self.tenant_name)
 
     def design(self):
         """
         Design method
         """
-        pass
+
 
     def deploy(self, attributes):
         """
@@ -68,7 +78,10 @@ class SoExecution(object):
         f.close()
 
         if self.stack_id is None:
-            self.stack_id = self.deployer.deploy(self.template, self.token, parameters=parameters)
+            #self.stack_id = self.deployer.deploy(self.template, self.token, parameters=parameters)
+            stack_details = self.heatclient.deploy(name="ims",template = self.template)
+            self.stack_id = stack_details['stack']['id']
+
 
     def provision(self):
         """
@@ -81,7 +94,8 @@ class SoExecution(object):
         Dispose method
         """
         if self.stack_id is not None:
-            self.deployer.dispose(self.stack_id, self.token)
+            #self.deployer.dispose(self.stack_id, self.token)
+            self.heatclient.delete(self.stack_id)
             self.stack_id = None
 
     def state(self):

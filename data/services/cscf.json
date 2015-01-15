@@ -1,0 +1,13 @@
+{
+    "service_type": "cscfs",
+    "image": "ims-v2",
+    "flavor": "m1.small",
+    "config": {
+        "hostname": "cscfs"
+    },
+    "size": {
+        "max": 1,
+        "def": 1,
+        "min": 1
+    }
+}

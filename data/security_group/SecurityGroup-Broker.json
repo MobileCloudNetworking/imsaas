@@ -1,0 +1,24 @@
+{
+    "name": "SecurityGroup-Broker",
+    "rules": [
+        {
+            "name": "tcp_22",
+            "protocol": "tcp",
+            "remote_ip_prefix": "0.0.0.0/0",
+            "port_range_max": 22,
+            "port_range_min": 22
+        },
+        {
+            "name": "tcp_5672",
+            "protocol": "tcp",
+            "remote_ip_prefix": "0.0.0.0/0",
+            "port_range_max": 5672,
+            "port_range_min": 5672
+        },
+        {
+            "name": "icmp",
+            "remote_ip_prefix": "0.0.0.0/0",
+            "protocol": "icmp"
+        }
+    ]
+}

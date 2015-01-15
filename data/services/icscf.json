@@ -1,0 +1,13 @@
+{
+    "service_type": "icscf",
+    "image": "icscf-v2",
+    "flavor": "m1.small",
+    "config": {
+        "hostname": "icscf"
+    },
+    "size": {
+        "max": 1,
+        "def": 1,
+        "min": 1
+    }
+}

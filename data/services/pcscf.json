@@ -1,0 +1,13 @@
+{
+    "service_type": "pcscf",
+    "image": "pcscf-v2",
+    "flavor": "m1.small",
+    "config": {
+        "hostname": "pcscf"
+    },
+    "size": {
+        "max": 1,
+        "def": 1,
+        "min": 1
+    }
+}

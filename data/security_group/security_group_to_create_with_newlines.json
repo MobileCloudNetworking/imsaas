@@ -1,0 +1,10 @@
+{
+	"name": "SecGroup1",
+	"rules": [{
+		"protocol": "tcp", 
+		"name": "Rule1", 
+		"remote_ip_prefix": "127.0.0.1/0", 
+		"port_range_max": 65535, 
+		"port_range_min": 1
+	}]
+}

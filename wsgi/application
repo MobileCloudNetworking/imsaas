@@ -18,6 +18,9 @@
 import os
 import logging
 
+
+from util.SysUtil import SysUtil
+
 try:
     virtenv = os.environ.get('OPENSHIFT_PYTHON_DIR', '.') + '/virtenv/'
     virtualenv = os.path.join(virtenv, 'bin/activate_this.py')
@@ -83,9 +86,9 @@ application = occi_ext.Application(MyBackend())
 #
 if __name__ == '__main__':
     from wsgiref.simple_server import make_server
+    logging.basicConfig(format='%(asctime)s_%(process)d:%(pathname)s:%(lineno)d [%(levelname)s] %(message)s',level=logging.DEBUG)
+    logger = logging.getLogger("EMMLogger")
+    SysUtil().init_sys()
     httpd = make_server('localhost', 8051, application)
     # Wait for a single request, serve it and quit.
-    logging.basicConfig(format='%(asctime)s_%(process)d:%(pathname)s:%(lineno)d [%(levelname)s] %(message)s',
-                        level=logging.INFO)
-    logger = logging.getLogger("IMSSO")
     httpd.serve_forever()
