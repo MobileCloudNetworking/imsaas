@@ -40,7 +40,7 @@ class SoExecution(object):
         """
         Constructor
         """
-        self.topology_type = "test.yaml"
+        self.topology_type = "ims-v2.yaml"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None
@@ -104,9 +104,14 @@ class SoExecution(object):
         """
         if self.stack_id is not None:
             tmp = self.deployer.details(self.stack_id, self.token)
-            return tmp['state'], self.stack_id, tmp['output']
+            output = ''
+            try:
+                output = tmp['output']
+            except KeyError:
+                pass
+            return tmp['state'], self.stack_id, output
         else:
-            return 'Unknown', 'N/A'
+            return 'Unknown', 'N/A', ''
 
 class SoDecision(object):
     '''
