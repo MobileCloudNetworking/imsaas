@@ -20,6 +20,7 @@ from interfaces.TopologyManager import TopologyManager as ABCTopologyManager
 from services.DatabaseManager import DatabaseManager
 from model.Entities import Topology, Unit, Requirement, Alarm, Action, Policy, SecurityGroup, Service, ServiceInstance, Command, \
     Network, Network_Instance, NetworkInstance_SecurityGroup
+from services.Checker import check
 
 __author__ = 'mpa'
 
@@ -49,9 +50,8 @@ class TopologyManager(ABCTopologyManager):
                 for serv in self.db.get_all(Service):
                     if serv.service_type == service_type:
                         service = serv
-
                 if not service:
-                    raise Exception('Service type %s not found' % service_type)
+                    raise Exception('\"service_type:%s\" not found' % service_type)
                 logger.debug('service: %s' % service)
                 if service:
                     logger.debug("requested Service: %s" % service)
@@ -60,10 +60,10 @@ class TopologyManager(ABCTopologyManager):
                     si_args['config'] = service.config
                     si_args['size'] = service.size
                 else:
-                    logger.error("Service %s not found in Database" % service_type)
+                    logger.error("\"service:%s\" not found in Database" % service_type)
                     raise Exception
             else:
-                logger.error("Service type not given")
+                logger.error("\"service_type\" is not defined")
                 raise Exception
             for si_item in si_config:
                 if si_item == "name":
@@ -152,8 +152,6 @@ class TopologyManager(ABCTopologyManager):
         ext_name = '' + top_name + '_' +str(random.randint(1000,9999))
         topology = Topology(name=top_name, state=top_state, service_instances=top_service_instances, ext_name=ext_name)
         logger.debug(topology)
-        # self.db.persist(topology)
-        topology = self.db.update(topology)
         return topology
 
     def update(self):

@@ -19,6 +19,8 @@ class Deployer(ABCDeployer):
         conf = SysUtil().get_sys_conf()
         logger.debug("Get runtime agent: " + conf['runtime_agent'])
         self.runtime_agent = FactoryAgent().get_agent(conf['runtime_agent'])
+        #self.register_agent = FactoryAgent().get_agent(file_name=conf['register_agent_file'],
+        #                                              class_name=conf['register_agent_class'])
         self.db = DatabaseManager()
 
     def deploy(self, topology):
@@ -34,16 +36,17 @@ class Deployer(ABCDeployer):
             logger.debug("stack id: %s" % topology.ext_id)
         except Exception, msg:
             logger.error(msg)
-            topology.state='ERROR'
+            topology.state = 'ERROR'
             topology.ext_id = None
             return topology
         logger.debug("Starting RuntimeAgent for topology %s." % topology.id)
         self.runtime_agent.start(topology)
+        #self.register_agent.start()
         return topology
 
     def dispose(self, topology):
         # checker_thread = self.checker_thread
-        #logger.debug("Get RuntimeAgent for topology %s" % topology.id)
+        # logger.debug("Get RuntimeAgent for topology %s" % topology.id)
         # runtime_agent = self.runtime_agents.get(topology.id)
         #logger.debug("Got RuntimeAgent: %s" % self.runtime_agent)
         stack_details = None
@@ -55,13 +58,10 @@ class Deployer(ABCDeployer):
                 stack_details = self.heatclient.delete(topology.ext_id)
             except Exception, msg:
                 logger.error(msg)
-                topology.state='ERROR'
+                topology.state = 'ERROR'
                 #topology.ext_id = None
-            for service_instance in topology.service_instances:
-                service_instance.networks = []
-            self.db.update(topology)
             topology.state = 'DELETED'
-            self.db.remove(topology)
+            self.db.update(topology)
             logger.debug("stack details after delete: %s" % stack_details)
         return stack_details
 

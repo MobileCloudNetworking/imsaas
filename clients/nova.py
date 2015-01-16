@@ -1,7 +1,7 @@
 import logging
 from emm_exceptions.NotFoundException import NotFoundException
 from novaclient import client
-from util.SysUtil import SysUtil
+from model.Entities import Key, Flavor, Image
 
 __author__ = 'lto'
 
@@ -9,8 +9,10 @@ logger = logging.getLogger('EMMLogger')
 
 class Client:
 
-    def __init__(self):
-        conf = SysUtil().get_sys_conf()
+    def __init__(self, conf=None):
+        if not conf:
+            from util.SysUtil import SysUtil
+            conf = SysUtil().get_sys_conf()
         self.nova = client.Client('2', conf['os_username'], conf['os_password'], conf['os_tenant'], conf['os_auth_url'])
 
     def list_servers(self):
@@ -46,3 +48,33 @@ class Client:
                         logger.debug(ip + " is a fixed ip")
         logger.debug("ips: " + str(unit.ips))
         logger.debug("floating_ips: " + str(unit.floating_ips))
+
+    def get_images(self, object=True):
+        images_repr = self.nova.images.list()
+        images = []
+        for image_repr in images_repr:
+            if object:
+                images.append(Image(name = image_repr.name, ext_id=image_repr.id, status=image_repr.status, created=image_repr.created, updated=image_repr.updated))
+            else:
+                images.append(image_repr._info)
+        return images
+
+    def get_flavors(self, object=True):
+        flavors_repr = self.nova.flavors.list()
+        flavors = []
+        for flavor_repr in flavors_repr:
+            if object:
+                flavors.append(Flavor(name=flavor_repr.name))
+            else:
+                flavors.append(flavor_repr._info)
+        return flavors
+
+    def get_keys(self, object=True):
+        keys_repr = self.nova.keypairs.list()
+        keys = []
+        for key_repr in keys_repr:
+            if object:
+                keys.append(Key(name=(key_repr.name)))
+            else:
+                keys.append(key_repr._info)
+        return keys

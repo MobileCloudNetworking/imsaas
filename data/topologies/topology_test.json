@@ -1,0 +1,98 @@
+{
+    "name":"ims",
+    "service_instances": [
+        {
+            "name":"cscfs",
+            "service_type":"cscfs",
+            "config": {
+                "key_name":"mcn-tub"
+            },
+            "networks": [
+                {
+                    "name":"mgmt",
+                    "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
+                    "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
+                    "security_groups": [
+                        "security-group-ims"
+                    ]
+                }
+            ],
+            "requirements": [
+                {
+                    "name":"$hssIp",
+                    "parameter":"private_ip",
+                    "source":"hss",
+                    "obj_name": "mgmt"
+                }
+            ],
+            "user_data": [
+
+                "#!/usr/bin/env bash",
+                "apt-get install -y zabbix-agent",
+                "sed -i 's/127.0.0.1/$/g' /etc/zabbix/zabbix_agentd.conf",
+                "sed -i 's/Hostname=/#Hostname=/g' /etc/zabbix/zabbix_agentd.conf",
+                "service zabbix-agent restart"
+            ]
+        },
+        {
+            "name":"hss",
+            "service_type":"hss",
+            "size": {
+                "min":1,
+                "max":5,
+                "def":1
+            },
+            "config": {
+                "key_name":"mcn-tub"
+            },
+            "networks": [
+                {
+                    "name":"mgmt",
+                    "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
+                    "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
+                    "security_groups": [
+                        "security-group-ims"
+                    ]
+                }
+            ],
+            "policies": [
+                #{
+                #    "name": "msg_scaleup",
+                #    "period": 60,
+                #    "alarm": {
+                #        "meter_name": "cpu_util",
+                #        "comparison_operator": "gt",
+                #        "threshold": 50,
+                #        "statistic": "avg",
+                #        "evaluation_periods": 1
+                #    },
+                #    "action": {
+                #        "adjustment_type": "ChangeInCapacity",
+                #        "scaling_adjustment": 1,
+                #        "cooldown": 60
+                #    }
+                #},
+                #{
+                #    "name": "msg_scaledown",
+                #    "period": 60,
+                #    "alarm": {
+                #        "meter_name": "cpu_util",
+                #        "comparison_operator": "lt",
+                #        "threshold": 10,
+                #        "statistic": "avg",
+                #        "evaluation_periods": 1
+                #    },
+                #    "action": {
+                #            "adjustment_type": "ChangeInCapacity",
+                #            "scaling_adjustment": -1,
+                #            "cooldown": 60
+                #    }
+                #}
+            ],
+            "requirements": [
+            ],
+            "user_data": [
+            ]
+        }
+    ]
+}

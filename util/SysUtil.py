@@ -1,7 +1,9 @@
 import json
 import logging
 import os
-from clients.neutron import Client
+from clients.neutron import Client as NeutronClient
+from clients.nova import Client as NovaClient
+
 from model.Entities import Configuration, new_alchemy_encoder
 
 import FactoryAgent as FactoryAgent
@@ -14,14 +16,6 @@ __author__ = 'lto'
 global sys_config
 sys_config = Configuration()
 
-
-def get_networks():
-    nc = Client(get_endpoint('network'), get_token())
-    return nc.get_networks()
-
-def get_ports():
-    nc = Client(get_endpoint('network'), get_token())
-    return nc.get_ports()
 
 logger = logging.getLogger("EMMLogger")
 
@@ -70,10 +64,24 @@ class SysUtil:
         for net in get_networks():
             db.persist(net)
 
+
+        for key in get_keys():
+            db.persist(key)
+
+        for flavor in get_flavors():
+            db.persist(flavor)
+
+        for image in get_images():
+            db.persist(image)
+
         # for port in get_ports():
         #     db.persist(port)
 
         self.print_logo()
+
+
+
+
 
     def get_sys_conf(self):
         props = {}
@@ -118,6 +126,28 @@ def get_endpoint(service_type, endpoint_type=None):
     ksclient = keystone.Client()
     endpoint = ksclient.get_endpoint(service_type=service_type, endpoint_type=endpoint_type)
     return endpoint
+
+
+def get_networks():
+    nc = NeutronClient(get_endpoint('network'), get_token())
+    return nc.get_networks()
+
+def get_ports():
+    nc = NeutronClient(get_endpoint('network'), get_token())
+    return nc.get_ports()
+
+
+def get_images():
+    novaClient = NovaClient(sys_config.props)
+    return novaClient.get_images()
+
+def get_keys():
+    novaClient = NovaClient(sys_config.props)
+    return novaClient.get_keys()
+
+def get_flavors():
+    novaClient = NovaClient(sys_config.props)
+    return novaClient.get_flavors()
 
 def translate(value, mapping, err_msg=None):
     try:

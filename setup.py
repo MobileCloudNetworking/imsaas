@@ -12,6 +12,7 @@ setup(
         'python-novaclient',
         'bottle',
         'sqlalchemy',
+        'pyzmq',
     ],
     # test_suite="test",
     url='',

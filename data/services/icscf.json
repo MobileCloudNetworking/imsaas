@@ -1,6 +1,6 @@
 {
     "service_type": "icscf",
-    "image": "icscf-v2",
+    "image": "ubuntu-server-14.04",
     "flavor": "m1.small",
     "config": {
         "hostname": "icscf"

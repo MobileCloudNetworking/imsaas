@@ -11,7 +11,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
-#    under the License.
+# under the License.
 import json
 from sqlalchemy import Column, Integer, String, PickleType, Enum, ForeignKey, create_engine, Table, Boolean
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
@@ -30,7 +30,8 @@ Base = declarative_base()
 
 __author__ = 'giuseppe'
 
-state = ('ERROR', 'DEFINED', 'DEPLOYING', 'DEPLOYED', 'INITIALISING', 'INITIALISED', 'DELETING', 'DELETED', 'UPDATING', 'UPDATED', 'STATE_NOT_IMPLEMENTED');
+state = ('ERROR', 'DEFINED', 'DEPLOYING', 'DEPLOYED', 'INITIALISING', 'INITIALISED', 'DELETING', 'DELETED', 'UPDATING',
+         'UPDATED', 'STATE_NOT_IMPLEMENTED', 'STARTED')
 
 logger = logging.getLogger('EMMLogger')
 
@@ -246,6 +247,7 @@ class Unit(Base):
     hostname = Column(String(20))
     ext_id = Column(String(50))
     availability_zone = Column(String(50))
+    ws = Column(String(100))
     ips = Column(PickleType)
     floating_ips = Column(PickleType)
     ports = relationship('Port', cascade="all, delete, delete-orphan", lazy='immediate')
@@ -253,7 +255,7 @@ class Unit(Base):
     service_instance_id = Column(Integer, ForeignKey('ServiceInstance.id'))
     requirement_id = Column(Integer, ForeignKey('Requirement.id'))
 
-    def __init__(self, hostname, state, ext_id=None, ips={}, floating_ips={}, ports = []):
+    def __init__(self, hostname, state, ext_id=None, ips={}, floating_ips={}, ports=[]):
         self.hostname = hostname
         self.state = state
         self.ext_id = ext_id
@@ -270,6 +272,7 @@ class Unit(Base):
         t += 'ext_id: %s' % self.ext_id
         t += ']'
         return t
+
 
 class Relation(object):
     pass
@@ -352,10 +355,69 @@ class Network(Base):
         t += '<Network>['
         t += 'id: %s, ' % self.id
         t += 'name: %s, ' % self.name
-        t += 'ext_id: %s, ' % self.ext_id
+        t += 'ext_id: %s' % self.ext_id
         t += ']'
         return t
 
+class Key(Base):
+  __tablename__ = "Key"
+  id = Column(Integer, primary_key=True)
+  name = Column(String(50), unique=True)
+
+  def __init__(self, name):
+    self.name = name
+
+  def __str__(self):
+    t = ""
+    t += '<Key>['
+    t += 'id: %s, ' % self.id
+    t += 'name: %s' % self.name
+    t += ']'
+    return t
+
+class Flavor(Base):
+  __tablename__ = "Flavor"
+  id = Column(Integer, primary_key=True)
+  name = Column(String(50), unique=True)
+  
+  def __init__(self, name):
+    self.name = name
+
+  def __str__(self):
+    t = ""
+    t += '<Flavor>['
+    t += 'id: %s, ' % self.id
+    t += 'name: %s' % self.name
+    t += ']'
+    return t
+
+class Image(Base):
+  __tablename__ = "Image"
+  id = Column(Integer, primary_key=True)
+  name = Column(String(50), unique=True)
+  ext_id = Column(String(50))
+  status = Column(String(50))
+  created = Column(String(50))
+  updated = Column(String(50))
+  
+  def __init__(self, name, ext_id, status, created, updated):
+    self.name = name
+    self.ext_id = ext_id
+    self.status = status
+    self.created = created
+    self.updated = updated 
+
+  def __str__(self):
+    t = ""
+    t += '<Image>['
+    t += 'id: %s, ' % self.id
+    t += 'name: %s, ' % self.name
+    t += 'ext_id: %s, ' % self.ext_id
+    t += 'status: %s, ' % self.status
+    t += 'created: %s, ' % self.created
+    t += 'updated: %s' % self.updated
+    t += ']'
+    return t
 
 class Network_Instance(Base):
     __tablename__ = 'Network_Instance'

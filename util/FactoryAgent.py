@@ -4,8 +4,8 @@ import os
 import logging
 
 module_name = 'services'
-PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
-#PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
+#PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
+PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
 
 logger = logging.getLogger('EMMLogger')

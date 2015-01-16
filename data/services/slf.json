@@ -1,6 +1,6 @@
 {
     "service_type": "slf",
-    "image": "slf",
+    "image": "ubuntu-server-14.04",
     "flavor": "m1.small",
     "config": {
         "hostname": "slf"

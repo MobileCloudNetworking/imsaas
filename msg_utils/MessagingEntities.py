@@ -7,10 +7,10 @@ class MessageObject:
         self.action = kwargs['action']
 
     def __str__(self):
-        str = 'MessageObject: [ '
-        str += 'Action=%s, ' % self.action
-        str += 'Message=%s ]' % self.message
-        return str
+        res = 'MessageObject: [ '
+        res += 'Action=%s, ' % self.action
+        res += 'Message=%s ]' % self.message
+        return res
 
 
 def enum(*sequential, **named):
@@ -22,3 +22,17 @@ def enum(*sequential, **named):
 
 Action = enum(init='init', install='install', add_relation='add_relation', start='start', error='error',
               restart='restart')
+
+
+class RegisterUnitMessage:
+    def __init__(self, **kwargs):
+        self.action = kwargs['action']
+        self.hostname = kwargs['hostname']
+        self.ws = kwargs['ws']
+
+    def __str__(self):
+        res = 'RegisterUnitMessage: [ '
+        res += 'Action=%s, ' % self.action
+        res += 'ws=%s, ' % self.ws
+        res += 'hostname=%s ]' % self.hostname
+        return res

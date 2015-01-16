@@ -17,6 +17,14 @@ __author__ = 'giuseppe'
 
 import os
 import logging
+import yaml
+
+from emm_exceptions.NotFoundException import NotFoundException
+from emm_exceptions.NotUniqueException import NotUniqueException
+from emm_exceptions.NotDefinedException import NotDefinedException
+from emm_exceptions.TypeErrorException import TypeErrorException
+from emm_exceptions.InvalidInputException import InvalidInputException
+from core.TopologyOrchestrator import TopologyOrchestrator
 
 
 
@@ -40,7 +48,7 @@ class SoExecution(object):
         """
         Constructor
         """
-        self.topology_type = "ims-v2.yaml"
+        self.topology_type = "topology_test.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None
@@ -73,14 +81,46 @@ class SoExecution(object):
 
         logger.info("deploying template %s" %(self.topology_type,))
         # read template...
-        f = open(os.path.join(SO_DIR, 'data', self.topology_type))
+        f = open(os.path.join(SO_DIR, 'data/topologies', self.topology_type))
         self.template = f.read()
         f.close()
+        logger.debug("content of the topology %s"%self.template)
+        try:
+            config = yaml.load(self.template)
+            logger.debug(config)
+        except yaml.YAMLError, exc:
+            if hasattr(exc, 'problem_mark'):
+                mark = exc.problem_mark
+                logger.error("Error in configuration file:", exc)
+                logger.error("Error position: (%s:%s)" % (mark.line + 1, mark.column + 1))
+            else:
+                logger.error("Error in configuration file:", exc)
+
+        #try:
+        self.topology = TopologyOrchestrator.create(config)
+        # except NotFoundException, msg:
+        #     logger.error(msg)
+        #     return
+        # except NotUniqueException, msg:
+        #     logger.error(msg)
+        #     return
+        # except NotDefinedException, msg:
+        #     logger.error(msg)
+        #     return
+        # except InvalidInputException, msg:
+        #     logger.error(msg)
+        #     return
+        # except TypeErrorException, msg:
+        #     logger.error(msg)
+        #     return
+        # except Exception, msg:
+        #     logger.error(msg)
+        #     return
 
         if self.stack_id is None:
-            #self.stack_id = self.deployer.deploy(self.template, self.token, parameters=parameters)
-            stack_details = self.heatclient.deploy(name="ims",template = self.template)
-            self.stack_id = stack_details['stack']['id']
+            stack_details= self.deployer.deploy(self.topology)
+            #stack_details = self.heatclient.deploy(name="ims",template = self.template)
+            self.stack_id = stack_details.ext_id
 
 
     def provision(self):
