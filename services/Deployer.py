@@ -80,3 +80,8 @@ class Deployer(ABCDeployer):
             logger.debug("stack details after delete: %s" % stack_details)
         return stack_details
 
+
+    def details(self, topology):
+        stack_details = self.heatclient.show(topology.ext_id)
+        logger.debug("Stack actually running %s" % stack_details)
+        return stack_details

@@ -26,8 +26,6 @@ from emm_exceptions.TypeErrorException import TypeErrorException
 from emm_exceptions.InvalidInputException import InvalidInputException
 from core.TopologyOrchestrator import TopologyOrchestrator
 
-
-
 from sdk.mcn import util
 from util.FactoryAgent import FactoryAgent
 from util.SysUtil import SysUtil as sys_util
@@ -39,11 +37,11 @@ SO_DIR = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 logger = logging.getLogger("IMSSO")
 
 
-
 class SoExecution(object):
     """
     class docs
     """
+
     def __init__(self, token, tenant_name):
         """
         Constructor
@@ -53,7 +51,7 @@ class SoExecution(object):
         self.tenant_name = tenant_name
         self.stack_id = None
         # make sure we can talk to deployer...
-        logger.debug("sending request to the url %s" %os.environ['DESIGN_URI'])
+        logger.debug("sending request to the url %s" % os.environ['DESIGN_URI'])
 
         conf = sys_util().get_sys_conf()
         self.deployer = FactoryAgent().get_agent(conf['deployer'])
@@ -78,12 +76,12 @@ class SoExecution(object):
         except:
             logger.debug("parameter mcn.topology.type not available, using the standard template imsaas.yaml")
 
-        logger.info("deploying template %s" %(self.topology_type,))
+        logger.info("deploying template %s" % (self.topology_type,))
         # read template...
         f = open(os.path.join(SO_DIR, 'data/topologies', self.topology_type))
         self.template = f.read()
         f.close()
-        logger.debug("content of the topology %s"%self.template)
+        logger.debug("content of the topology %s" % self.template)
         try:
             config = yaml.load(self.template)
             logger.debug(config)
@@ -117,10 +115,10 @@ class SoExecution(object):
             return
 
         if self.stack_id is None:
-            stack_details= self.deployer.deploy(self.topology)
+            stack_details = self.deployer.deploy(self.topology)
             #stack_details = self.heatclient.deploy(name="ims",template = self.template)
             self.stack_id = stack_details.id
-            logger.info("deployed topology with id %s"%self.stack_id)
+            logger.info("deployed topology with id %s" % self.stack_id)
 
 
     def provision(self):
@@ -133,10 +131,10 @@ class SoExecution(object):
         """
         Dispose method
         """
-        logger.info("deleting topology with id %s "%self.stack_id)
+        logger.info("deleting topology with id %s " % self.stack_id)
         if self.stack_id is not None:
             topology = TopologyOrchestrator.get(self.stack_id)
-            logger.debug("topology to be deleted %s "%topology)
+            logger.debug("topology to be deleted %s " % topology)
             self.deployer.dispose(topology)
             TopologyOrchestrator.delete(topology)
             self.stack_id = None
@@ -145,9 +143,10 @@ class SoExecution(object):
         """
         Report on state.
         """
-        logger.info("retrieving state of the running stack with id %s"%self.stack_id)
+        logger.info("retrieving state of the running stack with id %s" % self.stack_id)
         if self.stack_id is not None:
-            tmp = self.deployer.details(self.stack_id, self.token)
+            topology = TopologyOrchestrator.get(self.stack_id)
+            tmp = self.deployer.details(topology)
             output = ''
             try:
                 output = tmp['output']
@@ -156,6 +155,7 @@ class SoExecution(object):
             return tmp['state'], self.stack_id, output
         else:
             return 'Unknown', 'N/A', ''
+
 
 class SoDecision(object):
     '''
@@ -175,7 +175,6 @@ class SoDecision(object):
 
 
 class ServiceOrchestrator(object):
-
     def __init__(self, token, tenant_name):
         self.so_e = SoExecution(token, tenant_name)
         self.so_d = SoDecision(token, tenant_name)

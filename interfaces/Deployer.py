@@ -49,3 +49,11 @@ class Deployer(object):
         :return:
         """
         print "ABC - Deployer.dispose()"
+
+    @abstractmethod
+    def details(self):
+        """
+        Disposes an existing stack.
+        :return:
+        """
+        print "ABC - Deployer.details()"
