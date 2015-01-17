@@ -16,24 +16,15 @@
 from SysUtil import SysUtil
 from model.Entities import new_alchemy_encoder
 import json
+
+
 __author__ = 'giuseppe'
 
-import yaml
-import os
-
 def get_credentials():
-    # print "Fetch credentials from environment variables"
     creds = {}
-    # creds['tenant_name'] = os.environ.get('OS_TENANT_NAME', '')
-    # creds['username'] = os.environ.get('OS_USERNAME', '')
-    # creds['password'] = os.environ.get('OS_PASSWORD', '')
-    # creds['auth_url'] = os.environ.get('OS_AUTH_URL', '')
-    # print 'Credentials: %s' % creds
     ###Fetch Credentials from Configuration
     print "Fetch Credentials from SysUtil"
     conf = SysUtil().get_sys_conf()
-    #conf = DatabaseManager().get_by_name(Configuration, "SystemConfiguration")[0]
-    #print "props: %s" % conf.props
     creds['tenant_name'] = conf.get('os_tenant', '')
     creds['username'] = conf.get('os_username', '')
     creds['password'] = conf.get('os_password', '')

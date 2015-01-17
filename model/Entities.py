@@ -12,6 +12,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
 import json
 from sqlalchemy import Column, Integer, String, PickleType, Enum, ForeignKey, create_engine, Table, Boolean
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
@@ -19,14 +20,8 @@ from sqlalchemy.orm import relationship
 import logging
 
 
-# conf = SysUtil().get_sys_conf()
 Base = declarative_base()
-# engine = DatabaseManager().engine
 
-
-#create_engine(
-#'mysql://' + conf['db_username'] + ':' + conf['db_password'] + '@' + conf['db_url'] + '/' + conf['db_name'],
-#echo=False)
 
 __author__ = 'giuseppe'
 

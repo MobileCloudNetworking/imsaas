@@ -54,7 +54,6 @@ class SoExecution(object):
         self.stack_id = None
         # make sure we can talk to deployer...
         logger.debug("sending request to the url %s" %os.environ['DESIGN_URI'])
-        self.heatclient = HeatClient()
 
         conf = sys_util().get_sys_conf()
         self.deployer = FactoryAgent().get_agent(conf['deployer'])
@@ -146,6 +145,7 @@ class SoExecution(object):
         """
         Report on state.
         """
+        logger.info("retrieving state of the running stack with id %s"%self.stack_id)
         if self.stack_id is not None:
             tmp = self.deployer.details(self.stack_id, self.token)
             output = ''
