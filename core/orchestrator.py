@@ -96,31 +96,32 @@ class SoExecution(object):
             else:
                 logger.error("Error in configuration file:", exc)
 
-        #try:
-        self.topology = TopologyOrchestrator.create(config)
-        # except NotFoundException, msg:
-        #     logger.error(msg)
-        #     return
-        # except NotUniqueException, msg:
-        #     logger.error(msg)
-        #     return
-        # except NotDefinedException, msg:
-        #     logger.error(msg)
-        #     return
-        # except InvalidInputException, msg:
-        #     logger.error(msg)
-        #     return
-        # except TypeErrorException, msg:
-        #     logger.error(msg)
-        #     return
-        # except Exception, msg:
-        #     logger.error(msg)
-        #     return
+        try:
+            self.topology = TopologyOrchestrator.create(config)
+        except NotFoundException, msg:
+            logger.error(msg)
+            return
+        except NotUniqueException, msg:
+            logger.error(msg)
+            return
+        except NotDefinedException, msg:
+            logger.error(msg)
+            return
+        except InvalidInputException, msg:
+            logger.error(msg)
+            return
+        except TypeErrorException, msg:
+            logger.error(msg)
+            return
+        except Exception, msg:
+            logger.error(msg)
+            return
 
         if self.stack_id is None:
             stack_details= self.deployer.deploy(self.topology)
             #stack_details = self.heatclient.deploy(name="ims",template = self.template)
-            self.stack_id = stack_details.ext_id
+            self.stack_id = stack_details.id
+            logger.info("deployed topology with id %s"%self.stack_id)
 
 
     def provision(self):
@@ -133,9 +134,12 @@ class SoExecution(object):
         """
         Dispose method
         """
+        logger.info("deleting topology with id %s "%self.stack_id)
         if self.stack_id is not None:
-            #self.deployer.dispose(self.stack_id, self.token)
-            self.heatclient.delete(self.stack_id)
+            topology = TopologyOrchestrator.get(self.stack_id)
+            logger.debug("topology to be deleted %s "%topology)
+            self.deployer.dispose(topology)
+            TopologyOrchestrator.delete(topology)
             self.stack_id = None
 
     def state(self):

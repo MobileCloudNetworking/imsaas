@@ -4,6 +4,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.scoping import scoped_session
+from sqlalchemy.pool import StaticPool
+
 from emm_exceptions.NotFoundException import NotFoundException
 
 from interfaces.DatabaseManager import DatabaseManager as ABCDatabaseManager
@@ -46,7 +48,8 @@ class DatabaseManager(ABCDatabaseManager):
             db_name = self.conf['db_name']
             self.info = 'mysql://' + db_username + ':' + db_password + '@' + db_url + '/' + db_name
             #self.engine = create_engine(self.info, echo=False)
-            self.engine = create_engine('sqlite://')
+            self.engine = create_engine('sqlite://', connect_args={'check_same_thread':False},
+                    poolclass=StaticPool)
             self._scoped_session = scoped_session(sessionmaker(bind=self.engine, expire_on_commit=False))
             self.session = None
             # self.create_session()
