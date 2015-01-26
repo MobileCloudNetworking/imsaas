@@ -4,8 +4,10 @@
         {
             "name":"cscfs",
             "service_type":"cscfs",
-            "config": {
-                "key_name":"mcn-tub"
+            "flavor":"m1.small",
+            "image": "ubuntu-server-14.04",
+            "key":"mcn-tub",
+            "configuration": {
             },
             "networks": [
                 {
@@ -37,13 +39,15 @@
         {
             "name":"hss",
             "service_type":"hss",
+            "flavor":"m1.small",
+            "image": "ubuntu-server-14.04",
+            "key":"mcn-tub",
             "size": {
                 "min":1,
                 "max":5,
                 "def":1
             },
-            "config": {
-                "key_name":"mcn-tub"
+            "configuration": {
             },
             "networks": [
                 {

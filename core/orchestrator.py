@@ -46,7 +46,7 @@ class SoExecution(object):
         """
         Constructor
         """
-        self.topology_type = "topology_test.json"
+        self.topology_type = "topology_test_v2.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None
@@ -54,6 +54,7 @@ class SoExecution(object):
         logger.debug("sending request to the url %s" % os.environ['DESIGN_URI'])
 
         conf = sys_util().get_sys_conf()
+        logger.debug("instantiating deployer %s" %conf['deployer'])
         self.deployer = FactoryAgent().get_agent(conf['deployer'])
 
         #self.deployer = util.get_deployer(self.token, url_type='public', tenant_name=self.tenant_name)
@@ -146,13 +147,20 @@ class SoExecution(object):
         logger.info("retrieving state of the running stack with id %s" % self.stack_id)
         if self.stack_id is not None:
             topology = TopologyOrchestrator.get(self.stack_id)
-            tmp = self.deployer.details(topology)
+            stk = self.deployer.details(topology.ext_id)
+            res = {'state': stk['stack_status'],
+               'name': stk['stack_name'],
+               'id': stk['id']}
+            if 'outputs' in stk:
+                res['output'] = stk['outputs']
             output = ''
             try:
-                output = tmp['output']
+                output = res['output']
             except KeyError:
                 pass
-            return tmp['state'], self.stack_id, output
+
+            logger.debug(" state %s, output %s"%(res['state'],output))
+            return res['state'], str(self.stack_id), output
         else:
             return 'Unknown', 'N/A', ''
 

@@ -12,12 +12,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-
-from emm_exceptions import NotFoundException
+from emm_exceptions.NotFoundException import NotFoundException
 from model.Entities import Service
 from services.DatabaseManager import DatabaseManager
-from services.Checker import check
+from util.FactoryAgent import FactoryAgent
+from util.SysUtil import SysUtil as sys_util
+
 
 __author__ = 'lto'
 
@@ -29,12 +29,17 @@ class ServiceOrchestrator:
 
     @classmethod
     def create(cls, service_args):
-        new_service = Service(**service_args)
-        new_service.type = Service.__name__
-        check(service=new_service)
-        db = DatabaseManager()
-        db.persist(new_service)
-        return new_service
+        try:
+            conf = sys_util().get_sys_conf()
+            service_manager = FactoryAgent().get_agent(conf['service_manager'])
+            service = service_manager.create(service_args)
+            checker = FactoryAgent().get_agent(conf['checker'])
+            checker.check(service=service)
+            db = DatabaseManager()
+            db.persist(service)
+        except Exception, msg:
+            raise
+        return service
 
     @classmethod
     def delete(cls, id):
@@ -59,7 +64,9 @@ class ServiceOrchestrator:
         updated_service.image = service_args.get('image') or updated_service.image
         updated_service.service_type = service_args.get('service_type') or updated_service.service_type
         updated_service.size = service_args.get('size') or updated_service.size
-        check(service=updated_service)
+        conf = sys_util().get_sys_conf()
+        checker = FactoryAgent().get_agent(conf['checker'])
+        checker.check(service=updated_service)
         db.update(updated_service)
         return updated_service
 

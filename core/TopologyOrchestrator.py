@@ -16,8 +16,9 @@
 from emm_exceptions import NotFoundException
 from model.Entities import Topology
 from services.DatabaseManager import DatabaseManager
-from services.TopologyManager import TopologyManager
-from services.Checker import check
+from util.FactoryAgent import FactoryAgent
+from util.SysUtil import SysUtil as sys_util
+
 __author__ = 'lto'
 
 
@@ -29,9 +30,6 @@ class TopologyOrchestrator:
     @classmethod
     def delete(cls, topology):
         db = DatabaseManager()
-        for service_instance in topology.service_instances:
-                service_instance.networks = []
-        db.update(topology)
         db.remove(topology)
         return topology
 
@@ -52,10 +50,15 @@ class TopologyOrchestrator:
     @classmethod
     def create(cls, topology_args):
         try:
-            topology = TopologyManager().create(topology_args)
-            #check(topology=topology)
+            conf = sys_util().get_sys_conf()
+            topology_manager = FactoryAgent().get_agent(conf['topology_manager'])
+            topology = topology_manager.create(topology_args)
+            checker = FactoryAgent().get_agent(conf['checker'])
+            checker.check(topology=topology)
             db = DatabaseManager()
             db.persist(topology)
+            #db.update(topology)
         except Exception, msg:
             raise
         return topology
+

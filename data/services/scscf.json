@@ -2,8 +2,8 @@
     "service_type": "scscf",
     "image": "ubuntu-server-14.04",
     "flavor": "m1.small",
-    "config": {
-        "hostname": "scscf"
+    "key":"mcn-tub",
+    "configuration": {
     },
     "size": {
         "max": 1,

@@ -54,3 +54,6 @@ class Client(object):
                 {'sample_%s' % i: {'timestamp': sample._info['timestamp'], 'value': sample._info['counter_volume']}})
             i += 1
         return values
+
+    def get_meters(self):
+        return self.cmclient.meters.list()

@@ -1,18 +1,3 @@
-# Copyright 2014 Technische Universitaet Berlin
-# All Rights Reserved.
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
-
 import threading
 import time
 
@@ -29,10 +14,13 @@ import logging
 
 logger = logging.getLogger('EMMLogger')
 
-class DeployerDummy(ABCDeployer):
 
+class DeployerDummy(ABCDeployer):
     def __init__(self):
         # self.heatclient = HeatClient()
+        conf = SysUtil().get_sys_conf()
+        self.reg = FactoryAgent().get_agent(file_name=conf['register_agent_file'],
+                                            class_name=conf['register_agent_class'])
         pass
 
     def deploy(self, topology):
@@ -62,8 +50,9 @@ class DeployerDummy(ABCDeployer):
         # logger.debug("resources: %s" % self.heatclient.list_resources(stack_id))
         # logger.debug("resource ids: %s" % self.heatclient.list_resource_ids(stack_id))
 
-        self.th = CheckerThread(topology, None,stack_id)
+        self.th = CheckerThread(topology, None, stack_id)
         self.th.start()
+        self.reg.start()
 
         return stack_id
 
@@ -78,12 +67,12 @@ class DeployerDummy(ABCDeployer):
             db.remove(topology)
         except:
             pass
-        # stack_details = self.heatclient.delete(stack_id)
-        # logger.debug("stack details after delete: %s" % stack_details)
-        # return stack_details
+            # stack_details = self.heatclient.delete(stack_id)
+            # logger.debug("stack details after delete: %s" % stack_details)
+            # return stack_details
 
 
-class CheckerThread (threading.Thread):
+class CheckerThread(threading.Thread):
     def __init__(self, topology, heat_client, stack_id):
         super(CheckerThread, self).__init__()
         self._stop = threading.Event()

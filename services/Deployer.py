@@ -81,7 +81,7 @@ class Deployer(ABCDeployer):
         return stack_details
 
 
-    def details(self, topology):
-        stack_details = self.heatclient.show(topology.ext_id)
+    def details(self, topology_id):
+        stack_details = self.heatclient.show(topology_id)
         logger.debug("Stack actually running %s" % stack_details)
         return stack_details

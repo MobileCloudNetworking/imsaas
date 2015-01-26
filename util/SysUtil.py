@@ -46,7 +46,7 @@ class SysUtil:
         )
 
     def _read_properties(self, props={}):
-        with open('%s/etc/emm.properties' % PATH, 'r') as f:
+        with open('%s/etc/imsso.properties' % PATH, 'r') as f:
             for line in f:
                 line = line.rstrip()
 

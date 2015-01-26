@@ -2,8 +2,8 @@
     "service_type": "hss",
     "image": "ubuntu-server-14.04",
     "flavor": "m1.small",
-    "config": {
-        "hostname": "hss"
+    "key":"mcn-tub",
+    "configuration": {
     },
     "size": {
         "max": 1,
