@@ -18,7 +18,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.scoping import scoped_session
+from sqlalchemy.orm.scoping import ScopedSession as scoped_session
 from sqlalchemy.pool import StaticPool
 
 from emm_exceptions.NotFoundException import NotFoundException

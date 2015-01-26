@@ -18,7 +18,8 @@ lib64/
 parts/
 sdist/
 var/
-etc/emm.properties
+etc/imsso.properties
+
 *.egg-info/
 .installed.cfg
 *.egg
