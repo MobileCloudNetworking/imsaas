@@ -30,7 +30,7 @@ from util.SysUtil import SysUtil
 
 __author__ = 'mpa'
 
-logger = logging.getLogger("IMSSO")
+logger = logging.getLogger(__name__)
 
 import threading
 

@@ -17,7 +17,7 @@ from clients.nova import Client as NovaClient
 
 __author__ = 'mpa'
 
-logger = logging.getLogger("EMMLogger")
+logger = logging.getLogger(__name__)
 
 HEAT_TO_EMM_STATE = {'CREATE_IN_PROGRESS': 'DEPLOYING',
                      'CREATE_COMPLETE': 'DEPLOYED',

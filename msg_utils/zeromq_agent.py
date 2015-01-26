@@ -20,7 +20,7 @@ from msg_utils.MessagingEntities import Action, MessageObject
 
 __author__ = 'lto'
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 from abc import ABCMeta, abstractmethod

@@ -47,6 +47,9 @@ class MyBackend(occi_ext.Backend):
     def create(self, entity, extras):
         token = extras['token']
         tenant = extras['tenant_name']
+        logging.basicConfig(format='%(asctime)s_%(process)d:%(pathname)s:%(lineno)d [%(levelname)s] %(message)s',level=logging.DEBUG)
+        SysUtil().init_sys()
+        InitSO()
         self.so = ServiceOrchestrator(token, tenant)
         self.so.so_e.design()
         entity.actions = [occi_ext.DEPLOY_ACTION]
@@ -89,10 +92,6 @@ application = occi_ext.Application(MyBackend())
 #
 if __name__ == '__main__':
     from wsgiref.simple_server import make_server
-    logging.basicConfig(format='%(asctime)s_%(process)d:%(pathname)s:%(lineno)d [%(levelname)s] %(message)s',level=logging.DEBUG)
-    logger = logging.getLogger("EMMLogger")
-    SysUtil().init_sys()
-    InitSO()
     httpd = make_server('localhost', 8051, application)
     # Wait for a single request, serve it and quit.
     httpd.serve_forever()

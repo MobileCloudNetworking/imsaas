@@ -14,7 +14,7 @@ from emm_exceptions.NotDefinedException import NotDefinedException
 from emm_exceptions.NotUniqueException import NotUniqueException
 
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 # alarms
 METERS = ["cpu_util"]

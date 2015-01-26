@@ -5,7 +5,7 @@ import random
 
 __author__ = 'mpa'
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 class MonitoringAgentDummy(ABCMonitoringAgent):
 

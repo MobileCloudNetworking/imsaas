@@ -25,7 +25,7 @@ from clients.heat import Client as HeatClient
 
 __author__ = 'mpa'
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 class Deployer(ABCDeployer):

@@ -8,7 +8,7 @@ from model.Entities import Key, Flavor, Image, Quotas
 
 __author__ = 'lto'
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 class Client:

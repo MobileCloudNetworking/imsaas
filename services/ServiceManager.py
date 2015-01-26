@@ -24,7 +24,7 @@ from model.Entities import Topology, Requirement, SecurityGroup, Service, Comman
 
 __author__ = 'mpa'
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 class ServiceManager(ABCServiceManager):

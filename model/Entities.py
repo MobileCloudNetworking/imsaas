@@ -33,7 +33,7 @@ __author__ = 'giuseppe'
 state = ('ERROR', 'DEFINED', 'DEPLOYING', 'DEPLOYED', 'INITIALISING', 'INITIALISED', 'DELETING', 'DELETED', 'UPDATING',
          'UPDATED', 'STATE_NOT_IMPLEMENTED', 'STARTED')
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 class State:

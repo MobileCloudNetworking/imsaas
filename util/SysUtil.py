@@ -32,7 +32,7 @@ global sys_config
 sys_config = Configuration()
 
 
-logger = logging.getLogger("EMMLogger")
+logger = logging.getLogger(__name__)
 
 class SysUtil:
 

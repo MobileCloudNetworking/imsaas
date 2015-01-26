@@ -8,7 +8,7 @@ import yaml
 
 __author__ = 'mpa'
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 def get_template(topology):

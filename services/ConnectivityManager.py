@@ -19,7 +19,7 @@ from interfaces.ConnectivityManager import ConnectivityManager as ABCConnectivit
 
 __author__ = 'beb'
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 class ConnectivityManager(ABCConnectivityManager):

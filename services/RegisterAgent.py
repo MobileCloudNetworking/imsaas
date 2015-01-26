@@ -10,7 +10,7 @@ from msg_utils.zeromq_agent import Subscriber
 __author__ = 'lto'
 
 
-logger = logging.getLogger("EMMLogger")
+logger = logging.getLogger(__name__)
 
 
 def check_units_ws(units):

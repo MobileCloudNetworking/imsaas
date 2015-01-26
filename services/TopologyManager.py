@@ -26,7 +26,7 @@ from copy import deepcopy as copy
 
 __author__ = 'mpa'
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 class TopologyManager(ABCTopologyManager):

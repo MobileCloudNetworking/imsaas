@@ -12,7 +12,7 @@ __author__ = 'mpa'
 
 import logging
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 class DeployerDummy(ABCDeployer):

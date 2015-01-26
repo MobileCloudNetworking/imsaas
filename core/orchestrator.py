@@ -34,7 +34,7 @@ from clients.heat import Client as HeatClient
 
 SO_DIR = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
-logger = logging.getLogger("IMSSO")
+logger = logging.getLogger(__name__)
 
 
 class SoExecution(object):

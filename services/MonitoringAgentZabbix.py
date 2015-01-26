@@ -20,7 +20,7 @@ from clients.ceilometer import Client as CeilometerClient
 
 __author__ = 'mpa'
 
-logger = logging.getLogger('EMMLogger')
+logger = logging.getLogger(__name__)
 
 
 class MonitoringAgent(ABCMonitoringAgent):
