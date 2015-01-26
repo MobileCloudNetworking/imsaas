@@ -4,8 +4,9 @@
         {
             "name":"cscfs",
             "service_type":"cscfs",
-            "config": {
-                "key_name":"mcn-key"
+            "configuration": {
+                "hostname":"cscfs",
+                "key":"mcn-key"
             },
             "networks": [
                 {
@@ -43,8 +44,9 @@
                 "max":5,
                 "def":1
             },
-            "config": {
-                "key_name":"mcn-key"
+            "configuration": {
+                "hostname":"hss",
+                "key":"mcn-key"
             },
             "networks": [
                 {

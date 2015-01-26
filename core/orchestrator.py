@@ -54,6 +54,7 @@ class SoExecution(object):
         logger.debug("sending request to the url %s" % os.environ['DESIGN_URI'])
 
         conf = sys_util().get_sys_conf()
+        logger.debug("instantiating deployer %s" %conf['deployer'])
         self.deployer = FactoryAgent().get_agent(conf['deployer'])
 
         #self.deployer = util.get_deployer(self.token, url_type='public', tenant_name=self.tenant_name)

@@ -1,23 +1,8 @@
-# Copyright 2014 Technische Universitaet Berlin
-# All Rights Reserved.
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
-
-
 import logging
 from services.DatabaseManager import DatabaseManager
 from model.Entities import ServiceInstance, Network
 from util import SysUtil
+from util.SysUtil import to_json
 import yaml
 
 
@@ -49,6 +34,7 @@ def get_template(topology):
                     port_args['name'] = '%s-port-%s' % (unit.hostname, i)
                     port_args['private_net_id'] = network.private_net
                     port_args['private_subnet_id'] = network.private_subnet
+                    port_args['fixed_ip'] = network.fixed_ip
                     if network.security_groups:
                         port_args['security_groups'] = network.security_groups
                     new_port = Port(**port_args)
@@ -83,9 +69,9 @@ def get_template(topology):
             server_args = {}
             server_args['name'] = "%s" % unit.hostname
             server_args['hostname'] = "%s" % unit.hostname
-            server_args['flavor'] = service_instance.flavor
-            server_args['image'] = service_instance.image
-            server_args['key_name'] = service_instance.config.get('key_name')
+            server_args['flavor'] = service_instance.flavor.name
+            server_args['image'] = service_instance.image.name
+            server_args['key_name'] = service_instance.key.name
             server_args['network_ports'] = ports
             server_args['user_data'] = service_instance.user_data
             server_args['requirements'] = service_instance.requirements
@@ -101,10 +87,44 @@ def get_template(topology):
                     resources.update(floating_ip.dump_to_dict())
 
     template['resources'] = resources
+
+    ###Output section###
+    db = DatabaseManager()
+    for service_instance in topology.service_instances:
+        for network_instance in service_instance.networks:
+            if network_instance.public_net:
+                _public_network_names = [_network.name for _network in db.get_all(Network) if
+                                         _network.ext_id == network_instance.public_net]
+                _public_network_name = None
+                if _public_network_names:
+                    _public_network_name = _public_network_names[0]
+                else:
+                    logger.debug('ERROR: Cannot find network with id %s in Table Network' % network_instance.public_net)
+            if network_instance.private_net:
+                _private_network_names = [_network.name for _network in db.get_all(Network) if
+                                          _network.ext_id == network_instance.private_net]
+                _private_network_name = None
+                if _private_network_names:
+                    _private_network_name = _private_network_names[0]
+                else:
+                    logger.debug('ERROR: Cannot find network with id %s in Table Network' % network_instance.net)
+            for unit in service_instance.units:
+                if network_instance.public_net and _public_network_name:
+                    output = {}
+                    output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 1]}
+                    output['description'] = 'Public IP of %s.' % unit.hostname
+                    outputs['%s_public_ip' % unit.hostname] = output
+                elif network_instance.private_net and _private_network_name:
+                    output = {}
+                    output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 0]}
+                    output['description'] = 'Private IP of %s.' % unit.hostname
+                    outputs['%s_private_ip' % unit.hostname] = output
+    template['outputs'] = outputs
+
     yaml.add_representer(unicode, lambda dumper, value: dumper.represent_scalar(u'tag:yaml.org,2002:str', value))
     yaml.add_representer(SysUtil.literal_unicode, SysUtil.literal_unicode_representer)
     logger.debug((template))
-    logger.debug(yaml.dump(template))
+    #logger.debug(yaml.dumps(template))
     #f = open('/net/u/mpa/tempalte_file.yaml', 'w')
     #f.write(yaml.dump(template, indent=2))
     return yaml.dump(template)
@@ -216,11 +236,12 @@ class Server(object):
 
 
 class Port(object):
-    def __init__(self, name, private_net_id, private_subnet_id, security_groups = []):
+    def __init__(self, name, private_net_id, private_subnet_id, fixed_ip=None, security_groups = []):
         self.name = name
         self.type = 'OS::Neutron::Port'
         self.private_net_id = private_net_id
         self.private_subnet_id = private_subnet_id
+        self.fixed_ip = fixed_ip
         self.security_groups = security_groups
 
     def dump_to_dict(self):
@@ -230,8 +251,13 @@ class Port(object):
 
         properties = {}
         properties['network_id'] = self.private_net_id
-        if self.private_subnet_id:
-            properties['fixed_ips'] = [{'subnet_id': self.private_subnet_id}]
+        
+        if self.private_subnet_id or self.fixed_ip:
+            properties['fixed_ips'] = []
+        if self.fixed_ip:
+            properties['fixed_ips'].append({'ip_address' : self.fixed_ip})
+        elif self.private_subnet_id:
+            properties['fixed_ips'].append({'subnet_id' : self.private_subnet_id})
         if self.security_groups:
             properties['security_groups'] = []
             for security_group in self.security_groups:

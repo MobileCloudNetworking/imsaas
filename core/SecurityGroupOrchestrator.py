@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 from emm_exceptions import NotFoundException
 from services.DatabaseManager import DatabaseManager
 from model.Entities import Rule, SecurityGroup
-from services.Checker import check
+from util.FactoryAgent import FactoryAgent
+from util.SysUtil import SysUtil as sys_util
 
 __author__ = 'lto'
 
@@ -34,7 +34,9 @@ class SecurityGroupOrchestrator:
             _new_sec_rule = Rule(**_sec_rule_args)
             _new_sec_rules.append(_new_sec_rule)
         new_secgroup = SecurityGroup(name=secgroup_args.get('name'), rules=_new_sec_rules)
-        check(security_group=new_secgroup)
+        conf = sys_util().get_sys_conf()
+        checker = FactoryAgent().get_agent(conf['checker'])
+        checker.check(security_group=new_secgroup)
         db = DatabaseManager()
         db.persist(new_secgroup)
         return new_secgroup

@@ -1,0 +1,8 @@
+python-heatclient
+six
+python-novaclient
+python-ceilometerclient
+python-neutronclient
+bottle
+sqlalchemy
+pyzmq
