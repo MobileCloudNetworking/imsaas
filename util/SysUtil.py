@@ -60,7 +60,6 @@ class SysUtil:
 
     def init_sys(self):
         logger.info("Starting the System")
-        logger.debug('Creating and removing the tables')
         logger.debug('Retrieving the System Configurations')
         sys_config.props = {}
         sys_config.name = 'SystemConfiguration'
@@ -79,7 +78,6 @@ class SysUtil:
         for net in get_networks():
             db.persist(net)
 
-
         for key in get_keys():
             db.persist(key)
 
@@ -93,10 +91,6 @@ class SysUtil:
         #     db.persist(port)
 
         self.print_logo()
-
-
-
-
 
     def get_sys_conf(self):
         props = {}

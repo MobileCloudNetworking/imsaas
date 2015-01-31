@@ -17,7 +17,7 @@ from emm_exceptions.NotUniqueException import NotUniqueException
 logger = logging.getLogger(__name__)
 
 # alarms
-METERS = ["cpu_util"]
+METERS = ["system.cpu.util[,idle]"]
 STATISTICS = ["avg"]
 COMPARISON_OPERATORS = ["gt", "lt", "<", ">"]
 # actions

@@ -95,6 +95,8 @@
             "requirements": [
             ],
             "user_data": [
+                      "#!/bin/bash -v",
+                      "HOST_NAME=$(cat /etc/hostname)"
             ]
         }
     ]

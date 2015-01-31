@@ -5,7 +5,7 @@
             "name":"cscfs",
             "service_type":"cscfs",
             "flavor":"m1.small",
-            "image": "ubuntu-server-14.04",
+            "image": "ubuntu-software-config",
             "key":"mcn-tub",
             "configuration": {
             },
@@ -14,15 +14,51 @@
                     "name":"mgmt",
                     "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
                     "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
-                    "fixed_ip":"172.22.2.184",
+                    "fixed_ip":"192.168.9.88",
                     "security_groups": [
                         "security-group-ims"
                     ]
                 }
             ],
+            "policies": [
+                {
+                    "name": "msg_scaleup",
+                    "period": 60,
+                    "alarm": {
+                        "meter_name": "system.cpu.util[,idle]",
+                        "comparison_operator": "lt",
+                        "threshold": 50,
+                        "statistic": "avg",
+                        "evaluation_periods": 1
+                    },
+                    "action": {
+                        "adjustment_type": "ChangeInCapacity",
+                        "scaling_adjustment": 1,
+                        "cooldown": 60
+                    }
+                },
+                {
+                    "name": "msg_scaledown",
+                    "period": 60,
+                    "alarm": {
+                        "meter_name": "system.cpu.util[,idle]",
+                        "comparison_operator": "gt",
+                        "threshold": 10,
+                        "statistic": "avg",
+                        "evaluation_periods": 1
+                    },
+                    "action": {
+                            "adjustment_type": "ChangeInCapacity",
+                            "scaling_adjustment": -1,
+                            "cooldown": 60
+                    }
+                }
+            ],
             "requirements": [
             ],
             "user_data": [
+                      "#!/bin/bash -v",
+                      "HOST_NAME=$(cat /etc/hostname)"
             ]
         }
     ]

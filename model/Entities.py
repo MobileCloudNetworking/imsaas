@@ -532,7 +532,7 @@ class Flavor(Base):
 class Image(Base):
     __tablename__ = "Image"
     id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
+    name = Column(String(50))
     ext_id = Column(String(50))
     status = Column(String(50))
     created = Column(String(50))

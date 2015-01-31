@@ -36,12 +36,13 @@ class Deployer(ABCDeployer):
         self.runtime_agent = FactoryAgent().get_agent(conf['runtime_agent'])
         #self.register_agent = FactoryAgent().get_agent(file_name=conf['register_agent_file'],
         #                                              class_name=conf['register_agent_class'])
+        self.template_manager = FactoryAgent().get_agent(conf['template_manager'])
         self.db = DatabaseManager()
 
     def deploy(self, topology):
         logger.debug("Start Deploying topology %s" % topology.name)
         _name = topology.ext_name
-        _template = TemplateManager.get_template(topology)
+        _template = self.template_manager.get_template(topology)
         logger.debug("Stack name: %s" % _name)
         logger.debug("Template: %s" % _template)
         try:

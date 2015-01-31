@@ -58,8 +58,8 @@ class RuntimeAgent(ABCRuntimeAgent):
         def __init__(self):
             logger.debug("Starting RuntimeAgent.")
             # Get monitor name and service
-            conf = SysUtil().get_sys_conf()
-            monitor_name = conf.get('monitoring')
+            self.conf = SysUtil().get_sys_conf()
+            monitor_name = self.conf.get('monitoring')
             self.monitoring_service = FactoryAgent.get_agent(monitor_name)
             self.policy_threads = {}
             self.heat_client = HeatClient()
@@ -221,7 +221,7 @@ class PolicyThread(threading.Thread):
         alarm = self.policy.alarm
         logger.debug("request item value: %s" % unit.hostname)
         print "Monitoring service: %s" % monitoring_service
-        item_value = monitoring_service.get_item(res_id=unit.ext_id, item_name=alarm.meter_name,
+        item_value = monitoring_service.get_item(res_id=unit.hostname, item_name=alarm.meter_name,
                                                  kwargs={'period': alarm.evaluation_periods})
         # item_value = 50
         logger.debug("received item value: %s" % item_value)
@@ -401,7 +401,7 @@ class CheckerThread(threading.Thread):
                         self.set_ips(unit)
 
 
-            time.sleep(10)
+            time.sleep(30)
 
     def set_ips(self, unit):
         # Retrieving ports and ips information
