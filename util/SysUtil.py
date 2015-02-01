@@ -1,52 +1,41 @@
-# Copyright 2014 Technische Universitaet Berlin
-# All Rights Reserved.
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
-
-
 import json
 import logging
 import os
+from sqlalchemy.exc import IntegrityError
+
 from clients.neutron import Client as NeutronClient
 from clients.nova import Client as NovaClient
-
-from model.Entities import Configuration, new_alchemy_encoder
-
+from model.Entities import Configuration, new_alchemy_encoder, Network, Key, Image, Flavor, Quotas
 import FactoryAgent as FactoryAgent
 
+
 PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
+
 
 __author__ = 'lto'
 
 global sys_config
 sys_config = Configuration()
 
-
 logger = logging.getLogger(__name__)
 
-class SysUtil:
 
+class SysUtil:
     def print_logo(self):
-        logger.info('Welcome: \n' +
-                         ' _______  __                __    __        _______            __  __         _______\n'
-                         '|    ___||  |.---.-..-----.|  |_ |__|.----.|   |   |.-----..--|  ||__|.---.-.|   |   |.---.-..-----..---.-..-----..-----..----.\n'
-                         '|    ___||  ||  _  ||__ --||   _||  ||  __||       ||  -__||  _  ||  ||  _  ||       ||  _  ||     ||  _  ||  _  ||  -__||   _|\n'
-                         '|_______||__||___._||_____||____||__||____||__|_|__||_____||_____||__||___._||__|_|__||___._||__|__||___._||___  ||_____||__|\n'
-                         '                                                                                                           |_____|             \n'
+        logger.info('\n' +
+                    '$$$$$$\ $$\      $$\  $$$$$$\   $$$$$$\   $$$$$$\ \n'
+                    '\_$$  _|$$$\    $$$ |$$  __$$\ $$  __$$\ $$  __$$\n'
+                    '  $$ |  $$$$\  $$$$ |$$ /  \__|$$ /  \__|$$ /  $$\n'
+                    '  $$ |  $$\$$\$$ $$ |\$$$$$$\  \$$$$$$\  $$ |  $$ |\n'
+                    '  $$ |  $$ \$$$  $$ | \____$$\  \____$$\ $$ |  $$ |\n'
+                    '  $$ |  $$ |\$  /$$ |$$\   $$ |$$\   $$ |$$ |  $$ |\n'
+                    '$$$$$$\ $$ | \_/ $$ |\$$$$$$  |\$$$$$$  | $$$$$$  |\n'
+                    '\______|\__|     \__| \______/  \______/  \______/ \n'
         )
 
     def _read_properties(self, props={}):
         with open('%s/etc/imsso.properties' % PATH, 'r') as f:
+            logger.debug("Using %s/emm.properties file" % PATH)
             for line in f:
                 line = line.rstrip()
 
@@ -60,12 +49,13 @@ class SysUtil:
 
     def init_sys(self):
         logger.info("Starting the System")
+        logger.debug('Creating and removing the tables')
+        logger.debug('getting the DbManager')
         logger.debug('Retrieving the System Configurations')
         sys_config.props = {}
         sys_config.name = 'SystemConfiguration'
         self._read_properties(sys_config.props)
-        logger.debug('getting the DbManager')
-        db = FactoryAgent.FactoryAgent().get_agent(file_name=sys_config.props['database_manager'])
+        db = FactoryAgent.FactoryAgent().get_agent(agent=sys_config.props['database_manager'])
         if sys_config.props['create_tables'] == 'True':
             db.create_tables()
         old_cfg = db.get_by_name(Configuration, sys_config.name)
@@ -75,20 +65,120 @@ class SysUtil:
         else:
             db.persist(sys_config)
 
-        for net in get_networks():
-            db.persist(net)
+        try:
+            #Persist and update networks on database
+            nets = get_networks()
+            #remove old networks
+            available_network_names = [net.name for net in nets]
+            persisted_nets = db.get_all(Network)
+            for persisted_net in persisted_nets:
+                if persisted_net.name not in available_network_names:
+                    db.remove(persisted_net)
+            #update existing networks
+            for net in nets:
+                nets = db.get_by_name(Network, net.name)
+                if len(nets) >= 1:
+                    existing_net = nets[0]
+                    net.id = existing_net.id
+                    for subnet in net.subnets:
+                        for existing_subnet in existing_net.subnets:
+                            if subnet.name == existing_subnet.name:
+                                subnet.id = existing_subnet.id
+                                existing_subnet = subnet
+                                db.update(existing_subnet)
+                    existing_net = net
+                    db.update(existing_net)
+                else:
+                    try:
+                        db.persist(net)
+                    except IntegrityError, exc:
+                        logger.warning('Network \"%s\" is already persisted on the Database.' % net.name)
+            #Persist and update keys on database
+            keys = get_keys()
+            #remove old keys
+            available_key_names = [key.name for key in keys]
+            persisted_keys = db.get_all(Key)
+            for persisted_key in persisted_keys:
+                if persisted_key.name not in available_key_names:
+                    db.remove(persisted_key)
+            #update existing keys
+            for key in keys:
+                keys = db.get_by_name(Key, key.name)
+                if len(keys) >= 1:
+                    existing_key = keys[0]
+                    key.id = existing_key.id
+                    existing_key = key
+                    db.update(existing_key)
+                else:
+                    try:
+                        db.persist(key)
+                    except IntegrityError, exc:
+                        logger.warning('Key \"%s\" is already persisted on the Database.' % key.name)
 
-        for key in get_keys():
-            db.persist(key)
+            #Persist and update flavors on database
+            flavors = get_flavors()
+            #remove old flavors
+            available_flavor_names = [flavor.name for flavor in flavors]
+            persisted_flavors = db.get_all(Flavor)
+            for persisted_flavor in persisted_flavors:
+                if persisted_flavor.name not in available_flavor_names:
+                    db.remove(persisted_flavor)
+            #update existing flavors
+            for flavor in flavors:
+                flavors = db.get_by_name(Flavor, flavor.name)
+                if len(flavors) >= 1:
+                    existing_flavor = flavors[0]
+                    flavor.id = existing_flavor.id
+                    existing_flavor = flavor
+                    db.update(existing_flavor)
+                else:
+                    try:
+                        db.persist(flavor)
+                    except IntegrityError, exc:
+                        logger.warning('Flavor \"%s\" is already persisted on the Database. Trigger update.' % flavor.name)
 
-        for flavor in get_flavors():
-            db.persist(flavor)
+            images = get_images()
+            #remove old images
+            available_image_names = [image.name for image in images]
+            persisted_images = db.get_all(Image)
+            for persisted_image in persisted_images:
+                if persisted_image.name not in available_image_names:
+                    db.remove(persisted_image)
+            #update existing images
+            for image in images:
+                images = db.get_by_name(Image, image.name)
+                if len(images) >= 1:
+                    existing_image = images[0]
+                    image.id = existing_image.id
+                    existing_image = image
+                    db.update(existing_image)
+                else:
+                    try:
+                        db.persist(image)
+                    except IntegrityError, exc:
+                        logger.warning('Image \"%s\" is already persisted on the Database. Trigger update.' % image.name)
 
-        for image in get_images():
-            db.persist(image)
+            all_quotas = db.get_all(Quotas)
+            all_quotas_tenants = [quotas.tenant_id for quotas in all_quotas]
+            new_quotas = get_quotas()
+            #update existing quotas
+            for quotas in all_quotas:
+                if new_quotas.tenant_id in all_quotas_tenants:
+                    new_quotas.id = quotas.id
+                    quotas = new_quotas
+                    db.update(quotas)
+                else:
+                    try:
+                        db.persist(new_quotas)
+                    except IntegrityError, exc:
+                        logger.warning('Network \"%s\" are already persisted on the Database. Trigger update.' % get_quotas())
+                        db.update(get_quotas())
+        except Exception, exc:
+            logger.exception(exc.message)
+            raise
 
         # for port in get_ports():
-        #     db.persist(port)
+        # db.persist(port)
 
         self.print_logo()
 
@@ -96,6 +186,36 @@ class SysUtil:
         props = {}
         self._read_properties(props)
         return props
+
+
+def get_networks():
+    nc = NeutronClient(get_endpoint('network'), get_token())
+    return nc.get_networks()
+
+
+def get_ports():
+    nc = NeutronClient(get_endpoint('network'), get_token())
+    return nc.get_ports()
+
+
+def get_images():
+    novaClient = NovaClient(sys_config.props)
+    return novaClient.get_images()
+
+
+def get_keys():
+    novaClient = NovaClient(sys_config.props)
+    return novaClient.get_keys()
+
+
+def get_flavors():
+    novaClient = NovaClient(sys_config.props)
+    return novaClient.get_flavors()
+
+
+def get_quotas():
+    novaClient = NovaClient(sys_config.props)
+    return novaClient.get_quotas()
 
 
 def get_credentials():
@@ -109,7 +229,7 @@ def get_credentials():
     # ##Fetch Credentials from Configuration
     logger.debug("Fetch Credentials from SysUtil")
     conf = SysUtil().get_sys_conf()
-    #conf = DatabaseManager().get_by_name(Configuration, "SystemConfiguration")[0]
+    # conf = DatabaseManager().get_by_name(Configuration, "SystemConfiguration")[0]
     #print "props: %s" % conf.props
     creds['tenant_name'] = conf.get('os_tenant', '')
     creds['username'] = conf.get('os_username', '')
@@ -123,7 +243,7 @@ def get_token():
     from clients import keystone
     # ##Init keystone client
     ksclient = keystone.Client()
-    ###Get token from keystone
+    # ##Get token from keystone
     token = ksclient.get_token()
     logger.debug("token: %s" % token)
     return token
@@ -137,27 +257,6 @@ def get_endpoint(service_type, endpoint_type=None):
     return endpoint
 
 
-def get_networks():
-    nc = NeutronClient(get_endpoint('network'), get_token())
-    return nc.get_networks()
-
-def get_ports():
-    nc = NeutronClient(get_endpoint('network'), get_token())
-    return nc.get_ports()
-
-
-def get_images():
-    novaClient = NovaClient(sys_config.props)
-    return novaClient.get_images()
-
-def get_keys():
-    novaClient = NovaClient(sys_config.props)
-    return novaClient.get_keys()
-
-def get_flavors():
-    novaClient = NovaClient(sys_config.props)
-    return novaClient.get_flavors()
-
 def translate(value, mapping, err_msg=None):
     try:
         return mapping[value]
@@ -166,6 +265,7 @@ def translate(value, mapping, err_msg=None):
             raise KeyError(err_msg % value)
         else:
             raise ke
+
 
 class literal_unicode(unicode): pass
 

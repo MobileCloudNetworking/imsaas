@@ -23,6 +23,8 @@ from services.DatabaseManager import DatabaseManager
 from model.Entities import Topology, Unit, Requirement, Alarm, Action, Policy, SecurityGroup, Service, ServiceInstance, Command, \
     Network, Network_Instance, NetworkInstance_SecurityGroup, Flavor, Image, Key
 from copy import deepcopy as copy
+from util.FactoryAgent import FactoryAgent
+from util.SysUtil import SysUtil as sys_util
 
 __author__ = 'mpa'
 
@@ -142,7 +144,6 @@ class TopologyManager(ABCTopologyManager):
                     for key in si_config.get(si_item).keys():
                         if key in service.configuration.keys():
                             si_args['configuration'][key] = si_config.get(si_item).get(key)
-                    print si_args['configuration']
                 elif si_item == "policies":
                     policies = []
                     _policies = si_config.get(si_item)
@@ -202,8 +203,85 @@ class TopologyManager(ABCTopologyManager):
         logger.debug(topology)
         return topology
 
-    def update(self):
-        pass
+    def update(self, new_topology, old_topology):
+        conf = sys_util().get_sys_conf()
+        db = FactoryAgent().get_agent(conf['database_manager'])
+        updated_topology = old_topology
+        updated_topology.name = new_topology.name
+        #check for additional service instances and add them to the list of new instances
+        appended_service_instances = []
+        for new_service_instance in new_topology.service_instances:
+            is_found = False
+            for updated_service_instance in updated_topology.service_instances:
+                if new_service_instance.name == updated_service_instance.name:
+                    is_found = True
+                    break
+            if not is_found:
+                appended_service_instances.append(new_service_instance)
+        #check for removed service instances and add it to the list of removed instances
+        removed_service_instances = []
+        for updated_service_instance in updated_topology.service_instances:
+            is_found = False
+            for new_service_instance in new_topology.service_instances:
+                if new_service_instance.name == updated_service_instance.name:
+                    is_found = True
+                    break
+            if not is_found:
+                removed_service_instances.append(updated_service_instance)
+        #remove removed service instances
+        for removed_service_instance in removed_service_instances:
+            updated_topology.service_instances.remove(removed_service_instance)
+            logger.debug('Removed ServiceInstance \"%s\" from Topology \"%s\".' % (removed_service_instance.name, updated_topology.name))
+        #append additional service instances
+        for appended_service_instance in appended_service_instances:
+            appended_service_instance.topology_id = updated_topology.id
+            updated_topology.service_instances.append(appended_service_instance)
+            db.persist(appended_service_instance)
+            logger.debug('Appended ServiceInstance \"%s\" to Topology \"%s\".' % (appended_service_instance.name, updated_topology.name))
+        #Update all values for each service instance
+        for updated_service_instance in updated_topology.service_instances:
+            for new_service_instance in new_topology.service_instances:
+                if updated_service_instance.name == new_service_instance.name:
+                    updated_service_instance.size = new_service_instance.size
+                    updated_service_instance.configuration = new_service_instance.configuration
+                    updated_service_instance.policies = new_service_instance.policies
+                    #updated_service_instance.service_type = new_service_instance.service_type
+                    if new_service_instance.service_type and updated_service_instance.service_type != new_service_instance.service_type:
+                        logger.warning("Cannot update service_type for %s->%s. Not Implemented." % (updated_topology.name, updated_service_instance.name))
+                    #updated_service_instance.flavor = new_service_instance.flavor
+                    if new_service_instance.flavor and updated_service_instance.flavor.name != new_service_instance.flavor.name:
+                        logger.warning("Cannot update flavor for %s->%s. Not Implemented." % (updated_topology.name, updated_service_instance.name))
+                    #updated_service_instance.image = new_service_instance.image
+                    if new_service_instance.image and updated_service_instance.image.name != new_service_instance.image.name:
+                        logger.warning("Cannot update image for %s->%s. Not Implemented." % (updated_topology.name, updated_service_instance.name))
+                    #updated_service_instance.networks = new_service_instance.networks
+                    if new_service_instance.networks is not None:
+                        logger.warning("Cannot update networks for %s->%s. Not Implemented." % (updated_topology.name, updated_service_instance.name))
+                    #updated_service_instance.requirements = new_service_instance.requirements
+                    if new_service_instance.requirements is not None:
+                        logger.warning("Cannot update networks for %s->%s. Not Implemented." % (updated_topology.name, updated_service_instance.name))
+                    #updated_service_instance.user_data = new_service_instance.user_data
+                    if new_service_instance.user_data is not None:
+                        logger.warning("Cannot update user_data for %s->%s. Not Implemented." % (updated_topology.name, updated_service_instance.name))
+                    if new_service_instance.key and updated_service_instance.key.name != new_service_instance.key.name:
+                        logger.warning("Cannot update key for %s->%s without replacement." % (updated_topology.name, updated_service_instance.name))
+        #Add or remove units according to minimal or maximal size
+        for updated_service_instance in updated_topology.service_instances:
+            if updated_service_instance not in appended_service_instances:
+                if len(updated_service_instance.units) < updated_service_instance.size.get('min'):
+                    for i in range(updated_service_instance.size.get('min') - len(updated_service_instance.units)):
+                        _hostname = '%s-%s' % (
+                            updated_service_instance.name, str(len(updated_service_instance.units) + 1))
+                        _state = 'DEFINED'
+                        new_unit = Unit(hostname=_hostname, state=_state)
+                        new_unit.service_instance_id = updated_service_instance.id
+                        updated_service_instance.units.append(new_unit)
+                        db.persist(new_unit)
+                if len(updated_service_instance.units) > updated_service_instance.size.get('max'):
+                    for i in range(len(updated_service_instance.units) - updated_service_instance.size.get('max')):
+                        removed_unit = updated_service_instance.units.pop(len(updated_service_instance.units) - 1)
+                        db.remove(removed_unit)
+        return updated_topology
 
     def dynamic_create(self, dict):
         logger.debug(dict)

@@ -57,11 +57,11 @@ class Service(AbstractService, Base):
     __tablename__ = 'Service'
     id = Column(Integer, primary_key=True)
     service_type = Column(String(50), unique=True)
-    flavor = relationship('Flavor', cascade='merge', lazy='immediate')
+    flavor = relationship('Flavor', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
     flavor_id = Column(Integer, ForeignKey('Flavor.id'))
-    image = relationship('Image', cascade='merge', lazy='immediate')
+    image = relationship('Image', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
     image_id = Column(Integer, ForeignKey('Image.id'))
-    key = relationship('Key', cascade='merge', lazy='immediate')
+    key = relationship('Key', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
     key_id = Column(Integer, ForeignKey('Key.id'))
     user_data = relationship('Command', cascade="all, delete-orphan", lazy='immediate')
     requirements = relationship('Requirement', cascade="all, delete-orphan", lazy='immediate')
@@ -153,8 +153,8 @@ class Command(Base):
 
 
 NetworkInstance_SecurityGroup = Table('NetworkInstance_SecurityGroup', Base.metadata,
-                                      Column('Network_Instance_id', Integer, ForeignKey('Network_Instance.id', onupdate='CASCADE', ondelete='SET NULL')),
-                                      Column('SecurityGroup_id', Integer, ForeignKey('SecurityGroup.id', onupdate='CASCADE', ondelete='SET NULL'))
+                                      Column('Network_Instance_id', Integer, ForeignKey('Network_Instance.id', ondelete='SET NULL')),
+                                      Column('SecurityGroup_id', Integer, ForeignKey('SecurityGroup.id', ondelete='SET NULL'))
 )
 NetworkInstance_SecurityGroup.__name__ = 'NetworkInstance_SecurityGroup'
 
@@ -167,15 +167,15 @@ class ServiceInstance(AbstractService, Base):
     networks = relationship('Network_Instance', cascade="all, delete-orphan", lazy='immediate')
     policies = relationship('Policy', cascade="all, delete-orphan", lazy='immediate')
     requirements = relationship('Requirement', cascade="all, delete-orphan", lazy='immediate')
-    units = relationship('Unit', cascade="all, delete-orphan", lazy='immediate')
+    units = relationship('Unit', cascade="all, delete-orphan", lazy='select')
     user_data = relationship('Command', cascade="all, delete-orphan", lazy='immediate')
     configuration = Column(PickleType)
     flavor_id = Column(Integer, ForeignKey('Flavor.id'))
-    flavor = relationship('Flavor', cascade='merge', lazy='immediate')
+    flavor = relationship('Flavor', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
     image_id = Column(Integer, ForeignKey('Image.id'))
-    image = relationship('Image', cascade='merge', lazy='immediate')
+    image = relationship('Image', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
     key_id = Column(Integer, ForeignKey('Key.id'))
-    key = relationship('Key', cascade='merge', lazy='immediate')
+    key = relationship('Key', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
     name = Column(String(50))
     service_type = Column(String(50))
     size = Column(PickleType)
@@ -272,13 +272,15 @@ class Topology(Base):
     name = Column(String(50), unique=False)
     ext_id = Column(String(50))
     state = Column('State', Enum(*state))
-    service_instances = relationship('ServiceInstance', cascade="all, delete, delete-orphan", lazy='immediate')
+    detailed_state = Column(String(300))
+    service_instances = relationship('ServiceInstance', cascade='all, delete-orphan', lazy='select')
 
-    def __init__(self, name, state, service_instances=[], ext_id=None, ext_name=None):
+    def __init__(self, name, state, detailed_state=None, service_instances=[], ext_id=None, ext_name=None):
         self.id = None
         self.name = name
         self.ext_id = ext_id
         self.state = state
+        self.detailed_state = detailed_state
         self.service_instances = service_instances
         self.ext_name = ext_name
 
@@ -289,8 +291,9 @@ class Topology(Base):
         t += 'name:%s, ' % self.name
         t += 'ext_id:%s, ' % self.ext_id
         t += 'ext_name:%s, ' % self.ext_name
-        t += 'state %s, ' % self.state
-        t += 'service_instance_components['
+        t += 'state:%s, ' % self.state
+        t += 'detailed_state:%s, ' % self.detailed_state
+        t += 'service_instance_components:['
         if self.service_instances:
             t += '%s' % self.service_instances[0].__str__()
             for si in self.service_instances[1:]:
@@ -309,7 +312,7 @@ class Port(Base):
     name = Column(String(150))
     ext_id = Column(String(50))
     mac_address = Column(String(50))
-    unit_id = Column(Integer, ForeignKey('Unit.id'))
+    unit_id = Column(Integer, ForeignKey('Unit.id', onupdate='CASCADE'))
     ips = Column(PickleType)
 
     def __init__(self, name, ext_id=None, mac_address=None, ips={}):
@@ -342,30 +345,28 @@ class Unit(Base):
     ws = Column(String(100))
     ips = Column(PickleType)
     floating_ips = Column(PickleType)
-    ports = relationship('Port', cascade="all, delete, delete-orphan", lazy='immediate')
+    ports = relationship('Port', cascade='all, delete-orphan')
     state = Column('State', Enum(*state))
     service_instance_id = Column(Integer, ForeignKey('ServiceInstance.id'))
-    requirement_id = Column(Integer, ForeignKey('Requirement.id'))
 
-    def __init__(self, hostname, state, ext_id=None, ips={}, floating_ips={}, ports=[]):
+    def __init__(self, hostname, state, availability_zone=None, ext_id=None, ips={}, floating_ips={}, ports=[]):
         self.id = None
-        self.requirement_id = None
         self.hostname = hostname
         self.state = state
         self.ext_id = ext_id
         self.ips = ips
         self.ports = ports
         self.floating_ips = floating_ips
-        self.availability_zone = None
+        self.availability_zone = availability_zone
         self.ws = None
 
     def __str__(self):
         t = ""
         t += '<Unit>['
         t += 'id:%s, ' % self.id
+        t += 'service_instance_id:%s, ' % self.service_instance_id
         t += 'hostname:%s, ' % self.hostname
         t += 'state:%s, ' % self.state
-        t += 'requirement_id:%s, ' % self.requirement_id
         t += 'ext_id:%s, ' % self.ext_id
         t += 'ips:%s, ' % self.ips
         t += 'floating_ips:%s, ' % self.floating_ips
@@ -392,7 +393,7 @@ class SecurityGroup(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=True)
-    rules = relationship('Rule', cascade="all, delete, delete-orphan", lazy='immediate')
+    rules = relationship('Rule', cascade="all, delete-orphan", lazy='immediate')
 
     def __init__(self, name, rules=[]):
         self.id = None
@@ -490,7 +491,7 @@ class Network(Base):
 class Key(Base):
     __tablename__ = "Key"
     id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
+    name = Column(String(50))
 
     def __init__(self, name):
         self.id = None
@@ -508,7 +509,7 @@ class Key(Base):
 class Flavor(Base):
     __tablename__ = "Flavor"
     id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
+    name = Column(String(50))
     ram = Column(String(50))
     vcpus = Column(String(50))
 
@@ -633,7 +634,7 @@ class Network_Instance(Base):
     service_id = Column(Integer, ForeignKey('Service.id'))
     service_instance_id = Column(Integer, ForeignKey('ServiceInstance.id'))
     security_groups = relationship('SecurityGroup', cascade="merge, expunge", secondary=NetworkInstance_SecurityGroup,
-                                   lazy='immediate')
+                                   lazy='select')
 
     def __init__(self, name, private_net, private_subnet=None, public_net=None, fixed_ip=None, security_groups=[]):
         self.id = None
@@ -696,6 +697,7 @@ class Rule(Base):
         t += 'port_range_max:%s' % (self.port_range_max)
         t += ']'
         return t
+
 
 
 class Policy(Base):

@@ -69,7 +69,9 @@ class MyBackend(occi_ext.Backend):
 
     def update(self, old, new, extras):
         # TODO: attributes would need to be defined by a mixin.
+        logging.info("Received update request with attributes: %s"%new.attributes)
         old.attributes.update(new.attributes)
+        self.so.so_e.deploy(new.attributes)
 
     def delete(self, entity, extras):
         self.so.so_e.dispose()
@@ -77,7 +79,7 @@ class MyBackend(occi_ext.Backend):
     # Actions
 
     def deploy_me(self, entity, attributes, extras):
-        self.so.so_e.deploy(attributes)
+        #self.so.so_e.deploy(attributes)
         entity.actions = [occi_ext.PROVISION_ACTION]
 
     def provision_me(self, entity, attributes, extras):

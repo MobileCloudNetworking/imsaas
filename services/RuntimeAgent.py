@@ -1,18 +1,34 @@
+# Copyright 2014 Technische Universitaet Berlin
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+
 import logging
 import threading
 import time
-from novaclient.exceptions import NotFound
+from heatclient.exc import HTTPNotFound
 from services.DatabaseManager import DatabaseManager
-
+from core.TopologyOrchestrator import TopologyOrchestrator
 from model.Entities import Unit
 from interfaces.RuntimeAgent import RuntimeAgent as ABCRuntimeAgent
-from services import TemplateManager
 from util.FactoryAgent import FactoryAgent
 from util.SysUtil import SysUtil, translate
 import util.SysUtil as utilSys
 from clients.heat import Client as HeatClient
 from clients.neutron import Client as NeutronClient
 from clients.nova import Client as NovaClient
+
 
 
 __author__ = 'mpa'
@@ -58,8 +74,8 @@ class RuntimeAgent(ABCRuntimeAgent):
         def __init__(self):
             logger.debug("Starting RuntimeAgent.")
             # Get monitor name and service
-            self.conf = SysUtil().get_sys_conf()
-            monitor_name = self.conf.get('monitoring')
+            conf = SysUtil().get_sys_conf()
+            monitor_name = conf.get('monitoring')
             self.monitoring_service = FactoryAgent.get_agent(monitor_name)
             self.policy_threads = {}
             self.heat_client = HeatClient()
@@ -69,25 +85,31 @@ class RuntimeAgent(ABCRuntimeAgent):
             return repr(self)
 
         def start(self, topology):
-            self.checker_threads[topology.id] = CheckerThread(topology)
-            logger.debug("Starting CheckerThread")
-            self.checker_threads[topology.id].start()
+            #Start CheckerThread the first time or update topology after restart
+            if self.checker_threads.get(topology.id) is None:
+                self.checker_threads[topology.id] = CheckerThread(topology)
+                logger.debug("Starting CheckerThread")
+                self.checker_threads[topology.id].start()
+            else:
+                self.checker_threads[topology.id].topology = topology
+
+            #Start PolicyThreads if needed
             self.policy_threads[topology.id] = []
-            # try:
-            for service_instance in topology.service_instances:
-                lock = threading.Lock()
-                for policy in service_instance.policies:
-                    logger.debug('Creating new PolicyThread for %s' % policy)
-                    _policy_thread = PolicyThread(topology=topology, runtime_agent=self, policy=policy,
-                                                      service_instance=service_instance, lock=lock)
-                    logger.debug('Created new PolicyThread for %s' % policy)
-                    logger.debug("Starting PolicyThread for: %s" % service_instance.name)
-                    _policy_thread.start()
-                    logger.debug("Started PolicyThread for: %s" % service_instance.name)
-                    self.policy_threads[topology.id].append(_policy_thread)
-            # except Exception as e:
-            #     logger.warn("Error: unable to start thread that has to check policies. Message: " + e.message)
-            # logger.debug("All PolicyThreads %s" % self.policy_threads)
+            try:
+                for service_instance in topology.service_instances:
+                    lock = threading.Lock()
+                    for policy in service_instance.policies:
+                        logger.debug('Creating new PolicyThread for %s' % policy)
+                        _policy_thread = PolicyThread(topology=topology, runtime_agent=self, policy=policy,
+                                                          service_instance=service_instance, lock=lock)
+                        logger.debug('Created new PolicyThread for %s' % policy)
+                        logger.debug("Starting PolicyThread for: %s" % service_instance.name)
+                        _policy_thread.start()
+                        logger.debug("Started PolicyThread for: %s" % service_instance.name)
+                        self.policy_threads[topology.id].append(_policy_thread)
+            except Exception as e:
+                logger.warn("Error: unable to start thread that has to check policies. Message: " + e.message)
+            logger.debug("All PolicyThreads %s" % self.policy_threads)
 
         def stop(self, _id):
             logger.debug("Stopping all PolicyThreads %s" % self.policy_threads[_id])
@@ -96,7 +118,7 @@ class RuntimeAgent(ABCRuntimeAgent):
                 thread.stop()
             logger.debug("Stopped all PolicyThreads %s" % self.policy_threads[_id])
             logger.debug("Stopping CheckerThread: %s" % self.checker_threads[_id])
-            self.checker_threads[_id].stop()
+            #self.checker_threads[_id].stop()
             logger.debug("Stopped CheckerThread %s" % self.checker_threads[_id])
 
     instance = None
@@ -127,31 +149,35 @@ class PolicyThread(threading.Thread):
         self.lock = lock
 
         self.is_stopped = False
-
-        self.db = DatabaseManager()
+        conf = SysUtil().get_sys_conf()
+        self.template_manager = FactoryAgent().get_agent(conf['template_manager'])
+        self.db = FactoryAgent().get_agent(conf['database_manager'])
         self.heat_client = HeatClient()
 
     def run(self):
         logger.info("Initialise policy thread for policy %s" % self.policy.name)
         self.wait_until_final_state()
         logger.info("Starting policy thread for policy %s" % self.policy.name)
-        if self.topology.state == 'DEPLOYED' and not self.is_stopped:
+        if self.is_stopped:
+            logger.info("Cannot start policy threads. PolicyThreads are stopped.")
+        elif self.topology.state in ['DEPLOYED','UPDATED']:
             self.start_policy_checker_si()
             logger.info("Started policy thread for policy %s" % self.policy.name)
-        elif self.is_stopped:
-            logger.info("Cannot start policy threads. PolicyThreads are stopped.")
         else:
             logger.error(
                 "ERROR: Something went wrong. Seems to be an error. Topology state -> %s. Didn't start the PolicyThread" % self.topology.state)
 
 
-    def wait_until_final_state(self):
+    def wait_until_final_state(self, final_states=[]):
+        if len(final_states) == 0:
+            final_states = ['DEPLOYED','UPDATED','ERROR','DELETED']
         units_count = 0
         for service_instance in self.topology.service_instances:
             units_count += len(service_instance.units)
         i = 0
-        while not self.is_stopped and not self.topology.state == 'DEPLOYED' and not self.topology.state == 'ERROR' and not i > units_count * 100:
-            time.sleep(10)
+        while not self.is_stopped and not self.topology.state in final_states and not i > units_count * 100:
+            logger.debug('PolicyThread for %s -> Waiting 5 seconds' % self.policy.name)
+            time.sleep(5)
             i += 1
 
     def active_policy_unit(self):
@@ -206,7 +232,7 @@ class PolicyThread(threading.Thread):
                             logger.error(msg)
                             self.topology.state='ERROR'
                             self.topology.ext_id = None
-                        template = TemplateManager.get_template(self.topology)
+                        template = self.template_manager.get_template(self.topology)
                         # logger.debug("Send update to heat template with: \n%s" % template)
                         self.heat_client.update(stack_id=self.topology.ext_id, template=template)
                     logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
@@ -220,8 +246,7 @@ class PolicyThread(threading.Thread):
         logger.debug("checking for alarms")
         alarm = self.policy.alarm
         logger.debug("request item value: %s" % unit.hostname)
-        print "Monitoring service: %s" % monitoring_service
-        item_value = monitoring_service.get_item(res_id=unit.hostname, item_name=alarm.meter_name,
+        item_value = monitoring_service.get_item(res_id=unit.ext_id, item_name=alarm.meter_name,
                                                  kwargs={'period': alarm.evaluation_periods})
         # item_value = 50
         logger.debug("received item value: %s" % item_value)
@@ -257,7 +282,8 @@ class PolicyThread(threading.Thread):
                         'Check upscaling - Maximum number of unit exceeded for service instance: %s' % self.service_instance.name)
                     logger.debug("Release Policy lock by %s" % self.policy.name)
                     self.lock.release()
-                    break
+                    time.sleep(self.policy.period)
+                    continue
             if action.scaling_adjustment < 0:
                 if (len(self.service_instance.units) + action.scaling_adjustment) < self.service_instance.size.get(
                         'min'):
@@ -265,7 +291,8 @@ class PolicyThread(threading.Thread):
                         'Check downscaling - Minimum number of unit exceeded for service instance: %s' % self.service_instance.name)
                     logger.debug("Release Policy lock by %s" % self.policy.name)
                     self.lock.release()
-                    break
+                    time.sleep(self.policy.period)
+                    continue
             if self.service_instance.state != 'Updating' and self.check_alarm_si():
                 logger.debug('Execute action: %s' % repr(self.policy.action))
                 if action.adjustment_type == 'ChangeInCapacity':
@@ -280,6 +307,7 @@ class PolicyThread(threading.Thread):
                                     self.service_instance.name, str(len(self.service_instance.units) + 1))
                                 _state = 'DEFINED'
                                 new_unit = Unit(hostname=_hostname, state=_state)
+                                new_unit.service_instance_id = self.service_instance.id
                                 self.service_instance.units.append(new_unit)
                                 self.db.persist(new_unit)
                         else:
@@ -296,7 +324,7 @@ class PolicyThread(threading.Thread):
                             logger.warning(
                                 'Minimum number of unit exceeded for service instance: %s' % self.service_instance.name)
                     topology = self.db.update(self.topology)
-                    template = TemplateManager.get_template(topology)
+                    template = self.template_manager.get_template(self.topology)
                     # logger.debug("Send update to heat template with: \n%s" % template)
                     try:
                         self.heat_client.update(stack_id=self.topology.ext_id, template=template)
@@ -304,9 +332,11 @@ class PolicyThread(threading.Thread):
                         if not self.topology.state == 'DEPLOYED':
                             logger.error(
                                 "ERROR: Something went wrong. Seems to be an error. Topology state -> %s" % self.topology.state)
+                            self.lock.release()
                             return
                     except:
                         self.is_stopped = True
+                        self.lock.release()
                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
                 time.sleep(self.policy.action.cooldown)
             logger.debug("Release Policy lock from %s" % self.policy.name)
@@ -333,7 +363,7 @@ class PolicyThread(threading.Thread):
             else:
                 _sum = -1
                 _units_count = -1
-                break
+                return False
         if _sum >= 0 and _units_count > 0:
             si_avg = _sum / _units_count
             logger.debug("Average item value for the whole service instance group: %s -> %s" % (
@@ -371,7 +401,7 @@ class PolicyThread(threading.Thread):
         return False
 
     def remove_unit(self, topology, service_instance):
-        removed_unit = service_instance.units.pop([len(service_instance.units) - 1])
+        removed_unit = service_instance.units.pop(len(service_instance.units) - 1)
         return removed_unit
 
     def stop(self):
@@ -394,165 +424,163 @@ class CheckerThread(threading.Thread):
     def run(self):
         while not self.is_stopped:
             self.update_topology_state()
-
+            if self.topology.state == 'DELETED':
+                TopologyOrchestrator.delete(self.topology)
+                self.is_stopped = True
             for si in self.topology.service_instances:
-                for unit in si.units:
-                    if not unit.ports:
-                        self.set_ips(unit)
-
-
-            time.sleep(30)
+                if not self.is_stopped:
+                    for unit in si.units:
+                        if len(unit.ports) == 0:
+                            self.set_ips(unit)
+            time.sleep(5)
 
     def set_ips(self, unit):
         # Retrieving ports and ips information
         if not self.topology.state == 'ERROR':
-            logger.debug('#########SET_IPS########## for unit ' + unit.hostname)
+            logger.debug('Setting ips for unit %s.' % unit.hostname)
         if not self.topology.state == 'ERROR' and unit.ext_id:
             self.novac.set_ips(unit)
-
             self.db.update(unit)
-
             ports = self.neutronc.get_ports(unit)
             for port in ports:
+                port.unit_id = unit.id
                 self.db.persist(port)
-                unit.ports.append(port)
+            unit.ports = ports
             self.db.update(unit)
-
-
-            self.db.update(self.topology)
-
             logger.debug("Ports: ")
             for port in unit.ports:
                 logger.debug(port)
+        return unit
 
     def stop(self):
         self.is_stopped = True
 
     def update_topology_state(self):
-        # ##Get details of resources and update state for each si
+        #get stack details and set the topology state
+        try:
+            stack_details = self.heatclient.show(stack_id=self.topology.ext_id)
+            logger.debug('Stack details of %s: %s' % (self.topology.ext_name, stack_details))
+            old_state = self.topology.state
+            old_detailed_state = self.topology.detailed_state
+            if stack_details:
+                self.topology.state = translate(stack_details.get('stack_status'), HEAT_TO_EMM_STATE)
+                self.topology.detailed_state = stack_details.get('stack_status_reason')
+            if old_state != self.topology.state or old_detailed_state != self.topology.detailed_state:
+                self.db.update(self.topology)
+        except Exception, exc:
+            logger.exception(exc)
+            self.topology.state='ERROR'
+            raise
+
+        #Get details of resources and update state for each of them
         try:
             resource_details = self.heatclient.list_resources(self.topology.ext_id)
-        except Exception, msg:
-            logger.error(msg)
-            self.topology.state='ERROR'
+            logger.debug('Resource details of %s: %s' % (self.topology.ext_name, resource_details))
+        except HTTPNotFound, exc:
+            self.topology.state='DELETED'
             return
-        logger.debug(resource_details)
+        except Exception, exc:
+            logger.exception(exc)
+            self.topology.state='ERROR'
+
+        #Update all service instance state down to all units
         for service_instance in self.topology.service_instances:
             self.update_service_instance_state(service_instance=service_instance, resource_details=resource_details)
 
-        ###Check topology state again and check also all service instances
-        completed = True
+        #Check topology state again and check also all service instances
+        all_completed = False
+        if self.topology.state in ['DEPLOYED', 'UPDATED']:
+            topology_completed = True
+        else:
+            topology_completed = False
+        #Assume that the topology deployment is completed
+        all_completed = topology_completed
+        #Check if there are any errors downstairs
         for service_instance in self.topology.service_instances:
-            si_completed = False
-            if service_instance.state == 'DEPLOYED':
+            if service_instance.state in ['DEPLOYED', 'UPDATED']:
                 si_completed = True
             elif service_instance.state == 'ERROR':
+                si_completed = False
                 self.topology.state = 'ERROR'
-                break
-            completed = completed and si_completed
-        if completed:
+            else:
+                si_completed = False
+                self.topology.state = service_instance.state
+            all_completed = all_completed and si_completed
+        if all_completed:
             self.topology.state = 'DEPLOYED'
-        self.db.update(self.topology)
+        if old_state != self.topology.state:
+            self.db.update(self.topology)
 
     def update_service_instance_state(self, service_instance, resource_details=None):
+        old_state = service_instance.state
         if not resource_details:
-            resource_details = self.heatclient.list_resources(self.topology.ext_id)
-            logger.debug(resource_details)
+            try:
+                resource_details = self.heatclient.list_resources(self.topology.ext_id)
+                logger.debug('Resource details of %s: %s' % (self.topology.ext_name, resource_details))
+            except HTTPNotFound, exc:
+                self.topology.state='DELETED'
+                return
+            except Exception, exc:
+                logger.exception(exc)
+                self.topology.state='ERROR'
+        #Update all unit states
         for unit in service_instance.units:
             self.update_unit_state(unit, resource_details)
+
         # Update state of service instance
         si_completed = True
+        is_updated = False
         for unit in service_instance.units:
-            unit_completed = False
-            if unit.state == 'DEPLOYED' or unit.state == 'UPDATED':
+            if unit.state == 'INITIALISING':
+                if service_instance.state == 'DEFINED':
+                    service_instance.state = unit.state
+                unit_completed = False
+            elif unit.state in ['DEPLOYING','UPDATING']:
+                service_instance.state = unit.state
+                unit_completed = False
+            elif unit.state == 'DEPLOYED':
                 unit_completed = True
+            elif unit.state == 'UPDATED':
+                unit_completed = True
+                is_updated = True
             elif unit.state == 'ERROR':
                 service_instance.state = 'ERROR'
-                break
+                unit_completed = False
             else:
-                service_instance.state = unit.state
+                unit_completed = False
             si_completed = si_completed and unit_completed
         if si_completed:
-            service_instance.state = 'DEPLOYED'
-        self.db.update(service_instance)
+            if is_updated:
+                service_instance.state = 'UPDATED'
+            else:
+                service_instance.state = 'DEPLOYED'
+
+        #Update only when the state is changed
+        if old_state != service_instance.state:
+            self.db.update(service_instance)
 
     def update_unit_state(self, unit, resource_details=None):
         if not resource_details:
-            resource_details = self.heatclient.list_resources(self.topology.ext_id)
-            logger.debug(resource_details)
+            try:
+                resource_details = self.heatclient.list_resources(self.topology.ext_id)
+                logger.debug('Resource details of %s: %s' % (self.topology.ext_name, resource_details))
+            except HTTPNotFound, exc:
+                self.topology.state='DELETED'
+                return
+            except Exception, exc:
+                logger.exception(exc)
+                self.topology.state='ERROR'
         for vm in resource_details:
             if vm.get('resource_type') == "OS::Nova::Server":
                 if vm.get('resource_name') == unit.hostname:
                     unit.ext_id = vm['physical_resource_id']
                     heat_state = vm.get('resource_status')
                     if heat_state:
-                        unit.state = translate(heat_state, HEAT_TO_EMM_STATE)
-                        logger.debug(
-                            "State of unit %s: translate from %s to %s" % (unit.hostname, heat_state, unit.state))
+                        _new_state = translate(heat_state, HEAT_TO_EMM_STATE)
+                        logger.debug("State of unit %s: translate from %s to %s" % (unit.hostname, heat_state, _new_state))
+                        if _new_state != unit.state:
+                            unit.state = _new_state
+                            self.db.update(unit)
                     else:
                         logger.warning("State of unit %s: %s" % (unit.hostname, vm.get('resource_status')))
                         raise Exception
-        self.db.update(unit)
-
-
-    def update_topology_state_old(self):
-        completed = False
-        # ##Get stack information
-        heat_details = self.show(self.topology.ext_id)
-        if heat_details:
-            heat_state = heat_details.get('stack_status')
-            logger.debug("Topology heat state of %s: %s" % (self.topology.name, heat_state))
-            if heat_state:
-                self.topology.state = translate(heat_state, HEAT_TO_EMM_STATE)
-                logger.debug("Topology emm state of %s: %s" % (self.topology.name, heat_state))
-            else:
-                logger.warning("ERROR: cannot update state of topology %s" % self.topology.name)
-                raise Exception
-        else:
-            logger.warning("ERROR: cannot update state of topology %s" % self.topology.name)
-            raise Exception
-        ###Get resource information
-        resource_details = self.heatclient.list_resources(self.topology.ext_id)
-        logger.debug(resource_details)
-        for service_instance in self.topology.service_instances:
-            for unit in service_instance.units:
-                for vm in resource_details:
-                    if vm.get('resource_type') == "OS::Nova::Server":
-                        if vm.get('resource_name') == unit.hostname:
-                            unit.ext_id = vm['physical_resource_id']
-                            heat_state = vm.get('resource_status')
-                            if heat_state:
-                                unit.state = translate(heat_state, HEAT_TO_EMM_STATE)
-                                logger.debug("State of unit %s: translate from %s to %s" % (
-                                    unit.hostname, heat_state, unit.state))
-                            else:
-                                logger.warning("State of unit %s: %s" % (unit.hostname, vm.get('resource_status')))
-                                raise Exception
-        ###Check service instance state
-        for service_instance in self.topology.service_instances:
-            si_completed = True
-            for unit in service_instance.units:
-                unit_completed = False
-                if unit.state == 'DEPLOYED' or unit.state == 'UPDATED':
-                    unit_completed = True
-                elif unit.state == 'ERROR':
-                    service_instance.state = 'ERROR'
-                si_completed = si_completed and unit_completed
-            if si_completed:
-                service_instance.state = 'DEPLOYED'
-        ###Check topology state
-        if self.topology.state == 'DEPLOYED' or self.topology.state == 'UPDATED':
-            completed = True
-        for service_instance in self.topology.service_instances:
-            si_completed = False
-            if service_instance.state == 'ERROR':
-                self.topology.state = 'ERROR'
-            if service_instance.state == 'DEPLOYED':
-                si_completed = True
-            else:
-                logger.debug('Topology state update from %s is not finished' % (self.topology.name))
-            completed = completed and si_completed
-        if completed:
-            return True
-        else:
-            return False

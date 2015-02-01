@@ -1,3 +1,19 @@
+# Copyright 2014 Technische Universitaet Berlin
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+
 import logging
 from services.DatabaseManager import DatabaseManager
 from model.Entities import ServiceInstance, Network
@@ -10,128 +26,131 @@ __author__ = 'mpa'
 
 logger = logging.getLogger(__name__)
 
+class TemplateManager(object):
 
-def get_template(topology):
-    #name = topology.name
-    template = {}
-    template['heat_template_version'] = '2013-05-23'
-    resources = {}
-    outputs = {}
-    #print "create Template for Topology: %s" % name
+    @staticmethod
+    def get_template(topology):
+        #name = topology.name
+        template = {}
+        template['heat_template_version'] = '2013-05-23'
+        resources = {}
+        outputs = {}
+        #print "create Template for Topology: %s" % name
 
-    for service_instance in topology.service_instances:
-        for unit in service_instance.units:
-            #Create Ports and floating IPs for this unit
-            ports = []
-            floating_ips = []
-            if service_instance.networks:
-                i=1
-                for network in service_instance.networks:
-                    ###Creating Port for this service instance
-                    new_port = None
-                    #prepare port args for this service instance
-                    port_args = {}
-                    port_args['name'] = '%s-port-%s' % (unit.hostname, i)
-                    port_args['private_net_id'] = network.private_net
-                    port_args['private_subnet_id'] = network.private_subnet
-                    port_args['fixed_ip'] = network.fixed_ip
-                    if network.security_groups:
-                        port_args['security_groups'] = network.security_groups
-                    new_port = Port(**port_args)
-                    ports.append(new_port)
-                    if network.public_net:
-                        new_floating_ip_args = {}
-                        new_floating_ip_args['name'] = '%s-floating_ip-%s' % (unit.hostname, i)
-                        new_floating_ip_args['floating_network_id'] = network.public_net
-                        new_floating_ip_args['port'] = new_port.name
-                        new_floating_ip = FloatingIP(**new_floating_ip_args)
-                        floating_ips.append(new_floating_ip)
-                    ###Adding Security Groups
-                    for _security_group in network.security_groups:
-                        _new_name=_security_group.name
-                        _new_rules=[]
-                        _rules=_security_group.rules
-                        for _rule in _rules:
-                            _name = _rule.name
-                            _remote_ip_prefix = _rule.remote_ip_prefix
-                            _protocol = _rule.protocol
-                            _port_range_max = int(_rule.port_range_max) if _rule.port_range_max else None
-                            _port_range_min = int(_rule.port_range_min) if _rule.port_range_min else None
-                            _new_rule = Rule(_name, _remote_ip_prefix, _protocol, _port_range_max, _port_range_min)
-                            _new_rules.append(_new_rule)
-                        _new_security_group = SecurityGroup(name=_new_name, rules=_new_rules)
-                        resources.update(_new_security_group.dump_to_dict())
-                    i += 1
-
-            ###Create Server for this service instance
-            new_server = None
-            #prepare server args
-            server_args = {}
-            server_args['name'] = "%s" % unit.hostname
-            server_args['hostname'] = "%s" % unit.hostname
-            server_args['flavor'] = service_instance.flavor.name
-            server_args['image'] = service_instance.image.name
-            server_args['key_name'] = service_instance.key.name
-            server_args['network_ports'] = ports
-            server_args['user_data'] = service_instance.user_data
-            server_args['requirements'] = service_instance.requirements
-            new_server = Server(**server_args)
-
-            resources.update(new_server.dump_to_dict())
-
-            if ports:
-                for port in ports:
-                    resources.update(port.dump_to_dict())
-            if floating_ips:
-                for floating_ip in floating_ips:
-                    resources.update(floating_ip.dump_to_dict())
-
-    template['resources'] = resources
-
-    ###Output section###
-    db = DatabaseManager()
-    for service_instance in topology.service_instances:
-        for network_instance in service_instance.networks:
-            if network_instance.public_net:
-                _public_network_names = [_network.name for _network in db.get_all(Network) if
-                                         _network.ext_id == network_instance.public_net]
-                _public_network_name = None
-                if _public_network_names:
-                    _public_network_name = _public_network_names[0]
-                else:
-                    logger.debug('ERROR: Cannot find network with id %s in Table Network' % network_instance.public_net)
-            if network_instance.private_net:
-                _private_network_names = [_network.name for _network in db.get_all(Network) if
-                                          _network.ext_id == network_instance.private_net]
-                _private_network_name = None
-                if _private_network_names:
-                    _private_network_name = _private_network_names[0]
-                else:
-                    logger.debug('ERROR: Cannot find network with id %s in Table Network' % network_instance.net)
+        for service_instance in topology.service_instances:
             for unit in service_instance.units:
-                if network_instance.public_net and _public_network_name:
-                    output = {}
-                    output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 1]}
-                    output['description'] = 'Public IP of %s.' % unit.hostname
-                    outputs['%s_public_ip' % unit.hostname] = output
-                elif network_instance.private_net and _private_network_name:
-                    output = {}
-                    output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 0]}
-                    output['description'] = 'Private IP of %s.' % unit.hostname
-                    outputs['%s_private_ip' % unit.hostname] = output
-    template['outputs'] = outputs
+                #Create Ports and floating IPs for this unit
+                ports = []
+                floating_ips = []
+                if service_instance.networks:
+                    i=1
+                    for network in service_instance.networks:
+                        ###Creating Port for this service instance
+                        new_port = None
+                        #prepare port args for this service instance
+                        port_args = {}
+                        port_args['name'] = '%s-port-%s' % (unit.hostname, i)
+                        port_args['private_net_id'] = network.private_net
+                        port_args['private_subnet_id'] = network.private_subnet
+                        port_args['fixed_ip'] = network.fixed_ip
+                        if network.security_groups:
+                            port_args['security_groups'] = network.security_groups
+                        new_port = Port(**port_args)
+                        ports.append(new_port)
+                        if network.public_net:
+                            new_floating_ip_args = {}
+                            new_floating_ip_args['name'] = '%s-floating_ip-%s' % (unit.hostname, i)
+                            new_floating_ip_args['floating_network_id'] = network.public_net
+                            new_floating_ip_args['port'] = new_port.name
+                            new_floating_ip = FloatingIP(**new_floating_ip_args)
+                            floating_ips.append(new_floating_ip)
+                        ###Adding Security Groups
+                        for _security_group in network.security_groups:
+                            _new_name=_security_group.name
+                            _new_rules=[]
+                            _rules=_security_group.rules
+                            for _rule in _rules:
+                                _name = _rule.name
+                                _remote_ip_prefix = _rule.remote_ip_prefix
+                                _protocol = _rule.protocol
+                                _port_range_max = int(_rule.port_range_max) if _rule.port_range_max else None
+                                _port_range_min = int(_rule.port_range_min) if _rule.port_range_min else None
+                                _new_rule = Rule(_name, _remote_ip_prefix, _protocol, _port_range_max, _port_range_min)
+                                _new_rules.append(_new_rule)
+                            _new_security_group = SecurityGroup(name=_new_name, rules=_new_rules)
+                            resources.update(_new_security_group.dump_to_dict())
+                        i += 1
 
-    yaml.add_representer(unicode, lambda dumper, value: dumper.represent_scalar(u'tag:yaml.org,2002:str', value))
-    yaml.add_representer(SysUtil.literal_unicode, SysUtil.literal_unicode_representer)
-    logger.debug((template))
-    #logger.debug(yaml.dumps(template))
-    #f = open('/net/u/mpa/tempalte_file.yaml', 'w')
-    #f.write(yaml.dump(template, indent=2))
-    return yaml.dump(template)
+                ###Create Server for this service instance
+                new_server = None
+                #prepare server args
+                server_args = {}
+                server_args['name'] = "%s" % unit.hostname
+                server_args['hostname'] = "%s" % unit.hostname
+                server_args['availability_zone'] = unit.availability_zone
+                server_args['flavor'] = service_instance.flavor.name
+                server_args['image'] = service_instance.image.name
+                server_args['key_name'] = service_instance.key.name
+                server_args['network_ports'] = ports
+                server_args['user_data'] = service_instance.user_data
+                server_args['requirements'] = service_instance.requirements
+                new_server = Server(**server_args)
+
+                resources.update(new_server.dump_to_dict())
+
+                if ports:
+                    for port in ports:
+                        resources.update(port.dump_to_dict())
+                if floating_ips:
+                    for floating_ip in floating_ips:
+                        resources.update(floating_ip.dump_to_dict())
+
+        template['resources'] = resources
+
+        ###Output section###
+        db = DatabaseManager()
+        for service_instance in topology.service_instances:
+            for network_instance in service_instance.networks:
+                if network_instance.public_net:
+                    _public_network_names = [_network.name for _network in db.get_all(Network) if
+                                             _network.ext_id == network_instance.public_net]
+                    _public_network_name = None
+                    if _public_network_names:
+                        _public_network_name = _public_network_names[0]
+                    else:
+                        logger.debug('ERROR: Cannot find network with id %s in Table Network' % network_instance.public_net)
+                if network_instance.private_net:
+                    _private_network_names = [_network.name for _network in db.get_all(Network) if
+                                              _network.ext_id == network_instance.private_net]
+                    _private_network_name = None
+                    if _private_network_names:
+                        _private_network_name = _private_network_names[0]
+                    else:
+                        logger.debug('ERROR: Cannot find network with id %s in Table Network' % network_instance.net)
+                for unit in service_instance.units:
+                    if network_instance.public_net and _public_network_name:
+                        output = {}
+                        output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 1]}
+                        output['description'] = 'Public IP of %s.' % unit.hostname
+                        outputs['mcn.endpoint.%s' % unit.hostname] = output
+                    elif network_instance.private_net and _private_network_name:
+                        output = {}
+                        output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 0]}
+                        output['description'] = 'Private IP of %s.' % unit.hostname
+                        outputs['mcn.endpoint.%s' % unit.hostname] = output
+        template['outputs'] = outputs
+
+        yaml.add_representer(unicode, lambda dumper, value: dumper.represent_scalar(u'tag:yaml.org,2002:str', value))
+        yaml.add_representer(SysUtil.literal_unicode, SysUtil.literal_unicode_representer)
+        logger.debug((template))
+        #logger.debug(yaml.dumps(template))
+        #f = open('/net/u/mpa/tempalte_file.yaml', 'w')
+        #f.write(yaml.dump(template, indent=2))
+        return yaml.dump(template)
 
 
 class Server(object):
-    def __init__(self, name, hostname, flavor, image, key_name = None, network_ports = [], user_data = None, requirements = []):
+    def __init__(self, name, hostname, flavor, image, availability_zone=None, key_name = None, network_ports = [], user_data = None, requirements = []):
         ###Resource Type###
         self.type = "OS::Nova::Server"
 
@@ -144,6 +163,7 @@ class Server(object):
         self.network_ports = network_ports
         self.user_data = user_data
         self.requirements = requirements
+        self.availability_zone = availability_zone
 
 
     def dump_to_dict(self):
@@ -155,8 +175,9 @@ class Server(object):
         properties['name'] = self.name
         properties['image'] = self.image
         properties['flavor'] = self.flavor
-        properties['key_name'] = self.key_name
-        if self.network_ports:
+        if self.key_name is not None: properties['key_name'] = self.key_name
+        if self.availability_zone is not None: properties['availability_zone'] = self.availability_zone
+        if self.network_ports is not None:
             networks = []
             logger.debug(self.network_ports)
             for network_port in self.network_ports:
@@ -227,8 +248,6 @@ class Server(object):
                     else:
                         logger.debug('ERROR: ServiceInstance %s was not found' % requirement.source)
                         raise Exception
-
-
                 properties['user_data']['str_replace']['params'] = params
         server_config['properties'] = properties
         resource[self.name] = server_config
@@ -251,7 +270,6 @@ class Port(object):
 
         properties = {}
         properties['network_id'] = self.private_net_id
-        
         if self.private_subnet_id or self.fixed_ip:
             properties['fixed_ips'] = []
         if self.fixed_ip:

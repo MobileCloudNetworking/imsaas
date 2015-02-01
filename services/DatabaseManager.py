@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 import logging
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, object_session
 from sqlalchemy.orm.scoping import ScopedSession as scoped_session
 from sqlalchemy.pool import StaticPool
 
@@ -61,11 +62,10 @@ class DatabaseManager(ABCDatabaseManager):
             db_password = self.conf['db_password']
             db_url = self.conf['db_url']
             db_name = self.conf['db_name']
-            self.info = 'mysql://' + db_username + ':' + db_password + '@' + db_url + '/' + db_name
-            #self.engine = create_engine(self.info, echo=False)
+
             self.engine = create_engine('sqlite://', connect_args={'check_same_thread':False},
                     poolclass=StaticPool)
-            self._scoped_session = scoped_session(sessionmaker(bind=self.engine, expire_on_commit=False))
+            self._scoped_session = scoped_session(sessionmaker(bind=self.engine, expire_on_commit=True))
             self.session = None
             # self.create_session()
 
@@ -75,10 +75,12 @@ class DatabaseManager(ABCDatabaseManager):
         def persist(self, obj):
             self.create_session()
             self.session.add(obj)
+            obj = self.session.merge(obj)
             return obj
 
         def remove(self, obj):
             self.create_session()
+            obj = self.session.merge(obj)
             self.session.delete(obj)
 
         def update(self, obj):
@@ -121,9 +123,10 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def persist(self, obj):
         try:
+            logger.info('Persisting Object: %s' % obj)
             obj = self.instance.persist(obj)
             self.instance.session.commit()
-            logger.info("Persisted " + str(obj))
+            logger.debug('Persisted Object: %s' % obj)
             self.instance.session.expunge_all()
             self.instance.session.close()
         except:
@@ -134,10 +137,10 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def remove(self, obj):
         try:
-            logger.info("Removing Object " + str(obj))
-            obj = self.instance.remove(obj)
+            logger.info('Removing Object: %s' % obj)
+            self.instance.remove(obj)
             self.instance.session.commit()
-            logger.debug('Removed Obj')
+            logger.debug('Removed Object: %s' % obj)
             self.instance.session.expunge_all()
             self.instance.session.close()
         except:
@@ -148,9 +151,10 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def update(self, obj):
         try:
+            logger.info('Updating Object: %s' % obj)
             obj = self.instance.update(obj)
             self.instance.session.commit()
-            logger.info("Updated " + str(obj))
+            logger.debug('Updated Object: %s' % obj)
             self.instance.session.expunge_all()
             self.instance.session.close()
         except:
@@ -161,11 +165,9 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def get_all(self, _class):
         try:
+            logger.info('Get all of %s' % _class.__name__)
             lst = self.instance.get_all(_class)
-            self.instance.session.commit
-            logger.info('Get all of ' + _class.__name__)
-            self.instance.session.expunge_all()
-            self.instance.session.close()
+            self.instance.session.commit()
         except:
             self.instance.session.rollback
             raise
@@ -174,11 +176,9 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def get_by_id(self, _class, _id):
         try:
+            logger.debug('Get by id %s of class %s' % (_id,_class.__name__))
             res = self.instance.get_by_id(_class, _id)
-            self.instance.session.commit
-            logger.debug('Get by id ' + repr(_id) + ' of class ' + _class.__name__)
-            self.instance.session.expunge_all()
-            self.instance.session.close()
+            self.instance.session.commit()
         except:
             self.instance.session.rollback
             raise
@@ -187,11 +187,9 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def get_by_name(self, _class, _name):
         try:
+            logger.info('Get all of %s with name %s' % (_class.__name__ ,_name))
             res = self.instance.get_by_name(_class, _name)
-            self.instance.session.commit
-            logger.info('Get all of ' + _class.__name__ + ' with name ' + _name)
-            self.instance.session.expunge_all()
-            self.instance.session.close()
+            self.instance.session.commit()
         except:
             self.instance.session.rollback
             raise
@@ -200,16 +198,13 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def get_by_service_type(self, _class, _type):
         try:
+            logger.info('Get all of %s with service_type %s' % (_class.__name__ ,_type))
             res = self.instance.get_by_service_type(_class, _type)
-            self.instance.session.commit
-            logger.debug('Get all of service_type ' + _type)
-            self.instance.session.expunge_all()
-            self.instance.session.close()
+            self.instance.session.commit()
         except:
             self.instance.session.rollback
             raise
         return res
 
     def create_tables(self):
-        print "db_password is %s" %self.info
         Entities.create_tables(self.instance.engine)
