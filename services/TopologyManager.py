@@ -236,6 +236,9 @@ class TopologyManager(ABCTopologyManager):
         for appended_service_instance in appended_service_instances:
             appended_service_instance.topology_id = updated_topology.id
             updated_topology.service_instances.append(appended_service_instance)
+            if appended_service_instance.policies is not None:
+                for policy in appended_service_instance.policies:
+                    db.persist(policy)
             db.persist(appended_service_instance)
             logger.debug('Appended ServiceInstance \"%s\" to Topology \"%s\".' % (appended_service_instance.name, updated_topology.name))
         #Update all values for each service instance

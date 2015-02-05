@@ -165,10 +165,10 @@ class ServiceInstance(AbstractService, Base):
     id = Column(Integer, primary_key=True)
     topology_id = Column(Integer, ForeignKey('Topology.id'))
     networks = relationship('Network_Instance', cascade="all, delete-orphan", lazy='immediate')
-    policies = relationship('Policy', cascade="all, delete-orphan", lazy='immediate')
-    requirements = relationship('Requirement', cascade="all, delete-orphan", lazy='immediate')
+    policies = relationship('Policy', cascade="all, delete-orphan", lazy='select')
+    requirements = relationship('Requirement', cascade="all, delete-orphan", lazy='select')
     units = relationship('Unit', cascade="all, delete-orphan", lazy='select')
-    user_data = relationship('Command', cascade="all, delete-orphan", lazy='immediate')
+    user_data = relationship('Command', cascade="all, delete-orphan", lazy='select')
     configuration = Column(PickleType)
     flavor_id = Column(Integer, ForeignKey('Flavor.id'))
     flavor = relationship('Flavor', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
@@ -633,8 +633,7 @@ class Network_Instance(Base):
     fixed_ip = Column(String(50))
     service_id = Column(Integer, ForeignKey('Service.id'))
     service_instance_id = Column(Integer, ForeignKey('ServiceInstance.id'))
-    security_groups = relationship('SecurityGroup', cascade="merge, expunge", secondary=NetworkInstance_SecurityGroup,
-                                   lazy='select')
+    security_groups = relationship('SecurityGroup', cascade="save-update, merge, expunge, refresh-expire", secondary=NetworkInstance_SecurityGroup,lazy='select')
 
     def __init__(self, name, private_net, private_subnet=None, public_net=None, fixed_ip=None, security_groups=[]):
         self.id = None

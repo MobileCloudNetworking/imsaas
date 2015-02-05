@@ -16,24 +16,28 @@ logger = logging.getLogger(__name__)
 
 
 class DeployerDummy(ABCDeployer):
+
     def __init__(self):
         # self.heatclient = HeatClient()
         conf = SysUtil().get_sys_conf()
-        self.reg = FactoryAgent().get_agent(file_name=conf['register_agent_file'],
-                                            class_name=conf['register_agent_class'])
+        self.template_manager = FactoryAgent().get_agent(conf['template_manager'])
+        self.db = FactoryAgent().get_agent(conf['database_manager'])
+        self.runtime_agent = FactoryAgent().get_agent(conf['runtime_agent'])
+
+        #self.reg = FactoryAgent().get_agent(file_name=conf['register_agent_file'],
+        #                                    class_name=conf['register_agent_class'])
         pass
 
     def deploy(self, topology):
         logger.debug("Start Deploying")
         name = topology.name
-        template = TemplateManager.get_template(topology)
+        template = self.template_manager.get_template(topology)
         logger.debug("stack name: %s" % name)
         logger.debug("template: %s" % template)
-        # stack_details = self.heatclient.deploy(name=name, template=template)
-        logger.debug("stack details after deploy: dummy")
         try:
             # stack_id = stack_details['stack']['id']
-            stack_id = 'dummy-id'
+            stack_details = StackDetails()
+            stack_details.id = 'dummy-id'
             """
             filling the topology with real values
             """
@@ -41,35 +45,29 @@ class DeployerDummy(ABCDeployer):
             for service_instance in topology.service_instances:
                 for unit in service_instance.units:
                     unit.ext_id = unit.id
-            logger.debug("stack id: dummy")
+            topology.ext_id = 1
+            logger.debug("stack id: dummy-id")
         except KeyError, exc:
             logger.error(KeyError)
             logger.error(exc)
             stack_id = "None"
 
-        # logger.debug("resources: %s" % self.heatclient.list_resources(stack_id))
-        # logger.debug("resource ids: %s" % self.heatclient.list_resource_ids(stack_id))
+        self.runtime_agent.start(topology)
 
-        self.th = CheckerThread(topology, None, stack_id)
-        self.th.start()
-        self.reg.start()
-
-        return stack_id
+        return stack_details
 
     def dispose(self, topology):
-        try:
-            dbm_name = SysUtil().get_sys_conf()['database_manager']
-            db = FactoryAgent.get_agent(dbm_name)
-            self.th.stop()
-            for service_instance in topology.service_instances:
-                service_instance.networks = []
-            db.update(topology)
-            db.remove(topology)
-        except:
-            pass
+        # try:
+        #     self.db.remove(topology)
+        # except:
+        pass
             # stack_details = self.heatclient.delete(stack_id)
             # logger.debug("stack details after delete: %s" % stack_details)
             # return stack_details
+
+    def details(self, topology_id):
+        logger.debug("Stack actually running dummy-id")
+        return "dummy-id"
 
 
 class CheckerThread(threading.Thread):
@@ -107,3 +105,7 @@ class CheckerThread(threading.Thread):
 
     def stopped(self):
         return self._stop.isSet()
+
+
+class StackDetails():
+    pass

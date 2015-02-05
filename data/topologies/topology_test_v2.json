@@ -14,20 +14,20 @@
                     "name":"mgmt",
                     "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
                     "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
-                    "fixed_ip":"192.168.9.88",
                     "security_groups": [
                         "security-group-ims"
                     ]
                 }
             ],
             "policies": [
+
                 {
                     "name": "msg_scaleup",
                     "period": 60,
                     "alarm": {
                         "meter_name": "system.cpu.util[,idle]",
-                        "comparison_operator": "lt",
-                        "threshold": 50,
+                        "comparison_operator": "gt",
+                        "threshold": 70,
                         "statistic": "avg",
                         "evaluation_periods": 1
                     },
@@ -37,12 +37,13 @@
                         "cooldown": 60
                     }
                 },
+
                 {
                     "name": "msg_scaledown",
                     "period": 60,
                     "alarm": {
                         "meter_name": "system.cpu.util[,idle]",
-                        "comparison_operator": "gt",
+                        "comparison_operator": "lt",
                         "threshold": 10,
                         "statistic": "avg",
                         "evaluation_periods": 1
@@ -57,8 +58,6 @@
             "requirements": [
             ],
             "user_data": [
-                      "#!/bin/bash -v",
-                      "HOST_NAME=$(cat /etc/hostname)"
             ]
         }
     ]

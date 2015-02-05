@@ -269,7 +269,7 @@ class ZabbixAPI(object):
                    'User-Agent': 'python/zabbix_api'}
 
         if self.httpuser:
-            self.debug(logging.INFO, "HTTP Auth enabled")
+            self.debug(logging.DEBUG, "HTTP Auth enabled")
             auth = 'Basic ' + string.strip(base64.encodestring(self.httpuser + ':' + self.httppasswd))
             headers['Authorization'] = auth
         self.r_query.append(str(json_obj))
@@ -341,7 +341,7 @@ class ZabbixAPISubClass(ZabbixAPI):
 
     def __init__(self, parent, data, **kwargs):
         self._setuplogging()
-        self.debug(logging.INFO, "Creating %s" % self.__class__.__name__)
+        self.debug(logging.DEBUG, "Creating %s" % self.__class__.__name__)
         self.data = data
         self.parent = parent
 

@@ -199,11 +199,11 @@ class PolicyThread(threading.Thread):
                         logger.warning(
                             'Check downscaling - Minimum number of unit exceeded for service instance: %s' % self.service_instance.name)
                         break
-                if self.service_instance.state != 'Updating' and self.check_alarm_unit(unit, self.monitor):
+                if self.service_instance.state != 'UPDATING' and self.check_alarm_unit(unit, self.monitor):
                     logger.debug('Execute action: %s' % repr(self.policy.action))
                     if action.adjustment_type == 'ChangeInCapacity':
-                        self.service_instance.state = 'Updating'
-                        self.topology.state = 'Updating'
+                        self.service_instance.state = 'UPDATING'
+                        self.topology.state = 'UPDATING'
                         if action.scaling_adjustment > 0:
                             if (len(
                                     self.service_instance.units) + action.scaling_adjustment) <= self.service_instance.size.get(
@@ -293,11 +293,11 @@ class PolicyThread(threading.Thread):
                     self.lock.release()
                     time.sleep(self.policy.period)
                     continue
-            if self.service_instance.state != 'Updating' and self.check_alarm_si():
+            if self.service_instance.state != 'UPDATING' and self.check_alarm_si():
                 logger.debug('Execute action: %s' % repr(self.policy.action))
                 if action.adjustment_type == 'ChangeInCapacity':
-                    self.service_instance.state = 'Updating'
-                    self.topology.state = 'Updating'
+                    self.service_instance.state = 'UPDATING'
+                    self.topology.state = 'UPDATING'
                     if action.scaling_adjustment > 0:
                         if (len(
                                 self.service_instance.units) + action.scaling_adjustment) <= self.service_instance.size.get(
@@ -353,9 +353,8 @@ class PolicyThread(threading.Thread):
         si_avg = None
         logger.debug("Requesting meter values for service instance: %s" % self.service_instance.name)
         for unit in self.service_instance.units:
-            logger.debug("Requesting meter value for unit: %s" % unit.hostname)
-            item_value = self.monitor.get_item(res_id=unit.ext_id, item_name=alarm.meter_name,
-                                               kwargs={'period': alarm.evaluation_periods})
+            logger.debug("Requesting meter value for unit with hostname %s, item_name %s, and period: %s" %(unit.hostname,alarm.meter_name,alarm.evaluation_periods))
+            item_value = self.monitor.get_item(res_id=unit.hostname, item_name=alarm.meter_name, kwargs={'period': alarm.evaluation_periods})
             logger.debug("Got item value for %s -> %s" % (unit.hostname, item_value))
             if item_value:
                 _sum += item_value
@@ -432,7 +431,7 @@ class CheckerThread(threading.Thread):
                     for unit in si.units:
                         if len(unit.ports) == 0:
                             self.set_ips(unit)
-            time.sleep(5)
+            time.sleep(30)
 
     def set_ips(self, unit):
         # Retrieving ports and ips information

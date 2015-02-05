@@ -25,19 +25,18 @@ __author__ = 'mpa'
 
 logger = logging.getLogger(__name__)
 
-class Singleton(object):
-  _instance = None
-  def __new__(class_, *args, **kwargs):
-    if not isinstance(class_._instance, class_):
-        class_._instance = object.__new__(class_, *args, **kwargs)
-    return class_._instance
+# class Singleton(object):
+#   _instance = None
+#   def __new__(class_, *args, **kwargs):
+#     if not isinstance(class_._instance, class_):
+#         class_._instance = object.__new__(class_, *args, **kwargs)
+#     return class_._instance
 
-class MonitoringAgentZabbix(Singleton, ABCMonitoringAgent):
+class MonitoringAgentZabbix(ABCMonitoringAgent):
 
 
     def __init__(self):
-        self.cmclient = CeilometerClient()
-        self.zabbix = ZabbixAPI(server="http://160.85.4.45/zabbix")
+        self.zabbix = ZabbixAPI(server="http://160.85.4.45/zabbix", log_level=logging.DEBUG)
         self.username = "Admin"
         self.password = "zabbix"
         logger.debug("initialised monitoring agent")
@@ -55,23 +54,32 @@ class MonitoringAgentZabbix(Singleton, ABCMonitoringAgent):
     def address(self, token):
         pass
 
-    def get_item(self, hostname, item_name, **kwargs):
-        logger.debug("Monitor: request resource %s for %s" % (hostname, item_name))
+    def get_item(self, res_id, item_name, **kwargs):
+        logger.debug("Monitor: request resource %s for %s" % (res_id, item_name))
         #item_value = self.cmclient.get_statitics(resource_id=res_id, meter_name=item_name, period=kwargs.get('period') or 60)
 
         try:
-            hostid = self.zapi.host.get({"filter":{"host":hostname}})[0]["hostid"]
+            hostid = self.zabbix.host.get({"filter":{"host":res_id}})[0]["hostid"]
         except:
-            print "WARNING: Hostname " + hostname + " not found"
+            print "WARNING: Hostname " + res_id + " not found"
             return
 
         try:
-            item_value = self.zapi.item.get({"output":"extend","hostids":hostid,"filter":{"key_":item_name}})[0]["lastvalue"]
+            item_value = self.zabbix.item.get({"output":"extend","hostids":hostid,"filter":{"key_":item_name}})[0]["lastvalue"]
         except Exception as e:
             print "ERROR: User metric not found"
 
-        logger.debug("Monitor: received %s" % item_value)
+        logger.debug("Idle value received %s" % item_value)
+        item_value = 100 - float(item_value)
+        logger.debug("real cpu usage %s" % item_value)
         return item_value
 
     def dispose(self, token):
         pass
+
+
+if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s_%(process)d:%(pathname)s:%(lineno)d [%(levelname)s] %(message)s',level=logging.DEBUG)
+
+    zabi = MonitoringAgentZabbix()
+    zabi.get_item("cscfs-1", "system.cpu.util[,idle]")

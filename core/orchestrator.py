@@ -29,6 +29,7 @@ from core.TopologyOrchestrator import TopologyOrchestrator
 from sdk.mcn import util
 from util.FactoryAgent import FactoryAgent
 from util.SysUtil import SysUtil as sys_util
+from util import util as ims_util
 from clients.heat import Client as HeatClient
 
 
@@ -115,9 +116,12 @@ class SoExecution(object):
             logger.error(msg)
             return
 
+        for si in self.topology.service_instances:
+            print ims_util.get_zabbix_agent_commands(parameters['maas_ip_address'])
+            si.user_data = ims_util.get_zabbix_agent_commands(parameters['maas_ip_address'])
+
         if self.stack_id is None:
             stack_details = self.deployer.deploy(self.topology)
-            #stack_details = self.heatclient.deploy(name="ims",template = self.template)
             self.stack_id = stack_details.id
             logger.info("deployed topology with id %s" % self.stack_id)
 

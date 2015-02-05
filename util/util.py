@@ -14,7 +14,7 @@
 #    under the License.
 
 from SysUtil import SysUtil
-from model.Entities import new_alchemy_encoder
+from model.Entities import new_alchemy_encoder, Command
 import json
 
 
@@ -56,3 +56,14 @@ def literal_unicode_representer(dumper, data):
 
 def to_json(obj, _indent=4, _separators=(',', ': ')):
         return json.dumps(obj, cls=new_alchemy_encoder(), indent=_indent, separators=_separators)
+
+
+def get_zabbix_agent_commands(maas_ip):
+    commands = []
+    commands.append(Command("#!/usr/bin/env bash"))
+    commands.append(Command("apt-get install -y zabbix-agent;"))
+    commands.append(Command("sed -i 's/127.0.0.1/%s"%maas_ip+"/g' /etc/zabbix/zabbix_agentd.conf;"))
+    commands.append(Command("sed -i 's/Hostname=/#Hostname=/g' /etc/zabbix/zabbix_agentd.conf;"))
+    commands.append(Command("service zabbix-agent restart;"))
+
+    return commands

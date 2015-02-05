@@ -123,7 +123,7 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def persist(self, obj):
         try:
-            logger.info('Persisting Object: %s' % obj)
+            logger.info('Persisting Object: %s' % id(obj))
             obj = self.instance.persist(obj)
             self.instance.session.commit()
             logger.debug('Persisted Object: %s' % obj)
