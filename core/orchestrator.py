@@ -47,7 +47,7 @@ class SoExecution(object):
         """
         Constructor
         """
-        self.topology_type = "topology_test_v2.json"
+        self.topology_type = "topology_ims.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None

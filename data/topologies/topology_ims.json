@@ -1,103 +1,145 @@
 {
-    "name":"ims",
-    "service_instances": [
+  "name":"ims",
+  "service_instances": [
+    {
+      "name":"cscfs",
+      "service_type":"cscfs",
+      "flavor":"m1.small",
+      "image": "cscfs",
+      "key":"mcn-tub",
+      "configuration": {
+      },
+      "networks": [
         {
-            "name":"cscfs",
-            "service_type":"cscfs",
-            "configuration": {
-                "hostname":"cscfs",
-                "key":"mcn-key"
-            },
-            "networks": [
-                {
-                    "name":"mgmt",
-                    "private_net":"fd704f1b-9238-4c2c-a0f5-4ffb4543e33a",
-                    "private_subnet": "ab4595bf-12d5-4e92-baa8-b5dfb3c1a31d",
-                    "public_net": "2e2bc7f9-c29c-467c-94b6-5ef3724d79ac",
-                    "security_groups": [
-                        "default"
-                    ]
-                }
-            ],
-            "requirements": [
-                {
-                    "name":"$MediaServer_IPS",
-                    "parameter":"private_ip",
-                    "source":"MediaServer",
-                    "obj_name": "Network-1"
-                }
-            ],
-            "user_data": [
-
-                "#!/usr/bin/env bash",
-                "apt-get install -y zabbix-agent",
-                "sed -i 's/127.0.0.1/$/g' /etc/zabbix/zabbix_agentd.conf",
-                "sed -i 's/Hostname=/#Hostname=/g' /etc/zabbix/zabbix_agentd.conf",
-                "service zabbix-agent restart"
-            ]
-        },
-        {
-            "name":"hss",
-            "service_type":"hss",
-            "size": {
-                "min":1,
-                "max":5,
-                "def":1
-            },
-            "configuration": {
-                "hostname":"hss",
-                "key":"mcn-key"
-            },
-            "networks": [
-                {
-                    "name":"mgmt",
-                    "private_net":"fd704f1b-9238-4c2c-a0f5-4ffb4543e33a",
-                    "private_subnet": "ab4595bf-12d5-4e92-baa8-b5dfb3c1a31d",
-                    "security_groups": [
-                        "default"
-                    ]
-                }
-            ],
-            "policies": [
-                #{
-                #    "name": "msg_scaleup",
-                #    "period": 60,
-                #    "alarm": {
-                #        "meter_name": "cpu_util",
-                #        "comparison_operator": "gt",
-                #        "threshold": 50,
-                #        "statistic": "avg",
-                #        "evaluation_periods": 1
-                #    },
-                #    "action": {
-                #        "adjustment_type": "ChangeInCapacity",
-                #        "scaling_adjustment": 1,
-                #        "cooldown": 60
-                #    }
-                #},
-                #{
-                #    "name": "msg_scaledown",
-                #    "period": 60,
-                #    "alarm": {
-                #        "meter_name": "cpu_util",
-                #        "comparison_operator": "lt",
-                #        "threshold": 10,
-                #        "statistic": "avg",
-                #        "evaluation_periods": 1
-                #    },
-                #    "action": {
-                #            "adjustment_type": "ChangeInCapacity",
-                #            "scaling_adjustment": -1,
-                #            "cooldown": 60
-                #    }
-                #}
-            ],
-            "requirements": [
-            ],
-            "user_data": [
-                      "#!/bin/bash -v",
-                      "HOST_NAME=$(cat /etc/hostname)"
-            ]
+          "name":"mgmt",
+          "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
+          "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
+          "fixed_ip": "192.168.9.88",
+          "security_groups": [
+            "security-group-ims"
+          ]
         }
-    ]
+      ],
+      "policies": [
+      ],
+      "requirements": [
+      ],
+      "user_data": [
+      ]
+    },
+    {
+      "name":"hss",
+      "service_type":"hss",
+      "flavor":"m1.small",
+      "image": "hss-1",
+      "key":"mcn-tub",
+      "configuration": {
+      },
+      "networks": [
+        {
+          "name":"mgmt",
+          "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
+          "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
+          "security_groups": [
+            "security-group-ims"
+          ]
+        }
+      ],
+      "policies": [
+
+        {
+          "name": "msg_scaleup",
+          "period": 60,
+          "alarm": {
+            "meter_name": "system.cpu.util[,idle]",
+            "comparison_operator": "gt",
+            "threshold": 70,
+            "statistic": "avg",
+            "evaluation_periods": 1
+          },
+          "action": {
+            "adjustment_type": "ChangeInCapacity",
+            "scaling_adjustment": 1,
+            "cooldown": 60
+          }
+        },
+
+        {
+          "name": "msg_scaledown",
+          "period": 60,
+          "alarm": {
+            "meter_name": "system.cpu.util[,idle]",
+            "comparison_operator": "lt",
+            "threshold": 10,
+            "statistic": "avg",
+            "evaluation_periods": 1
+          },
+          "action": {
+            "adjustment_type": "ChangeInCapacity",
+            "scaling_adjustment": -1,
+            "cooldown": 60
+          }
+        }
+      ],
+      "requirements": [
+      ],
+      "user_data": [
+      ]
+    },
+    {
+      "name":"db",
+      "service_type":"db",
+      "flavor":"m1.small",
+      "image": "db",
+      "key":"mcn-tub",
+      "configuration": {
+      },
+      "networks": [
+        {
+          "name":"mgmt",
+          "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
+          "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
+          "fixed_ip": "192.168.9.57",
+          "security_groups": [
+            "security-group-ims"
+          ]
+        }
+      ],
+      "policies": [
+      ],
+      "requirements": [
+      ],
+      "user_data": [
+      ]
+    },
+    {
+      "name":"slf",
+      "service_type":"slf",
+      "flavor":"m1.small",
+      "image": "slf",
+      "key":"mcn-tub",
+      "configuration": {
+      },
+      "networks": [
+        {
+          "name":"mgmt",
+          "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
+          "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
+          "fixed_ip": "192.168.9.59",
+          "security_groups": [
+            "security-group-ims"
+          ]
+        }
+      ],
+      "policies": [
+      ],
+      "requirements": [
+      ],
+      "user_data": [
+      ]
+    }
+
+
+
+  ]
 }

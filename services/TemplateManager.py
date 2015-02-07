@@ -52,7 +52,13 @@ class TemplateManager(object):
                         port_args['name'] = '%s-port-%s' % (unit.hostname, i)
                         port_args['private_net_id'] = network.private_net
                         port_args['private_subnet_id'] = network.private_subnet
-                        port_args['fixed_ip'] = network.fixed_ip
+                        if "hss-1" in unit.hostname:
+                            port_args['fixed_ip'] = "192.168.9.48"
+                        elif "hss-2" in unit.hostname:
+                            port_args['fixed_ip'] = "192.168.9.55"
+                        else:
+                            port_args['fixed_ip'] = network.fixed_ip
+
                         if network.security_groups:
                             port_args['security_groups'] = network.security_groups
                         new_port = Port(**port_args)
@@ -89,7 +95,12 @@ class TemplateManager(object):
                 server_args['hostname'] = "%s" % unit.hostname
                 server_args['availability_zone'] = unit.availability_zone
                 server_args['flavor'] = service_instance.flavor.name
-                server_args['image'] = service_instance.image.name
+                if "hss-1" in unit.hostname:
+                    server_args['image'] = "hss-1"
+                elif "hss-2" in unit.hostname:
+                    server_args['image'] = "hss-2"
+                else:
+                    server_args['image'] = service_instance.image.name
                 server_args['key_name'] = service_instance.key.name
                 server_args['network_ports'] = ports
                 server_args['user_data'] = service_instance.user_data
