@@ -29,6 +29,7 @@ from clients.heat import Client as HeatClient
 from clients.neutron import Client as NeutronClient
 from clients.nova import Client as NovaClient
 
+from util.ImsDnsConfigurator import ImsDnsClient
 
 
 __author__ = 'mpa'
@@ -420,7 +421,9 @@ class CheckerThread(threading.Thread):
         self.topology = topology
         self.db = DatabaseManager()
         self.is_stopped = False
+        self.is_dns_configured = False
         self.novac = NovaClient()
+        self.dns_configurator = ImsDnsClient()
         self.neutronc = NeutronClient(utilSys.get_endpoint('network'), utilSys.get_token())
 
     def run(self):
@@ -434,7 +437,20 @@ class CheckerThread(threading.Thread):
                     for unit in si.units:
                         if len(unit.ports) == 0:
                             self.set_ips(unit)
+            if self.topology.state == 'DEPLOYED' and not self.is_dns_configured:
+                self.configure_dns()
+                self.is_dns_configured = True
             time.sleep(30)
+
+    def configure_dns(self):
+        for si in self.topology.service_instances:
+            for unit in si.units:
+                self.dns_configurator.configure_dns_entry(si.service_type, unit.hostname)(unit.ips['mgmt'])
+
+    def print_test(self, ip):
+        logging.debug("Testing dns entry for test service with ip %s"%ip)
+
+
 
     def set_ips(self, unit):
         # Retrieving ports and ips information

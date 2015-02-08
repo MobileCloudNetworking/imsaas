@@ -3,7 +3,7 @@
     "service_instances": [
         {
             "name":"cscfs",
-            "service_type":"cscfs",
+            "service_type":"test",
             "flavor":"m1.small",
             "image": "ubuntu-software-config",
             "key":"mcn-tub",

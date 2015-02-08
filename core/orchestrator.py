@@ -29,12 +29,18 @@ from core.TopologyOrchestrator import TopologyOrchestrator
 from util.FactoryAgent import FactoryAgent
 from util.SysUtil import SysUtil as sys_util
 from util import util as ims_util
-from util import IMSDNSConfigurator
 
 SO_DIR = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
 logger = logging.getLogger(__name__)
 
+
+topology_mapping = {
+    'e2e': 'topology_ims.json',
+    'standalone': 'topology_ims_standalone.json',
+    'test_no_services': 'topology_test_no_services.json',
+    'test_one_service_elasticity': 'topology_test_v2.json'
+}
 
 class SoExecution(object):
     """
@@ -78,9 +84,11 @@ class SoExecution(object):
         parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = attributes['mcn.endpoint.api']
 
         try:
-            self.topology_type = attributes['mcn.topology.type']
+            type = os.environ['TOPOLOGY'] = attributes['mcn.topology.type']
+            self.topology_type = topology_mapping[type]
         except:
-            logger.debug("parameter mcn.topology.type not available, using the standard template imsaas.yaml")
+            logger.debug("parameter mcn.topology.type not available, using the standard template")
+
 
         logger.info("deploying template %s" % (self.topology_type,))
         # read template...
@@ -195,6 +203,7 @@ class SoDecision(object):
 
 class ServiceOrchestrator(object):
     def __init__(self, token, tenant_name):
+        os.environ['OS_AUTH_TOKEN'] = token
         self.so_e = SoExecution(token, tenant_name)
         self.so_d = SoDecision(token, tenant_name)
 

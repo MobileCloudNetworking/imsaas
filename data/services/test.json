@@ -1,0 +1,13 @@
+{
+    "service_type": "test",
+    "image": "ubuntu-server-14.04",
+    "flavor": "m1.small",
+    "key":"mcn-tub",
+    "configuration": {
+    },
+    "size": {
+        "max": 1,
+        "def": 1,
+        "min": 1
+    }
+}
