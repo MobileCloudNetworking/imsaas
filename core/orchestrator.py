@@ -26,12 +26,10 @@ from emm_exceptions.TypeErrorException import TypeErrorException
 from emm_exceptions.InvalidInputException import InvalidInputException
 from core.TopologyOrchestrator import TopologyOrchestrator
 
-from sdk.mcn import util
 from util.FactoryAgent import FactoryAgent
 from util.SysUtil import SysUtil as sys_util
 from util import util as ims_util
-from clients.heat import Client as HeatClient
-
+from util import IMSDNSConfigurator
 
 SO_DIR = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
@@ -48,7 +46,7 @@ class SoExecution(object):
         Constructor
         """
         #self.topology_type = "topology_ims.json"
-        self.topology_type = "topology_test_no_services.json"
+        self.topology_type = "topology_test_v2.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None
@@ -76,6 +74,8 @@ class SoExecution(object):
 
         parameters = {}
         parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = attributes['mcn.endpoint.maas']
+        parameters['dns_ip_address'] = os.environ['DNS_IP'] = attributes['mcn.endpoint.forwarder']
+        parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = attributes['mcn.endpoint.api']
 
         try:
             self.topology_type = attributes['mcn.topology.type']
@@ -122,12 +122,15 @@ class SoExecution(object):
 
         for si in self.topology.service_instances:
             si.user_data = ims_util.get_zabbix_agent_commands(parameters['maas_ip_address'])
+            # todo add user data for dns as a service parameters['dns_ip_address']
+
 
 
         if self.stack_id is None:
             stack_details = self.deployer.deploy(self.topology)
             self.stack_id = stack_details.id
             logger.info("deployed topology with id %s" % self.stack_id)
+
 
 
     def provision(self):
