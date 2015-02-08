@@ -85,6 +85,9 @@ class RuntimeAgent(ABCRuntimeAgent):
             return repr(self)
 
         def start(self, topology):
+            #Start the monitoring agent
+            self.monitoring_service.start()
+
             #Start CheckerThread the first time or update topology after restart
             if self.checker_threads.get(topology.id) is None:
                 self.checker_threads[topology.id] = CheckerThread(topology)

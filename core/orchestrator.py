@@ -47,7 +47,8 @@ class SoExecution(object):
         """
         Constructor
         """
-        self.topology_type = "topology_ims.json"
+        #self.topology_type = "topology_ims.json"
+        self.topology_type = "topology_test_no_services.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None
@@ -70,9 +71,12 @@ class SoExecution(object):
         """
         Deploy method
         """
+        if self.stack_id is not None:
+            pass
 
         parameters = {}
-        parameters['maas_ip_address'] = attributes['mcn.endpoint.maas']
+        parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = attributes['mcn.endpoint.maas']
+
         try:
             self.topology_type = attributes['mcn.topology.type']
         except:
@@ -117,8 +121,8 @@ class SoExecution(object):
             return
 
         for si in self.topology.service_instances:
-            print ims_util.get_zabbix_agent_commands(parameters['maas_ip_address'])
             si.user_data = ims_util.get_zabbix_agent_commands(parameters['maas_ip_address'])
+
 
         if self.stack_id is None:
             stack_details = self.deployer.deploy(self.topology)

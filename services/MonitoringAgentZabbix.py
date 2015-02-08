@@ -16,6 +16,7 @@
 
 import logging
 import sys
+import os
 from util.zabbix_api import ZabbixAPI
 from clients.ceilometer import Client as CeilometerClient
 from interfaces.MonitoringAgent import MonitoringAgent as ABCMonitoringAgent
@@ -36,7 +37,11 @@ class MonitoringAgentZabbix(ABCMonitoringAgent):
 
 
     def __init__(self):
-        self.zabbix = ZabbixAPI(server="http://160.85.4.45/zabbix", log_level=logging.DEBUG)
+        pass
+
+    def start(self):
+        zabbix_ip = os.environ['ZABBIX_IP']
+        self.zabbix = ZabbixAPI(server="http://%s/zabbix" %zabbix_ip, log_level=logging.DEBUG)
         self.username = "Admin"
         self.password = "zabbix"
         logger.debug("initialised monitoring agent")
@@ -47,6 +52,7 @@ class MonitoringAgentZabbix(ABCMonitoringAgent):
         except Exception as e:
             logger.error('*** Caught exception: %s: %s' % (e.__class__, e))
             sys.exit(1)
+
 
     def deploy(self, token, tenant):
         pass
