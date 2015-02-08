@@ -40,7 +40,7 @@ class DNSaaSClientCore:
             response, content = h.request(target.geturl(), method, body, headers)
 
         except:
-            return -1, "Server API not reachable"
+            return -1, {'status': "Server API not reachable", 'data': {'code': ''}}
         response_status = response.get("status")
         content_dict = json.loads(content)
 
@@ -102,12 +102,12 @@ def createDomain(domain_name, domain_admin_email, tokenId, **kwargs):
     status, content = DNSaaSClient.doRequest('POST', '/domains', json.dumps(msgJson), tokenId)
 
     if content['status'] == '200':
-
         return 1
-
     elif content['data']['code'] == 409:
         # print content['data']['type'] # to print error info
         return 0
+    elif content['status'] == "Server API not reachable":
+        return "Server API not reachable"
     else:
         return 0
 
@@ -289,6 +289,8 @@ def createRecord(domain_name, record_name, record_type, record_data, tokenId, **
         elif content['status'] == '409':
             print content['data']['type']
             return 0
+        elif content['status'] == "Server API not reachable":
+            return "Server API not reachable"
         else:
             return 0
     else:
