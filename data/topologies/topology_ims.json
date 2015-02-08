@@ -14,7 +14,7 @@
           "name":"mgmt",
           "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
           "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
-          "fixed_ip": "192.168.9.88",
+          "fixed_ip": "192.168.9.51",
           "security_groups": [
             "security-group-ims"
           ]
