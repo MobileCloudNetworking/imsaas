@@ -445,7 +445,11 @@ class CheckerThread(threading.Thread):
     def configure_dns(self):
         for si in self.topology.service_instances:
             for unit in si.units:
-                self.dns_configurator.configure_dns_entry(si.service_type, unit.hostname)(unit.ips['mgmt'])
+                try:
+                    self.dns_configurator.configure_dns_entry(si.service_type, unit.hostname)(unit.ips['mgmt'])
+                except:
+                    logging.debug("this service instance is not needed in the dns")
+
 
     def print_test(self, ip):
         logging.debug("Testing dns entry for test service with ip %s"%ip)
