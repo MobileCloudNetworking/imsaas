@@ -51,8 +51,7 @@ class SoExecution(object):
         """
         Constructor
         """
-        #self.topology_type = "topology_ims.json"
-        self.topology_type = "topology_test_v2.json"
+        self.topology_type = "topology_ims.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None
@@ -87,8 +86,8 @@ class SoExecution(object):
             type = os.environ['TOPOLOGY'] = attributes['mcn.topology.type']
             self.topology_type = topology_mapping[type]
         except:
-            logger.debug("parameter mcn.topology.type not available, using the standard template")
-
+            logger.debug("parameter mcn.topology.type not available, using the default topology %s" %self.topology_type)
+            os.environ['TOPOLOGY'] = self.topology_type
 
         logger.info("deploying template %s" % (self.topology_type,))
         # read template...
