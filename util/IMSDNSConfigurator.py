@@ -16,10 +16,10 @@ class ImsDnsClient():
         if 'standalone' in os.environ['TOPOLOGY']:
             # In case of a standalone topology we need to create also the domains
             DNSaaSClient.createDomain('epc.mnc001.mcc001.3gppnetwork.org','admin@mcn.pt',self.tokenID)
-            DNSaaSClient.createRecord(domain_name='epc.mnc001.mcc001.3gppnetwork.org',record_name='ns',record_type='A',record_data=self.dns_ip,tokenId=self.tokenID)
-            DNSaaSClient.createRecord(domain_name='epc.mnc001.mcc001.3gppnetwork.org',record_name='dns',record_type='A',record_data=self.dns_ip,tokenId=self.tokenID)
-        DNSaaSClient.createRecord("epc.mnc001.mcc001.3gppnetwork.org", '', 'NAPTR', "10 50 \"s\" \"SIP+D2U\" \"\" _sip._udp", tokenID,priority = 10 )
-        DNSaaSClient.createRecord("epc.mnc001.mcc001.3gppnetwork.org", '', 'NAPTR', "20 50 \"s\" \"SIP+D2U\" \"\" _sip._udp", tokenID,priority = 10 )
+            DNSaaSClient.createRecord(domain_name='epc.mnc001.mcc001.3gppnetwork.org',record_name='ns',record_type='A',record_data=self.dns_ip,tokenId=self.self.tokenID)
+            DNSaaSClient.createRecord(domain_name='epc.mnc001.mcc001.3gppnetwork.org',record_name='dns',record_type='A',record_data=self.dns_ip,tokenId=self.self.tokenID)
+        DNSaaSClient.createRecord("epc.mnc001.mcc001.3gppnetwork.org", '', 'NAPTR', "10 50 \"s\" \"SIP+D2U\" \"\" _sip._udp", self.tokenID,priority = 10 )
+        DNSaaSClient.createRecord("epc.mnc001.mcc001.3gppnetwork.org", '', 'NAPTR', "20 50 \"s\" \"SIP+D2U\" \"\" _sip._udp", self.tokenID,priority = 10 )
 
     def create_records_cscfs(self, cscfs_ip):
         self.__create_records_icscf(cscfs_ip)
