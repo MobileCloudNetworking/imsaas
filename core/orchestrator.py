@@ -181,8 +181,7 @@ class SoExecution(object):
             logger.debug(" state %s, output %s"%(res['state'],output))
             return res['state'], str(self.stack_id), output
         else:
-            return 'Unknown', 'N/A', ''
-
+            return 'CREATE_COMPLETE', 'N/A', ''
 
 class SoDecision(object):
     '''

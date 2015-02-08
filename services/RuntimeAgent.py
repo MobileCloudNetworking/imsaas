@@ -29,7 +29,7 @@ from clients.heat import Client as HeatClient
 from clients.neutron import Client as NeutronClient
 from clients.nova import Client as NovaClient
 
-from util.ImsDnsConfigurator import ImsDnsClient
+from util.IMSDNSConfigurator import ImsDnsClient
 
 
 __author__ = 'mpa'

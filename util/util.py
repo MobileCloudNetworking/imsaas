@@ -66,4 +66,5 @@ def get_zabbix_agent_commands(maas_ip):
     commands.append(Command("sed -i 's/Hostname=/#Hostname=/g' /etc/zabbix/zabbix_agentd.conf;"))
     commands.append(Command("service zabbix-agent restart;"))
 
+
     return commands

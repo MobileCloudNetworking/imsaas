@@ -57,7 +57,7 @@ class MyBackend(occi_ext.Backend):
 
     def retrieve(self, entity, extras):
         if occi_ext.DEPLOY_ACTION in entity.actions:
-            entity.attributes['occi.mcn.stack.state'] = 'uninitialized'
+            entity.attributes['occi.mcn.stack.state'] = 'CREATE_COMPLETE' # Demo
             entity.attributes['occi.mcn.stack.id'] = 'N/A'
         else:
             state, stack_id, stack_output = self.so.so_e.state()
