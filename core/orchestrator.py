@@ -76,12 +76,15 @@ class SoExecution(object):
         """
         if self.stack_id is not None:
             pass
-
+        dnsaas = True
         parameters = {}
         parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = attributes['mcn.endpoint.maas']
-        parameters['dns_ip_address'] = os.environ['DNS_IP'] = attributes['mcn.endpoint.forwarder']
-        parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = attributes['mcn.endpoint.api']
-
+        try:
+            parameters['dns_ip_address'] = os.environ['DNS_IP'] = attributes['mcn.endpoint.forwarder']
+            parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = attributes['mcn.endpoint.api']
+        except:
+            logging.warning("the parameter was not found")
+            dnsaas = False
         try:
             type = os.environ['TOPOLOGY'] = attributes['mcn.topology.type']
             self.topology_type = topology_mapping[type]
@@ -128,9 +131,10 @@ class SoExecution(object):
             return
 
         for si in self.topology.service_instances:
-            si.user_data = ims_util.get_zabbix_agent_commands(parameters['maas_ip_address'])
-            # todo add user data for dns as a service parameters['dns_ip_address']
-
+            if not dnsaas:
+                si.user_data = ims_util.get_user_data(parameters['maas_ip_address'])
+            else:
+                si.user_data = ims_util.get_user_data(parameters['maas_ip_address'],parameters['dnsaas_ip_address'])
 
 
         if self.stack_id is None:

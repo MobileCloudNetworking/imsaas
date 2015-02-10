@@ -58,13 +58,19 @@ def to_json(obj, _indent=4, _separators=(',', ': ')):
         return json.dumps(obj, cls=new_alchemy_encoder(), indent=_indent, separators=_separators)
 
 
-def get_zabbix_agent_commands(maas_ip):
+def get_user_data(maas_ip, dnsaas_ip = None):
     commands = []
     commands.append(Command("#!/usr/bin/env bash"))
     commands.append(Command("apt-get install -y zabbix-agent;"))
-    commands.append(Command("sed -i 's/127.0.0.1/%s"%maas_ip+"/g' /etc/zabbix/zabbix_agentd.conf;"))
+    commands.append(Command(r"sed -i 's/^\(Server[ \t]*\)=[ \t]*[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*.*$/\1 =%s"%maas_ip+"/' /etc/zabbix/zabbix_agentd.conf"))
+    commands.append(Command(r"sed -i 's/^\(ServerActive[ \t]*\)=[ \t]*[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*.*$/\1 =%s"%maas_ip+"/' /etc/zabbix/zabbix_agentd.conf"))
     commands.append(Command("sed -i 's/Hostname=/#Hostname=/g' /etc/zabbix/zabbix_agentd.conf;"))
     commands.append(Command("service zabbix-agent restart;"))
-
+    if dnsaas_ip is not None:
+        commands.append(Command("cat << EOF > /etc/resolv.conf"))
+        commands.append(Command("search epc.mnc001.mcc001.3gppnetwork.org"))
+        commands.append(Command("domain epc.mnc001.mcc001.3gppnetwork.org"))
+        commands.append(Command("nameserver %s"%dnsaas_ip))
+        commands.append(Command("EOF"))
 
     return commands
