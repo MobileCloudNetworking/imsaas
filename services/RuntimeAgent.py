@@ -152,6 +152,8 @@ class PolicyThread(threading.Thread):
         self.monitor = runtime_agent.monitoring_service
         self.lock = lock
 
+        # hack for avoiding autoscaling at startup
+        self.counter = 0
         self.is_stopped = False
         conf = SysUtil().get_sys_conf()
         self.template_manager = FactoryAgent().get_agent(conf['template_manager'])
@@ -257,8 +259,15 @@ class PolicyThread(threading.Thread):
         if alarm.comparison_operator == '>' or alarm.comparison_operator == 'gt':
             logger.debug("Check upscaling: check that item value is bigger than threshold")
             if item_value > alarm.threshold:
-                logger.info('Trigger the action: %s' % repr(self.policy.action))
-                return True
+                # hack for demo
+                self.counter += 1
+
+                if self.counter > 3:
+                    logger.info('Counter %s Trigger the action: %s' % repr(self.counter, self.policy.action))
+                    return True
+                else:
+                    logger.info('Not triggering action %s since the counter is still under 3' % repr(self.policy.action))
+                    return False
             else:
                 logger.debug("Check upscaling: item value is lower than threshold")
         elif alarm.comparison_operator == '<' or alarm.comparison_operator == 'lt':
@@ -383,8 +392,14 @@ class PolicyThread(threading.Thread):
             if si_avg > alarm.threshold:
                 logger.debug(
                     "Check upscaling: avg item value is bigger than threshold for service instance %s." % self.service_instance.name)
-                logger.info('Trigger the action: %s' % repr(self.policy.action))
-                return True
+                self.counter += 1
+
+                if self.counter > 3:
+                    logger.info('Trigger the action: %s' % repr(self.policy.action))
+                    return True
+                else:
+                    logger.info('Not triggering action %s since the counter is still under 3' % repr(self.policy.action))
+                    return False
             else:
                 logger.debug(
                     "Check upscaling: avg item value is lower than threshold for service instance %s." % self.service_instance.name)
@@ -423,7 +438,7 @@ class CheckerThread(threading.Thread):
         self.is_stopped = False
         self.is_dns_configured = False
         self.novac = NovaClient()
-        self.dns_configurator = ImsDnsClient()
+        #self.dns_configurator = ImsDnsClient()
         self.neutronc = NeutronClient(utilSys.get_endpoint('network'), utilSys.get_token())
 
     def run(self):
@@ -438,7 +453,7 @@ class CheckerThread(threading.Thread):
                         if len(unit.ports) == 0:
                             self.set_ips(unit)
             if self.topology.state == 'DEPLOYED' and not self.is_dns_configured:
-                self.configure_dns()
+                #self.configure_dns()
                 self.is_dns_configured = True
             time.sleep(30)
 

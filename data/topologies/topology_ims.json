@@ -49,24 +49,24 @@
 
         {
           "name": "msg_scaleup",
-          "period": 60,
+          "period": 30,
           "alarm": {
             "meter_name": "system.cpu.util[,idle]",
             "comparison_operator": "gt",
-            "threshold": 70,
+            "threshold": 40,
             "statistic": "avg",
             "evaluation_periods": 1
           },
           "action": {
             "adjustment_type": "ChangeInCapacity",
             "scaling_adjustment": 1,
-            "cooldown": 60
+            "cooldown": 30
           }
         },
 
         {
           "name": "msg_scaledown",
-          "period": 60,
+          "period": 30,
           "alarm": {
             "meter_name": "system.cpu.util[,idle]",
             "comparison_operator": "lt",
