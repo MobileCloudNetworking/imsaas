@@ -33,7 +33,6 @@ class ImsDnsClient():
         DNSaaSClient.createRecord(domain_name='epc.mnc001.mcc001.3gppnetwork.org',record_name='pcscf-rf',record_type='A',record_data=pcscf_ip,tokenId=self.tokenID)
         DNSaaSClient.createRecord("epc.mnc001.mcc001.3gppnetwork.org", "_sip.pcscf", "SRV", "0 4060 pcscf.epc.mnc001.mcc001.3gppnetwork.org.", tokenId=self.tokenID, priority = 1)
         DNSaaSClient.createRecord("epc.mnc001.mcc001.3gppnetwork.org", "_sip._tcp.pcscf", "SRV", "0 4060 pcscf.epc.mnc001.mcc001.3gppnetwork.org.", tokenId=self.tokenID, priority = 1)
-        DNSaaSClient.createRecord(domain_name='epc.mnc001.mcc001.3gppnetwork.org',record_name='epc',record_type='A',record_data=pcscf_ip,tokenId=self.tokenID)
 
     def __create_records_icscf(self, icscf_ip):
         DNSaaSClient.createRecord(domain_name='epc.mnc001.mcc001.3gppnetwork.org',record_name='icscf',record_type='A',record_data=icscf_ip,tokenId=self.tokenID)
@@ -44,6 +43,8 @@ class ImsDnsClient():
         DNSaaSClient.createRecord("epc.mnc001.mcc001.3gppnetwork.org", "_sip._udp.epc", "SRV", "0 5060 epc.mnc001.mcc001.3gppnetwork.org.", tokenId=self.tokenID, priority = 1)
         DNSaaSClient.createRecord("epc.mnc001.mcc001.3gppnetwork.org", "_sip._tcp", "SRV", "0 5060 epc.mnc001.mcc001.3gppnetwork.org.", tokenId=self.tokenID, priority = 1)
         DNSaaSClient.createRecord("epc.mnc001.mcc001.3gppnetwork.org", "_sip.epc", "SRV", "0 5060 epc.mnc001.mcc001.3gppnetwork.org.", tokenId=self.tokenID, priority = 1)
+        # TODO change
+        DNSaaSClient.createRecord(domain_name='epc.mnc001.mcc001.3gppnetwork.org',record_name='',record_type='A',record_data=icscf_ip,tokenId=self.tokenID)
 
 
     def __create_records_scscf(self, scscf_ip):

@@ -438,7 +438,7 @@ class CheckerThread(threading.Thread):
         self.is_stopped = False
         self.is_dns_configured = False
         self.novac = NovaClient()
-        #self.dns_configurator = ImsDnsClient()
+        self.dns_configurator = ImsDnsClient()
         self.neutronc = NeutronClient(utilSys.get_endpoint('network'), utilSys.get_token())
 
     def run(self):
@@ -453,7 +453,7 @@ class CheckerThread(threading.Thread):
                         if len(unit.ports) == 0:
                             self.set_ips(unit)
             if self.topology.state == 'DEPLOYED' and not self.is_dns_configured:
-                #self.configure_dns()
+                self.configure_dns()
                 self.is_dns_configured = True
             time.sleep(30)
 

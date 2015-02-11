@@ -46,6 +46,9 @@ class DNSaaSClientCore:
 
         return response_status, content_dict
 
+
+        return response_status, content_dict
+
     def processReply(self, response):
         '''
         Method to process the reply from the DNSaaS API. The processing can be a simple print or other kind of treatment.
@@ -102,12 +105,12 @@ def createDomain(domain_name, domain_admin_email, tokenId, **kwargs):
     status, content = DNSaaSClient.doRequest('POST', '/domains', json.dumps(msgJson), tokenId)
 
     if content['status'] == '200':
+
         return 1
+
     elif content['data']['code'] == 409:
         # print content['data']['type'] # to print error info
         return 0
-    elif content['status'] == "Server API not reachable":
-        return "Server API not reachable"
     else:
         return 0
 
@@ -274,8 +277,17 @@ def createRecord(domain_name, record_name, record_type, record_data, tokenId, **
             record_data = verify_record_syntax(record_data, domain_name)
             jsonRecord = {'name': record_name, 'type': record_type, 'data': record_data}
 
+        elif record_type == 'A':
+
+            if record_name is not '':
+                domain_name = verify_record_syntax(record_name, domain_name)
+
+            jsonRecord = {'name': domain_name, 'type': record_type, 'data': record_data}
+
+
 
         else:
+
             jsonRecord = {'name': record_name, 'type': record_type, 'data': record_data}
 
         msgJson = {'idDomain': idDomain, 'dataRecord': jsonRecord, 'ISOcodes': codeISO, 'geoRecord': geoRecord}
@@ -289,8 +301,6 @@ def createRecord(domain_name, record_name, record_type, record_data, tokenId, **
         elif content['status'] == '409':
             print content['data']['type']
             return 0
-        elif content['status'] == "Server API not reachable":
-            return "Server API not reachable"
         else:
             return 0
     else:
