@@ -89,7 +89,7 @@
     {
       "name":"db",
       "service_type":"db",
-      "flavor":"m1.small",
+      "flavor":"m1.db",
       "image": "db",
       "key":"mcn-tub",
       "configuration": {
