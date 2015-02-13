@@ -262,7 +262,7 @@ class PolicyThread(threading.Thread):
                 # hack for demo
                 self.counter += 1
 
-                if self.counter > 3:
+                if self.counter > 4:
                     logger.info('Counter %s Trigger the action: %s' % repr(self.counter, self.policy.action))
                     return True
                 else:
@@ -394,7 +394,7 @@ class PolicyThread(threading.Thread):
                     "Check upscaling: avg item value is bigger than threshold for service instance %s." % self.service_instance.name)
                 self.counter += 1
 
-                if self.counter > 3:
+                if self.counter > 4:
                     logger.info('Trigger the action: %s' % repr(self.policy.action))
                     return True
                 else:

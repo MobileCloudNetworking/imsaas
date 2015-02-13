@@ -4,7 +4,7 @@
     {
       "name":"cscfs",
       "service_type":"cscfs",
-      "flavor":"m1.small",
+      "flavor":"m1.medium",
       "image": "cscfs",
       "key":"mcn-tub",
       "configuration": {
@@ -53,7 +53,7 @@
           "alarm": {
             "meter_name": "system.cpu.util[,idle]",
             "comparison_operator": "gt",
-            "threshold": 40,
+            "threshold": 35,
             "statistic": "avg",
             "evaluation_periods": 1
           },
@@ -90,7 +90,7 @@
       "name":"db",
       "service_type":"db",
       "flavor":"m1.db",
-      "image": "db",
+      "image": "db-v2.0",
       "key":"mcn-tub",
       "configuration": {
       },
