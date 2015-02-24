@@ -36,6 +36,7 @@ export OPENSHIFT_REPO_DIR=%%imsso_path%%
 ```
 
 For starting the IMSSO:
+
 ```
 python wsgi/application
 ```
@@ -45,10 +46,11 @@ Instantiate an IMS instance
 ===========================
 
 First of all you need to initialize the IMSSO. In a new terminal do get a token from keystone (token must belong to a user which has the admin role for the tenant):
+
 ```bash
-$ keystone token-get
-$ export KID='...'
-$ export TENANT='...'
+keystone token-get
+export KID='...'
+export TENANT='...'
 ```
 
 Once you have the token you can send the init request to the SO:
