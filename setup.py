@@ -11,7 +11,7 @@ setup(
         'python-neutronclient',
         'python-novaclient',
         'bottle',
-        'sqlalchemy',
+        'sqlalchemy==0.9.8',
         'pyzmq',
     ],
     # test_suite="test",

@@ -4,5 +4,5 @@ python-novaclient
 python-ceilometerclient
 python-neutronclient
 bottle
-sqlalchemy
+sqlalchemy==0.9.8
 pyzmq
