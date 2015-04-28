@@ -16,7 +16,7 @@
 
 import logging
 import threading
-import time
+import time, os
 from heatclient.exc import HTTPNotFound
 from services.DatabaseManager import DatabaseManager
 from core.TopologyOrchestrator import TopologyOrchestrator
@@ -471,16 +471,27 @@ class CheckerThread(threading.Thread):
     def configure_topology(self):
         for si in self.topology.service_instances:
             si.adapter_instance = FactoryServiceAdapter.get_agent(si.service_type, si.adapter)
+            time.sleep(2)
             for unit in si.units:
                 try:
-                    logging.info("sending install message to the adapter")
                     config = {}
                     config['hostname'] = unit.hostname
                     config['ips'] = unit.ips
+                    config['zabbix_ip'] = os.environ['ZABBIX_IP']
+                    config['floating_ips'] = unit.floating_ips
+                except:
+                    logging.debug("there was an issue getting the config for the vnf")
+
+                try:
+
+                    logging.info("sending requests to the adapter %s with config" % config)
                     si.adapter_instance.preinit(config)
                     si.adapter_instance.install(config)
-                except:
-                    logging.debug("this service instance is not needed in the dns")
+                    # TODO add add_relation methods
+                    si.adapter_instance.pre_start(config)
+                    si.adapter_instance.start(config)
+                except Exception,e:
+                    logging.error("error while configuring vnf %s" % e)
 
     def print_test(self, ip):
         logging.debug("Testing dns entry for test service with ip %s"%ip)

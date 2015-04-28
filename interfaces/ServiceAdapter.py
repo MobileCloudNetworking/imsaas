@@ -41,6 +41,22 @@ class ServiceAdapter(object):
         print "ABC - ServiceAdatper.add_dependency()"
 
     @abstractmethod
+    def pre_start(self, config):
+        """
+        start a service instance
+        :return:
+        """
+        print "ABC - ServiceAdatper.preStart()"
+
+    @abstractmethod
+    def start(self, config ):
+        """
+        start a service instance
+        :return:
+        """
+        print "ABC - ServiceAdatper.start()"
+
+    @abstractmethod
     def remove_dependency(self, config, ext_service):
         """
         Remove the dependency between this service and the external one

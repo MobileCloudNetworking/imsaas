@@ -1,6 +1,6 @@
 {
     "service_type": "cscfs",
-    "image": "epc-base",
+    "image": "ims-base",
     "flavor": "m1.small",
     "key":"mcn-key",
     "adapter": "CscfsAdapter",

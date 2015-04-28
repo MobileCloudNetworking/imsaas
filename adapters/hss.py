@@ -7,7 +7,7 @@ import json
 import socket, time, datetime
 
 
-class CscfsAdapter(ABCServiceAdapter):
+class HssAdapter(ABCServiceAdapter):
 
     def __init__(self):
         """
@@ -86,7 +86,7 @@ class CscfsAdapter(ABCServiceAdapter):
 
         request = {"parameters":parameters}
         print "I'm the cscfs adapter, preinit cscfs service, parameters %s, request %s" %(parameters,str(json.dumps(request)))
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "icscf")
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "hss")
         print "I'm the cscfs adapter, preinit cscfs services, received resp %s" %resp
 
         return True
@@ -94,9 +94,6 @@ class CscfsAdapter(ABCServiceAdapter):
     def install(self, config):
         """
         Creates a new Service based on the config file.
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$ICSCF_MGMT_ADDR\",\"$ICSCF_DIAMETER_PORT\",\"$ICSCF_PORT\"]}" http://$ICSCF_MGMT_ADDR:8390/icscf/install
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$SCSCF_MGMT_ADDR\",\"$SCSCF_DIAMETER_PORT\",\"$SCSCF_PORT\"]}" http://$SCSCF_MGMT_ADDR:8390/scscf/install
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$PCSCF_MGMT_ADDR\",\"$PCSCF_PORT\"]}" http://$PCSCF_MGMT_ADDR:8390/pcscf/install
         :return:
         """
 
@@ -112,32 +109,6 @@ class CscfsAdapter(ABCServiceAdapter):
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "icscf")
         print "I'm the cscfs adapter, installing icscf service, received resp %s" %resp
 
-
-        # scscf
-        parameters = []
-        parameters.append(config['ips'].get('mgmt'))
-        parameters.append(self.SCSCF_DIAMETER_PORT)
-        parameters.append(self.SCSCF_PORT)
-
-        # create request scscf
-        request = {"parameters":parameters}
-        print "I'm the cscfs adapter, install scscf service, parameters %s" %(parameters)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "scscf")
-        print "I'm the cscfs adapter, installing scscf service, received resp %s" %resp
-
-
-        # pcscf
-        parameters = []
-        parameters.append(config['ips'].get('mgmt'))
-        parameters.append(self.PCSCF_PORT)
-
-        # create request icscf
-        request = {"parameters":parameters}
-        print "I'm the cscfs adapter, install pcscf service, parameters %s" %(parameters)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "pcscf")
-        print "I'm the cscfs adapter, installing pcscf service, received resp %s" %resp
-
-        return True
 
     def add_dependency(self, config, ext_service):
         """
@@ -159,9 +130,6 @@ class CscfsAdapter(ABCServiceAdapter):
     def pre_start(self, config):
         """
         Send the pre-start request
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$ICSCF_LISTEN\",\"$ICSCF_DIAMETER_PORT\",\"$ICSCF_PORT\",\"$DNS_REALM\",\"$DNS_REA_SLASHED\",\"$ICSCF_ENTRY\",\"$HSS_ENTRY\",\"$SLF_ENTRY\",\"$SLF_PORT\",\"$SCSCF_PORT\",\"$DEFAULT_ROUTE\",\"$USE_SLF\",\"$HSS_PORT\"]}" http://$ICSCF_MGMT_ADDR:8390/icscf/preStart
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$SCSCF_LISTEN\",\"$SCSCF_DIAMETER_PORT\",\"$SCSCF_PORT\",\"$DNS_REALM\",\"$DNS_REA_SLASHED\",\"$SCSCF_ENTRY\",\"$HSS_ENTRY\",\"$SLF_ENTRY\",\"$SLF_PORT\",\"$ICSCF_ENTRY\",\"$DEFAULT_ROUTE\",\"$USE_SLF\",\"$HSS_PORT\"]}" http://$SCSCF_MGMT_ADDR:8390/scscf/preStart
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$PCSCF_LISTEN\",\"$PCSCF_PORT\",\"$DNS_REALM\",\"$DNS_REA_SLASHED\",\"$PCSCF_ENTRY\"]}" http://$PCSCF_MGMT_ADDR:8390/pcscf/preStart
 
         :param config:
         :return:
@@ -193,52 +161,10 @@ class CscfsAdapter(ABCServiceAdapter):
         print "I'm the cscfs adapter, installing icscf service, received resp %s" %resp
 
 
-        # scscf
-        parameters = []
-        parameters.append(config['ips'].get('mgmt'))
-        parameters.append(self.SCSCF_DIAMETER_PORT)
-        parameters.append(self.SCSCF_PORT)
-        parameters.append(self.DNS_REALM)
-        parameters.append(self.DNS_REA_SLASHED)
-        parameters.append(self.SCSCF_ENTRY)
-        parameters.append(self.HSS_ENTRY)
-        parameters.append(self.SLF_ENTRY)
-        parameters.append(self.SLF_PORT)
-        parameters.append(self.SCSCF_PORT)
-        parameters.append(self.DEFAULT_ROUTE)
-        parameters.append(self.USE_SLF)
-        parameters.append(self.HSS_PORT)
-
-        # create request scscf
-        request = {"parameters":parameters}
-        print "I'm the cscfs adapter, install scscf service, parameters %s" %(parameters)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preStart", "scscf")
-        print "I'm the cscfs adapter, installing scscf service, received resp %s" %resp
-
-
-        # pcscf
-        parameters = []
-        parameters.append(config['ips'].get('mgmt'))
-        parameters.append(self.PCSCF_PORT)
-        parameters.append(self.DNS_REALM)
-        parameters.append(self.DNS_REA_SLASHED)
-        parameters.append(self.PCSCF_ENTRY)
-
-
-        # create request pcscf
-        request = {"parameters":parameters}
-        print "I'm the cscfs adapter, install pcscf service, parameters %s" %(parameters)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preStart", "pcscf")
-        print "I'm the cscfs adapter, installing pcscf service, received resp %s" %resp
-
-        return True
 
     def start(self, config):
         """
         Sending start requests to the different components
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$ICSCF_MGMT_ADDR:8390/icscf/start
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$SCSCF_MGMT_ADDR:8390/scscf/start
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$PCSCF_MGMT_ADDR:8390/pcscf/start
         :param config:
         :return:
         """
@@ -249,23 +175,6 @@ class CscfsAdapter(ABCServiceAdapter):
         request = {"parameters":parameters}
         print "I'm the cscfs adapter, install icscf service, parameters %s" %(parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "icscf")
-        print "I'm the cscfs adapter, installing pcscf service, received resp %s" %resp
-
-
-        # scscf
-        parameters = []
-        # create request scscf
-        request = {"parameters":parameters}
-        print "I'm the cscfs adapter, install scscf service, parameters %s" %(parameters)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "scscf")
-        print "I'm the cscfs adapter, installing scscf service, received resp %s" %resp
-
-        # pcscf
-        parameters = []
-        # create request pcscf
-        request = {"parameters":parameters}
-        print "I'm the cscfs adapter, install pcscf service, parameters %s" %(parameters)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "pcscf")
         print "I'm the cscfs adapter, installing pcscf service, received resp %s" %resp
 
 
@@ -293,7 +202,7 @@ class CscfsAdapter(ABCServiceAdapter):
 
 
 if __name__ == '__main__':
-    c = CscfsAdapter()
+    c = HssAdapter()
     config = {}
     config['hostname'] = "test"
     config['ips'] = {'mgmt':'160.85.4.54'}

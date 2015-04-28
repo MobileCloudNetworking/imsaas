@@ -11,7 +11,7 @@ class FactoryServiceAdapter(object):
         _package = "adapters"
         _module = module
         _class = cl
-        print("%s %s %s"%(_package,_module,_class))
+        logger.debug("Instantiating %s from %s.%s"%(_class, _package,_module))
         try:
             _loaded_module = __import__(name='%s.%s' % (_package,_module), fromlist=[_module])
         except ImportError, exc:
