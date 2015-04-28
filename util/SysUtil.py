@@ -249,11 +249,12 @@ def get_token():
     return token
 
 
-def get_endpoint(service_type, endpoint_type=None):
+def get_endpoint(service_type, endpoint_type=None,region_name=None):
     from clients import keystone
     # ##Init keystone client
     ksclient = keystone.Client()
-    endpoint = ksclient.get_endpoint(service_type=service_type, endpoint_type=endpoint_type)
+    endpoint = ksclient.get_endpoint(service_type=service_type, endpoint_type=endpoint_type, region_name=region_name)
+    logger.debug("endpoint for service_type %s is %s" %(service_type,endpoint,))
     return endpoint
 
 

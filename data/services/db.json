@@ -1,8 +1,8 @@
 {
     "service_type": "db",
-    "image": "ubuntu-server-14.04",
-    "flavor": "m1.db",
-    "key":"mcn-tub",
+    "image": "Ubuntu 14.04 LTS",
+    "flavor": "m1.small",
+    "key":"mcn-key",
     "configuration": {
     },
     "size": {

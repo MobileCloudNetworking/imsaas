@@ -32,8 +32,7 @@ except IOError:
 # line, it's possible required libraries won't be in your searchable path
 
 from core.orchestrator import ServiceOrchestrator
-from core.SecurityGroupOrchestrator import SecurityGroupOrchestrator
-import json
+
 
 from sdk.mcn import occi_ext
 PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
@@ -51,7 +50,6 @@ class MyBackend(occi_ext.Backend):
         SysUtil().init_sys()
         InitSO()
         self.so = ServiceOrchestrator(token, tenant)
-        self.so.so_e.design()
         entity.actions = [occi_ext.DEPLOY_ACTION]
 
 

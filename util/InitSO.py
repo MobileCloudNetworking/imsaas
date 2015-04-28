@@ -21,6 +21,8 @@ import os
 from core.SecurityGroupOrchestrator import SecurityGroupOrchestrator
 from core.ServiceOrchestrator import ServiceOrchestrator
 
+
+
 PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
 
@@ -56,4 +58,5 @@ class InitSO:
                 json_file = config_file
                 resp = ServiceOrchestrator.create(json.loads(json_file))
                 logger.debug('response: %s' % resp)
+
 

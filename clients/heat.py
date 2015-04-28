@@ -16,6 +16,7 @@
 __author__ = 'mpa'
 
 from util import SysUtil
+from util.SysUtil import SysUtil as SysUtilObj
 from heatclient.client import Client as HeatClient
 from heatclient.common import utils
 from heatclient.common import template_utils
@@ -27,7 +28,9 @@ class Client(object):
     def __init__(self):
         heat_args = SysUtil.get_credentials()
         heat_args['token'] = SysUtil.get_token()
-        endpoint = SysUtil.get_endpoint(service_type='orchestration', endpoint_type='publicURL')
+        conf = SysUtilObj().get_sys_conf()
+        endpoint = SysUtil.get_endpoint(service_type='orchestration', endpoint_type='publicURL', region_name=conf['os_region_name'])
+
         self.client = HeatClient(version='1', endpoint=endpoint, **heat_args)
         #self.client = heat.Client(version='1', auth_url=auth_url, tenant_name=tenant_name, username=username, password=password, token = None)
 

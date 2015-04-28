@@ -39,7 +39,9 @@ topology_mapping = {
     'e2e': 'topology_ims.json',
     'standalone': 'topology_ims_standalone.json',
     'test_no_services': 'topology_test_no_services.json',
-    'test_one_service_elasticity': 'topology_test_v2.json'
+    'test_one_service_elasticity': 'topology_test_v2.json',
+    'test_dummy_topology': 'topology_dummy_service.json',
+    'topology_cscfs_service': 'topology_cscfs_service.json'
 }
 
 class SoExecution(object):
@@ -51,7 +53,7 @@ class SoExecution(object):
         """
         Constructor
         """
-        self.topology_type = "topology_ims.json"
+        self.topology_type = "topology_cscfs_service.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None
@@ -64,10 +66,6 @@ class SoExecution(object):
 
         #self.deployer = util.get_deployer(self.token, url_type='public', tenant_name=self.tenant_name)
 
-    def design(self):
-        """
-        Design method
-        """
 
 
     def deploy(self, attributes):
@@ -186,28 +184,11 @@ class SoExecution(object):
         else:
             return 'CREATE_COMPLETE', 'N/A', ''
 
-class SoDecision(object):
-    '''
-    classdocs
-    '''
-
-
-    def __init__(self, token, tenant):
-        '''
-        Constructor
-        '''
-        self.token = token
-        self.tenant = tenant
-
-    def run(self):
-        pass
-
 
 class ServiceOrchestrator(object):
     def __init__(self, token, tenant_name):
         os.environ['OS_AUTH_TOKEN'] = token
         self.so_e = SoExecution(token, tenant_name)
-        self.so_d = SoDecision(token, tenant_name)
 
 
 

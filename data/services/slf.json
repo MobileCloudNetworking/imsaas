@@ -1,8 +1,8 @@
 {
     "service_type": "slf",
-    "image": "ubuntu-server-14.04",
+    "image": "Ubuntu 14.04 LTS",
     "flavor": "m1.small",
-    "key":"mcn-tub",
+    "key":"mcn-key",
     "configuration": {
     },
     "size": {

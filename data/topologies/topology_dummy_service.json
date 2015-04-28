@@ -1,0 +1,30 @@
+{
+    "name":"test",
+    "service_instances": [
+        {
+            "name":"dummy",
+            "service_type":"dummy",
+            "flavor":"m1.small",
+            "key":"stack",
+            "configuration": {
+            },
+            "networks": [
+                {
+                    "name":"mgmt",
+                    "private_net":"8220d5ad-cb26-40bc-8957-01d8325eb0ee",
+                    "private_subnet": "3b820f2a-6ac0-431e-9fd3-28bc78ce1e46",
+                    "public_net": "35d14714-9363-4751-87e4-76aa86da580b",
+                    "security_groups": [
+                        "security-group-ims"
+                    ]
+                }
+            ],
+            "policies": [
+            ],
+            "requirements": [
+            ],
+            "user_data": [
+            ]
+        }
+    ]
+}

@@ -1,8 +1,9 @@
 {
     "service_type": "cscfs",
-    "image": "ubuntu-software-config",
+    "image": "epc-base",
     "flavor": "m1.small",
-    "key":"mcn-tub",
+    "key":"mcn-key",
+    "adapter": "CscfsAdapter",
     "configuration": {
     },
     "size": {

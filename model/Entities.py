@@ -51,6 +51,7 @@ class AbstractService(object):
         self.flavor
         self.size
         self.config
+        self.adapter
 
 
 class Service(AbstractService, Base):
@@ -66,11 +67,12 @@ class Service(AbstractService, Base):
     user_data = relationship('Command', cascade="all, delete-orphan", lazy='immediate')
     requirements = relationship('Requirement', cascade="all, delete-orphan", lazy='immediate')
     networks = relationship('Network_Instance', cascade="all, delete-orphan", lazy='immediate')
+    adapter = Column(String(50))
     size = Column(PickleType)
     version = Column(String(50))
     configuration = Column(PickleType)
 
-    def __init__(self, service_type, image, flavor, size, version=None, user_data=[], requirements=[], networks=[], key=None, configuration={}):
+    def __init__(self, service_type, image, flavor, size, version=None, user_data=[], requirements=[], networks=[], key=None, configuration={}, adapter=None):
         self.id = None
         self.service_type = service_type
         self.configuration = configuration
@@ -85,6 +87,7 @@ class Service(AbstractService, Base):
         self.networks = networks
         self.size = size
         self.version = version
+        self.adapter = adapter
 
     def __str__(self):
         t = ""
@@ -99,6 +102,7 @@ class Service(AbstractService, Base):
         t += 'key:%s, ' % (self.key)
         t += 'key_id:%s, ' % (self.key_id)
         t += 'size:%s, ' % self.size
+        t += 'adapter:%s, ' % self.adapter
         t += 'networks:['
         if self.networks:
             t += '%s' % self.networks[0].__str__()
@@ -178,12 +182,13 @@ class ServiceInstance(AbstractService, Base):
     key = relationship('Key', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
     name = Column(String(50))
     service_type = Column(String(50))
+    adapter = Column(String(50))
     size = Column(PickleType)
     state = Column('State', Enum(*state))
 
 
     def __init__(self, name, service_type, state, image, flavor, size, key=None,
-                 policies=[], units=[], requirements=[], user_data=[], networks=[], configuration={}):
+                 policies=[], units=[], requirements=[], user_data=[], networks=[], configuration={}, adapter=None):
         self.id = None
         self.topology_id = None
         self.configuration = configuration
@@ -202,6 +207,8 @@ class ServiceInstance(AbstractService, Base):
         self.state = state
         self.units = units
         self.user_data = user_data
+        self.adapter = adapter
+        self.instace_adapter = None
 
 
     def __str__(self):
@@ -211,6 +218,7 @@ class ServiceInstance(AbstractService, Base):
         t += 'topology_id:%s, ' % (self.topology_id)
         t += 'name:%s, ' % (self.name)
         t += 'service_type:%s, ' % (self.service_type)
+        t += 'adapter: %s, ' % (self.adapter)
         t += 'state: %s, ' % (self.state)
         t += 'configuration:%s, ' % (self.configuration)
         t += 'image:%s, ' % (self.image)

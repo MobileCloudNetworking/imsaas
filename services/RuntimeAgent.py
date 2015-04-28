@@ -23,6 +23,7 @@ from core.TopologyOrchestrator import TopologyOrchestrator
 from model.Entities import Unit
 from interfaces.RuntimeAgent import RuntimeAgent as ABCRuntimeAgent
 from util.FactoryAgent import FactoryAgent
+from util.FactoryServiceAdapter import FactoryServiceAdapter
 from util.SysUtil import SysUtil, translate
 import util.SysUtil as utilSys
 from clients.heat import Client as HeatClient
@@ -438,7 +439,7 @@ class CheckerThread(threading.Thread):
         self.is_stopped = False
         self.is_dns_configured = False
         self.novac = NovaClient()
-        self.dns_configurator = ImsDnsClient()
+        #self.dns_configurator = ImsDnsClient()
         self.neutronc = NeutronClient(utilSys.get_endpoint('network'), utilSys.get_token())
 
     def run(self):
@@ -453,9 +454,11 @@ class CheckerThread(threading.Thread):
                         if len(unit.ports) == 0:
                             self.set_ips(unit)
             if self.topology.state == 'DEPLOYED' and not self.is_dns_configured:
-                self.configure_dns()
+                #self.configure_dns()
+                self.configure_topology()
                 self.is_dns_configured = True
             time.sleep(30)
+
 
     def configure_dns(self):
         for si in self.topology.service_instances:
@@ -465,6 +468,19 @@ class CheckerThread(threading.Thread):
                 except:
                     logging.debug("this service instance is not needed in the dns")
 
+    def configure_topology(self):
+        for si in self.topology.service_instances:
+            si.adapter_instance = FactoryServiceAdapter.get_agent(si.service_type, si.adapter)
+            for unit in si.units:
+                try:
+                    logging.info("sending install message to the adapter")
+                    config = {}
+                    config['hostname'] = unit.hostname
+                    config['ips'] = unit.ips
+                    si.adapter_instance.preinit(config)
+                    si.adapter_instance.install(config)
+                except:
+                    logging.debug("this service instance is not needed in the dns")
 
     def print_test(self, ip):
         logging.debug("Testing dns entry for test service with ip %s"%ip)

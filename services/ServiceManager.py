@@ -100,10 +100,14 @@ class ServiceManager(ABCServiceManager):
                 new_service_args['user_data'] = user_data
             elif service_item == "version":
                 new_service_args['version'] = config.get(service_item)
+            elif service_item == "adapter":
+                new_service_args['adapter'] = config.get(service_item)
             else:
                 raise InvalidInputException("paramter \"%s\" is not provided by Services." % config.get(service_item))
 
+
         ###Create Service
+        print(new_service_args)
         new_service = Service(**new_service_args)
         logger.debug(new_service)
         return new_service

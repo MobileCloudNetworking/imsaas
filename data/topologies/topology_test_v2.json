@@ -4,9 +4,6 @@
         {
             "name":"cscfs",
             "service_type":"test",
-            "flavor":"m1.small",
-            "image": "ubuntu-software-config",
-            "key":"mcn-tub",
             "configuration": {
             },
             "networks": [

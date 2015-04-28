@@ -61,6 +61,7 @@ class TopologyManager(ABCTopologyManager):
                     si_args['configuration'] = service.configuration
                     si_args['key'] = service.key
                     si_args['size'] = service.size
+                    si_args['adapter'] = service.adapter
                     si_args['requirements'] = []
                     for requirement in service.requirements:
                         func = Requirement.__init__
@@ -98,6 +99,8 @@ class TopologyManager(ABCTopologyManager):
                     logger.debug("Parsing service instance \"%s\"" % si_args['name'])
                 elif si_item == "service_type":
                     si_args['service_type'] = si_config.get(si_item)
+                elif si_item == "adapter":
+                    si_args['adapter'] = si_config.get(si_item)
                 elif si_item == "image":
                     image_name = si_config.get(si_item)
                     image_list = self.db.get_by_name(Image, image_name)
@@ -251,6 +254,8 @@ class TopologyManager(ABCTopologyManager):
                     #updated_service_instance.service_type = new_service_instance.service_type
                     if new_service_instance.service_type and updated_service_instance.service_type != new_service_instance.service_type:
                         logger.warning("Cannot update service_type for %s->%s. Not Implemented." % (updated_topology.name, updated_service_instance.name))
+                    if new_service_instance.adapter and updated_service_instance.adapter != new_service_instance.adapter:
+                        logger.warning("Cannot update adapter for %s->%s. Not Implemented." % (updated_topology.name, updated_service_instance.name))
                     #updated_service_instance.flavor = new_service_instance.flavor
                     if new_service_instance.flavor and updated_service_instance.flavor.name != new_service_instance.flavor.name:
                         logger.warning("Cannot update flavor for %s->%s. Not Implemented." % (updated_topology.name, updated_service_instance.name))
