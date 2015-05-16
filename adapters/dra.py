@@ -6,24 +6,14 @@ import json
 import socket, time, datetime
 
 
-class HssAdapter(ABCServiceAdapter):
+class DraAdapter(ABCServiceAdapter):
     def __init__(self):
         """
         Initializes a new ServiceAdapter.
         :return:
         """
         self.headers = {'Content-type': 'application/json'}
-        self.icscf_diameter_port = "3869"
-        self.SCSCF_NAME = "scscf"
-        self.SCSCF_DIAMETER_PORT = "3870"
-        self.SCSCF_PORT = "6060"
-        self.SCSCF_LISTEN = "0.0.0.0"
-        self.ICSCF_NAME = "icscf"
-        self.ICSCF_DIAMETER_PORT = "3869"
-        self.ICSCF_PORT = "5060"
-        self.PCSCF_NAME = "pcscf"
-        self.PCSCF_PORT = "4060"
-        self.HSS_MGMT_ADDR = ""
+
         self.HOST_NAME_BY_ORCH = ""
         self.PUB_IP = ""
         # 0 means we are not using a local database
@@ -31,45 +21,46 @@ class HssAdapter(ABCServiceAdapter):
         # and configured before starting this service
         self.LocalDB = "1"
 
-        self.VAR_CONSOLE_PORT_ONE = "10003"
-        self.VAR_CONSOLE_PORT_TWO = "10000"
-        self.VAR_CONSOLE_PORT_BIND_ONE = "0.0.0.0"
-        self.VAR_CONSOLE_PORT_BIND_TWO = "0.0.0.0"
-        self.VAR_HSS_DNS_REALM = "openepc.test"  # mainly used for dra/slf relation
-        self.VAR_HSS_ENTRY ="hss.%s" % self.VAR_HSS_DNS_REALM  # mainly used for dra/slf relation
-        self.VAR_HSS_PORT = "3868"
-        self.VAR_HSS_BIND = "localhost"
+        self.SLF_NAME = "slf"
+        self.USE_SLF = "false"
+        self.SLF_PORT = "13868"
+
+        self.VAR_SLF_BIND = "localhost"
         self.VERSION = "5G"
+        # -------------------------------------------------------#
+        #	Parameters for dns relation
+        # -------------------------------------------------------#
+        self.DNS_REALM = "openepc.test"
+        self.DNS_REA_SLASHED = "openepc\\\.test"
+        self.DNS_LISTEN = ""
+        self.DNS_IP = ""
         # -------------------------------------------------------#
         # Parameters for hss relation
         # -------------------------------------------------------#
         self.HSS_MGMT_ADDR = ""
         self.HSS_NAME = "hss"  # most likely the name given by orchestrator (e.g. hss-125683782)
         self.HSS_PORT = "3868"
+        self.HSS_MGMT_ADDR = ""
+        self.HSS_ENTRY = "%s.%s" % (self.HSS_NAME, self.DNS_REALM)
         # -------------------------------------------------------#
-        #	Parameters for slf relation
-        #--------------------------------------------------------#
-        self.SLF_NAME = "slf"
-        self.USE_SLF = "false"
-        self.SLF_PORT = "13868"
-
+        # Parameters for cscfs relation
         # -------------------------------------------------------#
-        #	Parameters for dns relation
-        # -------------------------------------------------------#
-        self.DNS_REALM = "openepc.test"
-        self.DNS_REA_SLASHED = "openepc\\\.test"
+        self.SCSCF_NAME = "scscf"
+        self.SCSCF_PORT = "6060"
+        self.SCSCF_LISTEN = "0.0.0.0"
+        self.ICSCF_NAME = "icscf"
+        self.ICSCF_PORT = "5060"
         self.ICSCF_ENTRY = "icscf.%s" % self.DNS_REALM
         self.SCSCF_ENTRY = "scscf.%s" % self.DNS_REALM
         self.PCSCF_ENTRY = "pcscf.%s" % self.DNS_REALM
-        self.HSS_ENTRY = "%s.%s" % (self.HSS_NAME, self.DNS_REALM)
-        self.SLF_ENTRY = "%s.%s" % (self.SLF_NAME, self.DNS_REALM)
-
         # -------------------------------------------------------#
         #	Parameters for db relation
         # -------------------------------------------------------#
         self.DB_HOST = "localhost"
+        self.DB_IP = ""
 
         self.DEFAULT_ROUTE = self.HSS_ENTRY
+        self.SLF_ENTRY = "%s.%s" % (self.SLF_NAME, self.DNS_REALM)
 
     def preinit(self, config):
         """
@@ -102,19 +93,16 @@ class HssAdapter(ABCServiceAdapter):
         parameters.append(config['zabbix_ip'])
 
         request = {"parameters": parameters}
-        print "I'm the hss adapter, preinit hss service, parameters %s, request %s" % (
+        print "I'm the dra adapter, preinit dra service, parameters %s, request %s" % (
             parameters, str(json.dumps(request)))
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "chess")
-        print "I'm the hss adapter, preinit hss services, received resp %s" % resp
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "dra")
+        print "I'm the dra adapter, preinit dra services, received resp %s" % resp
 
         return True
 
     def install(self, config):
         """
         Creates a new Service based on the config file.
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$LocalDB\",\"$HOST_NAME_BY_ORCH\",\"$PUB_IP\",\"$VAR_CONSOLE_PORT_ONE\",
-        \"$VAR_CONSOLE_PORT_TWO\",\"$VAR_CONSOLE_PORT_BIND_ONE\",\"$VAR_CONSOLE_PORT_BIND_TWO\",\"$VAR_HSS_ENTRY\",
-        \"$VAR_HSS_PORT\",\"$VAR_HSS_BIND\",\"$VERSION\"]}" http://$HSS_MGMT_ADDR:8390/chess/install
         :return:
         """
 
@@ -124,22 +112,13 @@ class HssAdapter(ABCServiceAdapter):
         # hss parameters
         parameters = []
         parameters.append(self.LocalDB)
-        parameters.append(config['hostname'])
-        parameters.append(config['floating_ips'].get('mgmt'))
-        parameters.append(self.VAR_CONSOLE_PORT_ONE)
-        parameters.append(self.VAR_CONSOLE_PORT_TWO)
-        parameters.append(self.VAR_CONSOLE_PORT_BIND_ONE)
-        parameters.append(self.VAR_CONSOLE_PORT_BIND_TWO)
-        parameters.append(self.VAR_HSS_ENTRY)
-        parameters.append(self.VAR_HSS_PORT)
-        parameters.append(self.VAR_HSS_BIND)
-        parameters.append(self.VERSION)
+
 
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the hss adapter, install hss service, parameters %s" % (request)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "chess")
-        print "I'm the hss adapter, installing hss service, received resp %s" % resp
+        print "I'm the dra adapter, install dra service, parameters %s" % (request)
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "dra")
+        print "I'm the dra adapter, installing dra service, received resp %s" % resp
 
 
     def add_dependency(self, config, ext_unit, ext_service):
@@ -147,23 +126,19 @@ class HssAdapter(ABCServiceAdapter):
         Add the dependency between this service and the external one
         :return:
         """
-        print "hss adapter ext_service.service_type %s" %ext_service.service_type
+        print "dra adapter ext_service.service_type %s" %ext_service.service_type
 
-        if "cscfs" in ext_service.service_type:
+        if "hss" in ext_service.service_type:
         # external dependency with the cscfs
-        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$HSS_MGMT_ADDR:8390/chess/addRelation/icscf
+        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$HSS_NAME\",\"$DNS_REALM\",\"$HSS_PORT\"]}" http://$SLF_MGMT_ADDR:8390/dra/addRelation/hss
             parameters = []
+            parameters.append(ext_unit.hostname)
+            parameters.append(self.DNS_REALM)
+            # TODO add port number via dependency
+            parameters.append("3868")
             request = {"parameters":parameters}
-            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "icscf")
-            print "I'm the cscfs adapter, resolving dependency with hss service, received resp %s" %resp
-        if "dra" in ext_service.service_type:
-        # external dependency with the cscfs
-        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$HSS_MGMT_ADDR:8390/chess/addRelation/icscf
-            parameters = []
-            request = {"parameters":parameters}
-            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "icscf")
-            print "I'm the cscfs adapter, resolving dependency with hss service, received resp %s" %resp
-
+            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "dra", "hss")
+            print "I'm the dra adapter, resolving dependency with hss service, received resp %s" %resp
 
     def remove_dependency(self, config, ext_service):
         """
@@ -176,11 +151,6 @@ class HssAdapter(ABCServiceAdapter):
         """
         Send the pre-start request
 
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$VAR_CONSOLE_PORT_ONE\",
-        \"$VAR_CONSOLE_PORT_TWO\",\"$VAR_CONSOLE_PORT_BIND_ONE\",\"$VAR_CONSOLE_PORT_BIND_TWO\",
-        \"$DNS_REALM\",\"$VAR_HSS_ENTRY\",\"$SLF_ENTRY\",\"$USE_SLF\",\"$SLF_PORT\",\"$ICSCF_PORT\",
-        \"$SCSCF_PORT\",\"$VAR_HSS_PORT\",\"$VAR_HSS_BIND\",\"$DB_HOST\",\"$DEFAULT_ROUTE\"]}"
-         http://$HSS_MGMT_ADDR:8390/chess/preStart
         :param config:
         :return:
         """
@@ -192,22 +162,16 @@ class HssAdapter(ABCServiceAdapter):
 
         # hss parameters
         parameters = []
-        parameters.append(self.VAR_CONSOLE_PORT_ONE)
-        parameters.append(self.VAR_CONSOLE_PORT_TWO)
-        parameters.append(self.VAR_CONSOLE_PORT_BIND_ONE)
-        parameters.append(self.VAR_CONSOLE_PORT_BIND_TWO)
         parameters.append(self.DNS_REALM)
-        parameters.append(self.VAR_HSS_ENTRY)
         parameters.append(self.SLF_ENTRY)
-        parameters.append(self.USE_SLF)
-        parameters.append(self.SLF_PORT)
+        parameters.append(self.VAR_HSS_ENTRY)
+        parameters.append(self.VAR_HSS_PORT)
+        parameters.append(self.ICSCF_ENTRY)
+        parameters.append(self.SCSCF_ENTRY)
         parameters.append(self.ICSCF_PORT)
         parameters.append(self.SCSCF_PORT)
-        parameters.append(self.VAR_HSS_PORT)
-        parameters.append(self.VAR_HSS_BIND)
-        parameters.append(self.DB_HOST)
-        parameters.append(self.DEFAULT_ROUTE)
-
+        parameters.append(self.SLF_PORT)
+        parameters.append(self.VAR_SLF_BIND)
 
 
         # create request hss
@@ -243,6 +207,7 @@ class HssAdapter(ABCServiceAdapter):
         pass
 
 
+
     def __send_request(self, ip, request, method, vnf, ext_vnf=None):
         """
         :return:
@@ -254,6 +219,7 @@ class HssAdapter(ABCServiceAdapter):
             connection.request('POST', '/%s/%s/%s' % (vnf, method, ext_vnf), json.dumps(request), self.headers)
         response = connection.getresponse()
         return (response.read())
+
 
     def __split_ip(self, ip):
         """Split a IP address given as string into a 4-tuple of integers."""

@@ -1,11 +1,70 @@
 {
-    "name":"test",
+    "name":"ims",
     "service_instances": [
         {
-            "name":"dummy",
+            "name":"cscfs",
             "service_type":"cscfs",
+            "image": "ims-base-r140",
             "flavor":"m1.small",
             "key":"mcn-key",
+            "location": ["bart"],
+            "relation": ["hss"],
+            "configuration": {
+            },
+            "networks": [
+                {
+                    "name":"mgmt",
+                    "private_net":"14348f08-19c5-471d-9f8d-dfeff6ffdb1e",
+                    "private_subnet": "329a66f7-999d-4505-b982-c0b4aee3688c",
+                    "public_net": "831c6cfe-3f05-4fcc-9488-ca4e3106d748",
+                    "security_groups": [
+                        "security-group-ims"
+                    ]
+                }
+            ],
+            "policies": [
+            ],
+            "requirements": [
+            ],
+            "user_data": [
+            ]
+        },
+        {
+            "name":"hss",
+            "service_type":"hss",
+            "image": "ims-base-r140",
+            "flavor":"m1.small",
+            "key":"mcn-key",
+            "location": ["bart"],
+            "relation": ["cscfs"],
+            "configuration": {
+            },
+            "networks": [
+                {
+                    "name":"mgmt",
+                    "private_net":"14348f08-19c5-471d-9f8d-dfeff6ffdb1e",
+                    "private_subnet": "329a66f7-999d-4505-b982-c0b4aee3688c",
+                    "public_net": "831c6cfe-3f05-4fcc-9488-ca4e3106d748",
+                    "security_groups": [
+                        "security-group-ims"
+                    ]
+                }
+            ],
+            "policies": [
+            ],
+            "requirements": [
+            ],
+            "user_data": [
+            ]
+        },
+        {
+            "name":"dra",
+            "service_type":"dra",
+            "image": "slf_base_image",
+            "flavor":"m1.small",
+            "key":"mcn-key",
+            "location": ["bart"],
+            "relation": ["cscfs", "hss"],
             "configuration": {
             },
             "networks": [
@@ -26,5 +85,6 @@
             "user_data": [
             ]
         }
+
     ]
 }

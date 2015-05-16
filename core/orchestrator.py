@@ -30,6 +30,8 @@ from util.FactoryAgent import FactoryAgent
 from util.SysUtil import SysUtil as sys_util
 from util import util as ims_util
 
+from sdk.mcn import util
+
 SO_DIR = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
 logger = logging.getLogger(__name__)
@@ -76,7 +78,23 @@ class SoExecution(object):
             pass
         dnsaas = True
         parameters = {}
-        parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = attributes['mcn.endpoint.maas']
+
+        # trying to retrieve maas endpoint
+        if 'mcn.endpoint.maas' in attributes:
+            logger.debug("Maas IP was passed as attribute")
+            parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = attributes['mcn.endpoint.maas']
+        else:
+            try:
+                logger.debug("Maas IP was not passed as attribute")
+                self.maas = util.get_maas(self.token, tenant_name=self.tenant_name)
+                parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = self.maas.get_address(self.token)
+                logger.info("maas instantiated with address %s" % os.environ['ZABBIX_IP'])
+            except Exception, e:
+                logger.error("Problems instantiating maas")
+                raise SystemError("Problems instantiating maas")
+
+
+
         try:
             parameters['dns_ip_address'] = os.environ['DNS_IP'] = attributes['mcn.endpoint.forwarder']
             parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = attributes['mcn.endpoint.api']
@@ -86,7 +104,7 @@ class SoExecution(object):
         try:
             type = os.environ['TOPOLOGY'] = attributes['mcn.topology.type']
             self.topology_type = topology_mapping[type]
-        except:
+        except Exception:
             logger.debug("parameter mcn.topology.type not available, using the default topology %s" %self.topology_type)
             os.environ['TOPOLOGY'] = self.topology_type
 
@@ -106,6 +124,8 @@ class SoExecution(object):
                 logger.error("Error position: (%s:%s)" % (mark.line + 1, mark.column + 1))
             else:
                 logger.error("Error in configuration file:", exc)
+
+
 
         try:
             self.topology = TopologyOrchestrator.create(config)
@@ -159,6 +179,10 @@ class SoExecution(object):
             self.deployer.dispose(topology)
             TopologyOrchestrator.delete(topology)
             self.stack_id = None
+            if self.maas is not None:
+                util.dispose_maas(self.token, self.maas)
+
+
 
     def state(self):
         """

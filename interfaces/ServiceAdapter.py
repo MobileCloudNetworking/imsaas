@@ -33,7 +33,7 @@ class ServiceAdapter(object):
         print "ABC - ServiceAdatper.install()"
 
     @abstractmethod
-    def add_dependency(self, config, ext_service):
+    def add_dependency(self, config, ext_unit, ext_service):
         """
         Add the dependency between this service and the external one
         :return:
@@ -57,7 +57,7 @@ class ServiceAdapter(object):
         print "ABC - ServiceAdatper.start()"
 
     @abstractmethod
-    def remove_dependency(self, config, ext_service):
+    def remove_dependency(self, config, ext_unit, ext_service):
         """
         Remove the dependency between this service and the external one
         :return:

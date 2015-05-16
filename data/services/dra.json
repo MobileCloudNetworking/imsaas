@@ -1,6 +1,7 @@
 {
-    "service_type": "slf",
-    "image": "Ubuntu 14.04 LTS",
+    "service_type": "dra",
+    "image": "slf_base_image",
+    "adapter": "DraAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",
     "configuration": {

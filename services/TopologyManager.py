@@ -21,7 +21,7 @@ from emm_exceptions.InvalidInputException import InvalidInputException
 from interfaces.TopologyManager import TopologyManager as ABCTopologyManager
 from services.DatabaseManager import DatabaseManager
 from model.Entities import Topology, Unit, Requirement, Alarm, Action, Policy, SecurityGroup, Service, ServiceInstance, Command, \
-    Network, Network_Instance, NetworkInstance_SecurityGroup, Flavor, Image, Key
+    Network, Network_Instance, NetworkInstance_SecurityGroup, Flavor, Image, Key, Relation, Location
 from copy import deepcopy as copy
 from util.FactoryAgent import FactoryAgent
 from util.SysUtil import SysUtil as sys_util
@@ -184,6 +184,20 @@ class TopologyManager(ABCTopologyManager):
                         command = Command(_user_data_item)
                         user_data.append(command)
                     si_args['user_data'] = user_data
+                elif si_item == "location":
+                    location = []
+                    for _loc in si_config.get(si_item):
+                        logger.debug("found item location %s"%_loc)
+                        loc = Location(_loc)
+                        location.append(loc)
+                    si_args['location'] = location
+                elif si_item == "relation":
+                    relation = []
+                    for _rel in si_config.get(si_item):
+                        logger.debug("found item relation %s"%_rel)
+                        rel = Relation(_rel)
+                        relation.append(rel)
+                    si_args['relation'] = relation
                 else:
                     raise InvalidInputException("parameter \"%s\" is not provided by Services." % si_config.get(si_item))
 

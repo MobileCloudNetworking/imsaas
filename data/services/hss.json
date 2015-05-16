@@ -1,6 +1,7 @@
 {
     "service_type": "hss",
-    "image": "Ubuntu 14.04 LTS",
+    "image": "ims-base",
+    "adapter": "HssAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",
     "configuration": {

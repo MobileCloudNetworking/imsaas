@@ -26,7 +26,7 @@ __author__ = 'mpa'
 
 logger = logging.getLogger(__name__)
 
-class TemplateManager(object):
+class TemplateManagerCS(object):
 
     @staticmethod
     def get_template(topology):

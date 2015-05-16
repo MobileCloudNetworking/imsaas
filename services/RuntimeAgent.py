@@ -16,11 +16,11 @@
 
 import logging
 import threading
-import time, os
+import time, os, thread
 from heatclient.exc import HTTPNotFound
 from services.DatabaseManager import DatabaseManager
 from core.TopologyOrchestrator import TopologyOrchestrator
-from model.Entities import Unit
+from model.Entities import Unit, ServiceInstance
 from interfaces.RuntimeAgent import RuntimeAgent as ABCRuntimeAgent
 from util.FactoryAgent import FactoryAgent
 from util.FactoryServiceAdapter import FactoryServiceAdapter
@@ -471,7 +471,6 @@ class CheckerThread(threading.Thread):
     def configure_topology(self):
         for si in self.topology.service_instances:
             si.adapter_instance = FactoryServiceAdapter.get_agent(si.service_type, si.adapter)
-            time.sleep(2)
             for unit in si.units:
                 try:
                     config = {}
@@ -479,19 +478,32 @@ class CheckerThread(threading.Thread):
                     config['ips'] = unit.ips
                     config['zabbix_ip'] = os.environ['ZABBIX_IP']
                     config['floating_ips'] = unit.floating_ips
+                    config['hostname'] = unit.hostname
                 except:
                     logging.debug("there was an issue getting the config for the vnf")
 
                 try:
-
                     logging.info("sending requests to the adapter %s with config" % config)
                     si.adapter_instance.preinit(config)
                     si.adapter_instance.install(config)
+                except Exception,e:
+                    logging.error("error while configuring vnf %s" % e)
+
+                # add relations
+                for ext_service in si.relation:
+                    service_list = self.db.get_by_name(ServiceInstance, ext_service.name)
+                    if len(service_list) == 1:
+                        ext_si = service_list[0]
+                        for ext_unit in ext_si.units:
+                            logging.info("sending request add_dependency to the adapter %s with config %s and ext_unit %s" % (si.service_type, config, ext_unit))
+                            si.adapter_instance.add_dependency(config, ext_unit, ext_si)
+                try:
                     # TODO add add_relation methods
                     si.adapter_instance.pre_start(config)
                     si.adapter_instance.start(config)
                 except Exception,e:
                     logging.error("error while configuring vnf %s" % e)
+
 
     def print_test(self, ip):
         logging.debug("Testing dns entry for test service with ip %s"%ip)

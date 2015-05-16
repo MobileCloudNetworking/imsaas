@@ -139,15 +139,22 @@ class CscfsAdapter(ABCServiceAdapter):
 
         return True
 
-    def add_dependency(self, config, ext_service):
+    def add_dependency(self, config, ext_unit, ext_service):
         """
         Add the dependency between this service and the external one
         :return:
         """
+        print "cscfs adapter ext_service.service_type %s" %ext_service.service_type
 
-        # external dependency with the database
-
-        print "I'm the dummy adapter, installing dummy service, received config %s" %config
+        if "hss" in ext_service.service_type:
+        # external dependency with the hss
+        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$HSS_MGMT_ADDR\"]}" http://$ICSCF_MGMT_ADDR:8390/icscf/addRelation/chess
+            print "resolving dependency with the hss with following information: %s, %s"%(ext_unit, ext_service)
+            parameters = []
+            parameters.append(ext_unit.ips.get('mgmt'))
+            request = {"parameters":parameters}
+            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "icscf", "hss")
+            print "I'm the cscfs adapter, resolving dependency with hss service, received resp %s" %resp
 
     def remove_dependency(self, config, ext_service):
         """
@@ -159,9 +166,14 @@ class CscfsAdapter(ABCServiceAdapter):
     def pre_start(self, config):
         """
         Send the pre-start request
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$ICSCF_LISTEN\",\"$ICSCF_DIAMETER_PORT\",\"$ICSCF_PORT\",\"$DNS_REALM\",\"$DNS_REA_SLASHED\",\"$ICSCF_ENTRY\",\"$HSS_ENTRY\",\"$SLF_ENTRY\",\"$SLF_PORT\",\"$SCSCF_PORT\",\"$DEFAULT_ROUTE\",\"$USE_SLF\",\"$HSS_PORT\"]}" http://$ICSCF_MGMT_ADDR:8390/icscf/preStart
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$SCSCF_LISTEN\",\"$SCSCF_DIAMETER_PORT\",\"$SCSCF_PORT\",\"$DNS_REALM\",\"$DNS_REA_SLASHED\",\"$SCSCF_ENTRY\",\"$HSS_ENTRY\",\"$SLF_ENTRY\",\"$SLF_PORT\",\"$ICSCF_ENTRY\",\"$DEFAULT_ROUTE\",\"$USE_SLF\",\"$HSS_PORT\"]}" http://$SCSCF_MGMT_ADDR:8390/scscf/preStart
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$PCSCF_LISTEN\",\"$PCSCF_PORT\",\"$DNS_REALM\",\"$DNS_REA_SLASHED\",\"$PCSCF_ENTRY\"]}" http://$PCSCF_MGMT_ADDR:8390/pcscf/preStart
+        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$ICSCF_LISTEN\",\"$ICSCF_DIAMETER_PORT\",
+            \"$ICSCF_PORT\",\"$DNS_REALM\",\"$DNS_REA_SLASHED\",\"$ICSCF_ENTRY\",\"$HSS_ENTRY\",\"$SLF_ENTRY\",
+            \"$SLF_PORT\",\"$SCSCF_PORT\",\"$DEFAULT_ROUTE\",\"$USE_SLF\",\"$HSS_PORT\"]}" http://$ICSCF_MGMT_ADDR:8390/icscf/preStart
+        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$SCSCF_LISTEN\",\"$SCSCF_DIAMETER_PORT\",
+            \"$SCSCF_PORT\",\"$DNS_REALM\",\"$DNS_REA_SLASHED\",\"$SCSCF_ENTRY\",\"$HSS_ENTRY\",\"$SLF_ENTRY\",\"$SLF_PORT\",
+            \"$ICSCF_ENTRY\",\"$DEFAULT_ROUTE\",\"$USE_SLF\",\"$HSS_PORT\"]}" http://$SCSCF_MGMT_ADDR:8390/scscf/preStart
+        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$PCSCF_LISTEN\",\"$PCSCF_PORT\",
+            \"$DNS_REALM\",\"$DNS_REA_SLASHED\",\"$PCSCF_ENTRY\"]}" http://$PCSCF_MGMT_ADDR:8390/pcscf/preStart
 
         :param config:
         :return:
@@ -277,13 +289,15 @@ class CscfsAdapter(ABCServiceAdapter):
         pass
 
 
-    def __send_request(self, ip, request, method, vnf):
+    def __send_request(self, ip, request, method, vnf, ext_vnf=None):
         """
-
         :return:
         """
         connection = httplib.HTTPConnection('%s:8390' % ip)
-        connection.request('POST', '/%s/%s' % (vnf, method), json.dumps(request), self.headers)
+        if ext_vnf is None:
+            connection.request('POST', '/%s/%s' % (vnf, method), json.dumps(request), self.headers)
+        else:
+            connection.request('POST', '/%s/%s/%s' % (vnf, method, ext_vnf), json.dumps(request), self.headers)
         response = connection.getresponse()
         return (response.read())
 

@@ -180,6 +180,10 @@ class ServiceInstance(AbstractService, Base):
     image = relationship('Image', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
     key_id = Column(Integer, ForeignKey('Key.id'))
     key = relationship('Key', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
+    key_id = Column(Integer, ForeignKey('Key.id'))
+    key = relationship('Key', cascade='save-update, merge, refresh-expire, expunge', lazy='select')
+    location = relationship('Location', cascade='all, delete-orphan', lazy='select')
+    relation = relationship('Relation', cascade='all, delete-orphan', lazy='select')
     name = Column(String(50))
     service_type = Column(String(50))
     adapter = Column(String(50))
@@ -187,7 +191,7 @@ class ServiceInstance(AbstractService, Base):
     state = Column('State', Enum(*state))
 
 
-    def __init__(self, name, service_type, state, image, flavor, size, key=None,
+    def __init__(self, name, service_type, state, image, flavor, size, key=None, location=[], relation=[],
                  policies=[], units=[], requirements=[], user_data=[], networks=[], configuration={}, adapter=None):
         self.id = None
         self.topology_id = None
@@ -198,6 +202,8 @@ class ServiceInstance(AbstractService, Base):
         self.flavor_id = None
         self.key = key
         self.key_id = None
+        self.location = location
+        self.relation = relation
         self.name = name
         self.networks = networks
         self.policies = policies
@@ -227,11 +233,29 @@ class ServiceInstance(AbstractService, Base):
         t += 'flavor_id:%s, ' % (self.flavor_id)
         t += 'key:%s, ' % (self.key)
         t += 'key_id:%s, ' % (self.key_id)
+        t += 'relation:%s, ' % (self.relation)
+        t += 'location:%s, ' % (self.location)
         t += 'networks:['
         if self.networks:
             t += '%s' % self.networks[0].__str__()
             for network in self.networks[1:]:
                 t += ', %s' % network.__str__()
+        else:
+            t += 'None'
+        t += '], '
+        t += 'relations:['
+        if self.relation:
+            t += '%s' % self.relation[0].__str__()
+            for rel in self.relation[1:]:
+                t += ', %s' % rel.__str__()
+        else:
+            t += 'None'
+        t += '], '
+        t += 'locations:['
+        if self.location:
+            t += '%s' % self.location[0].__str__()
+            for loc in self.location[1:]:
+                t += ', %s' % loc.__str__()
         else:
             t += 'None'
         t += '], '
@@ -391,9 +415,6 @@ class Unit(Base):
         t += ']'
         return t
 
-
-class Relation(object):
-    pass
 
 
 class SecurityGroup(Base):
@@ -564,6 +585,48 @@ class Image(Base):
         t += 'status:%s, ' % self.status
         t += 'created:%s, ' % self.created
         t += 'updated:%s' % self.updated
+        t += ']'
+        return t
+
+
+class Location(Base):
+    __tablename__ = "Location"
+
+    id = Column(Integer, primary_key=True)
+    location = Column(String(256))
+    service_instance_id = Column(Integer, ForeignKey('ServiceInstance.id'), onupdate='CASCADE')
+
+    def __init__(self, location):
+        self.id = None
+        self.location = location
+        self.service_instance_id = None
+
+
+    def __str__(self):
+        t = ""
+        t += '<Location>['
+        t += 'id:%s, ' % self.id
+        t += 'location:%s' % self.location
+        t += ']'
+        return t
+
+
+class Relation(Base):
+    __tablename__ = "Relation"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(256))
+
+    service_instance_id = Column(Integer, ForeignKey('ServiceInstance.id'))
+
+    def __init__(self, name):
+        self.id = None
+        self.name = name
+
+    def __str__(self):
+        t = ""
+        t += '<Relation>['
+        t += 'id:%s, ' % self.id
+        t += 'name:%s' % self.name
         t += ']'
         return t
 

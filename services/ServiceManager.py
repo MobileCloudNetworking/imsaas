@@ -123,3 +123,6 @@ class ServiceManager(ABCServiceManager):
 
     def get_attrs(self,_class):
         return [k for k in dir(_class) if not k.startswith('__') ]
+
+    def get_service_instance(self, _class, _name):
+        return self.db.get_by_name(_class, _name)
