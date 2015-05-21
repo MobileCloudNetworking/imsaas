@@ -189,12 +189,12 @@ class SysUtil:
 
 
 def get_networks():
-    nc = NeutronClient(get_endpoint('network'), get_token())
+    nc = NeutronClient(get_endpoint('network', region_name='RegionOne'), get_token())
     return nc.get_networks()
 
 
 def get_ports():
-    nc = NeutronClient(get_endpoint('network'), get_token())
+    nc = NeutronClient(get_endpoint('network', region_name='RegionOne'), get_token())
     return nc.get_ports()
 
 

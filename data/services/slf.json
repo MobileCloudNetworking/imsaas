@@ -1,7 +1,7 @@
 {
-    "service_type": "dra",
-    "image": "slf_base_image",
-    "adapter": "DraAdapter",
+    "service_type": "slf",
+    "image": "slf-base-r143",
+    "adapter": "SlfAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",
     "configuration": {

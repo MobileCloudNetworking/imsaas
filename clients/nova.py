@@ -20,7 +20,7 @@ class Client:
         else:
             self.conf = conf
         self.nova = client.Client('2', self.conf['os_username'], self.conf['os_password'], self.conf['os_tenant'],
-                                  self.conf['os_auth_url'])
+                                  self.conf['os_auth_url'], region_name=self.conf['os_region_name'])
 
     def list_servers(self):
         res = self.nova.servers.list()

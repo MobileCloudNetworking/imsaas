@@ -43,7 +43,9 @@ topology_mapping = {
     'test_no_services': 'topology_test_no_services.json',
     'test_one_service_elasticity': 'topology_test_v2.json',
     'test_dummy_topology': 'topology_dummy_service.json',
-    'topology_cscfs_service': 'topology_cscfs_service.json'
+    'topology_cscfs_service': 'topology_cscfs_service.json',
+    'topology_bern': 'topology-ims-bern.json'
+
 }
 
 class SoExecution(object):
@@ -55,7 +57,7 @@ class SoExecution(object):
         """
         Constructor
         """
-        self.topology_type = "topology_cscfs_service.json"
+        self.topology_type = "topology-ims-bern.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None

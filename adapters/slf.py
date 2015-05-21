@@ -6,7 +6,7 @@ import json
 import socket, time, datetime
 
 
-class DraAdapter(ABCServiceAdapter):
+class SlfAdapter(ABCServiceAdapter):
     def __init__(self):
         """
         Initializes a new ServiceAdapter.
@@ -93,10 +93,10 @@ class DraAdapter(ABCServiceAdapter):
         parameters.append(config['zabbix_ip'])
 
         request = {"parameters": parameters}
-        print "I'm the dra adapter, preinit dra service, parameters %s, request %s" % (
+        print "I'm the slf adapter, preinit slf service, parameters %s, request %s" % (
             parameters, str(json.dumps(request)))
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "dra")
-        print "I'm the dra adapter, preinit dra services, received resp %s" % resp
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "slf")
+        print "I'm the slf adapter, preinit slf services, received resp %s" % resp
 
         return True
 
@@ -116,9 +116,9 @@ class DraAdapter(ABCServiceAdapter):
 
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the dra adapter, install dra service, parameters %s" % (request)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "dra")
-        print "I'm the dra adapter, installing dra service, received resp %s" % resp
+        print "I'm the slf adapter, install slf service, parameters %s" % (request)
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "slf")
+        print "I'm the slf adapter, installing slf service, received resp %s" % resp
 
 
     def add_dependency(self, config, ext_unit, ext_service):
@@ -126,7 +126,7 @@ class DraAdapter(ABCServiceAdapter):
         Add the dependency between this service and the external one
         :return:
         """
-        print "dra adapter ext_service.service_type %s" %ext_service.service_type
+        print "slf adapter ext_service.service_type %s" %ext_service.service_type
 
         if "hss" in ext_service.service_type:
         # external dependency with the cscfs
@@ -137,8 +137,8 @@ class DraAdapter(ABCServiceAdapter):
             # TODO add port number via dependency
             parameters.append("3868")
             request = {"parameters":parameters}
-            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "dra", "hss")
-            print "I'm the dra adapter, resolving dependency with hss service, received resp %s" %resp
+            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "slf", "hss")
+            print "I'm the slf adapter, resolving dependency with hss service, received resp %s" %resp
 
     def remove_dependency(self, config, ext_service):
         """
@@ -155,30 +155,7 @@ class DraAdapter(ABCServiceAdapter):
         :return:
         """
 
-        # hss
-
-        self.VAR_HSS_ENTRY='%s.%s' % (config['hostname'], self.DNS_REALM)
-        self.VAR_HSS_BIND = config['ips'].get('mgmt')
-
-        # hss parameters
-        parameters = []
-        parameters.append(self.DNS_REALM)
-        parameters.append(self.SLF_ENTRY)
-        parameters.append(self.VAR_HSS_ENTRY)
-        parameters.append(self.VAR_HSS_PORT)
-        parameters.append(self.ICSCF_ENTRY)
-        parameters.append(self.SCSCF_ENTRY)
-        parameters.append(self.ICSCF_PORT)
-        parameters.append(self.SCSCF_PORT)
-        parameters.append(self.SLF_PORT)
-        parameters.append(self.VAR_SLF_BIND)
-
-
-        # create request hss
-        request = {"parameters": parameters}
-        print "I'm the hss adapter, pre-starting hss service, parameters %s" % (request)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preStart", "chess")
-        print "I'm the hss adapter, pre-starting hss service, received resp %s" % resp
+        pass
 
 
     def start(self, config):
@@ -194,9 +171,9 @@ class DraAdapter(ABCServiceAdapter):
         parameters = []
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the hss adapter, install hss service, parameters %s" % (parameters)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "chess")
-        print "I'm the hss adapter, installing hss service, received resp %s" % resp
+        print "I'm the slf adapter, install slf service, parameters %s" % (parameters)
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "slf")
+        print "I'm the slf adapter, installing slf service, received resp %s" % resp
 
 
     def terminate(self):

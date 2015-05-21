@@ -1,6 +1,6 @@
 {
     "service_type": "dummy",
-    "image": "Ubuntu 14.04 LTS",
+    "image": "ims-base-r142",
     "flavor": "m1.small",
     "key":"mcn-key",
     "adapter":"DummyAdapter",

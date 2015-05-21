@@ -50,7 +50,7 @@ class HssAdapter(ABCServiceAdapter):
         #	Parameters for slf relation
         #--------------------------------------------------------#
         self.SLF_NAME = "slf"
-        self.USE_SLF = "false"
+        self.USE_SLF = "true"
         self.SLF_PORT = "13868"
 
         # -------------------------------------------------------#

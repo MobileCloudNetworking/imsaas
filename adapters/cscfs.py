@@ -35,7 +35,7 @@ class CscfsAdapter(ABCServiceAdapter):
         #	Parameters for slf relation
         #-------------------------------------------------------#
         self.SLF_NAME="slf"
-        self.USE_SLF="false"
+        self.USE_SLF="true"
         self.SLF_PORT="13868"
 
         # -------------------------------------------------------#
@@ -50,7 +50,7 @@ class CscfsAdapter(ABCServiceAdapter):
         self.SLF_ENTRY="slf.%s" % self.DNS_REALM
 
 
-        self.DEFAULT_ROUTE=self.HSS_ENTRY
+        self.DEFAULT_ROUTE=self.SLF_ENTRY
 
     def preinit(self, config):
         """
