@@ -1,6 +1,6 @@
 {
     "service_type": "db",
-    "image": "ims-base-r142",
+    "image": "ims-base-r147",
     "flavor": "m1.small",
     "key":"mcn-key",
     "configuration": {

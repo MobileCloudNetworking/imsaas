@@ -440,7 +440,7 @@ class CheckerThread(threading.Thread):
         self.is_dns_configured = False
         self.novac = NovaClient()
         #self.dns_configurator = ImsDnsClient()
-        self.neutronc = NeutronClient(utilSys.get_endpoint('network'), utilSys.get_token())
+        self.neutronc = NeutronClient(utilSys.get_endpoint('network', region_name=SysUtil().get_sys_conf()['os_region_name']), utilSys.get_token())
 
     def run(self):
         while not self.is_stopped:
