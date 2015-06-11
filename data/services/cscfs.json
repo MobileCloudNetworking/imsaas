@@ -1,6 +1,6 @@
 {
     "service_type": "cscfs",
-    "image": "ims-base-r147",
+    "image": "ims-base-r154",
     "flavor": "m1.small",
     "key":"mcn-key",
     "adapter": "CscfsAdapter",

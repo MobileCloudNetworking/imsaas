@@ -1,7 +1,7 @@
 {
-    "service_type": "db",
+    "service_type": "dns",
     "image": "ims-base-r154",
-    "adapter": "DBAdapter",
+    "adapter": "DNSAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",
     "configuration": {

@@ -155,15 +155,23 @@ class HssAdapter(ABCServiceAdapter):
             parameters = []
             request = {"parameters":parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "icscf")
-            print "I'm the cscfs adapter, resolving dependency with hss service, received resp %s" %resp
+            print "I'm the hss adapter, resolving dependency with cscsf service, received resp %s" %resp
         if "dra" in ext_service.service_type:
         # external dependency with the cscfs
         # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$HSS_MGMT_ADDR:8390/chess/addRelation/icscf
             parameters = []
             request = {"parameters":parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "icscf")
-            print "I'm the cscfs adapter, resolving dependency with hss service, received resp %s" %resp
-
+            print "I'm the hss adapter, resolving dependency with dra service, received resp %s" %resp
+        if "db" in ext_service.service_type:
+        # external dependency with the cscfs
+        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$DB_IP\"]}" http://$HSS_MGMT_ADDR:8390/chess/addRelation/db+
+            self.DB_HOST=ext_unit.ips.get('mgmt')
+            parameters = []
+            parameters.append(ext_unit.ips.get('mgmt'))
+            request = {"parameters":parameters}
+            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "db")
+            print "I'm the hss adapter, resolving dependency with db service, received resp %s" %resp
 
     def remove_dependency(self, config, ext_service):
         """

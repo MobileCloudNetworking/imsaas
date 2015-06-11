@@ -1,6 +1,6 @@
 {
     "service_type": "hss",
-    "image": "ims-base-r147",
+    "image": "ims-base-r154",
     "adapter": "HssAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",

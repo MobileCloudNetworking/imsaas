@@ -18,6 +18,7 @@ __author__ = 'giuseppe'
 import os
 import logging
 import yaml
+import time
 
 from emm_exceptions.NotFoundException import NotFoundException
 from emm_exceptions.NotUniqueException import NotUniqueException
@@ -38,14 +39,11 @@ logger = logging.getLogger(__name__)
 
 
 topology_mapping = {
-    'e2e': 'topology_ims.json',
     'standalone': 'topology_ims_standalone.json',
     'test_no_services': 'topology_test_no_services.json',
-    'test_one_service_elasticity': 'topology_test_v2.json',
     'test_dummy_topology': 'topology_dummy_service.json',
-    'topology_cscfs_service': 'topology_cscfs_service.json',
-    'topology_bern': 'topology-ims-bern.json'
-
+    'bern': 'topology-ims-bern.json',
+    'bart': 'topology-ims-bart.json'
 }
 
 class SoExecution(object):
@@ -57,33 +55,46 @@ class SoExecution(object):
         """
         Constructor
         """
+        # by default
         self.topology_type = "topology-ims-bern.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None
+        self.maas = None
+        self.location = 'bern'
         # make sure we can talk to deployer...
         logger.debug("sending request to the url %s" % os.environ['DESIGN_URI'])
 
-        conf = sys_util().get_sys_conf()
-        logger.debug("instantiating deployer %s" %conf['deployer'])
-        self.deployer = FactoryAgent().get_agent(conf['deployer'])
-
+        self.conf = sys_util().get_sys_conf()
+        logger.debug("instantiating deployer %s" %self.conf['deployer'])
+        self.deployer = None
         #self.deployer = util.get_deployer(self.token, url_type='public', tenant_name=self.tenant_name)
-
-
 
     def deploy(self, attributes):
         """
         Deploy method
         """
+
+        #start timer for calculating time of execution of this method
+        start_time = time.time()
+
+
         if self.stack_id is not None:
             pass
         dnsaas = True
         parameters = {}
 
+        # defining the location of the topology
+        if 'imsaas.location' in attributes:
+            self.location = parameters['location'] = os.environ['location'] = attributes['imsaas.location']
+            logger.debug("location %s passed via OCCI Attribute"%self.location)
+
+        self.deployer = FactoryAgent().get_agent(self.conf['deployer'])
+
+
         # trying to retrieve maas endpoint
         if 'mcn.endpoint.maas' in attributes:
-            logger.debug("Maas IP was passed as attribute")
+            logger.debug("MaaS IP was passed as attribute")
             parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = attributes['mcn.endpoint.maas']
         else:
             try:
@@ -95,29 +106,33 @@ class SoExecution(object):
                 logger.error("Problems instantiating maas")
                 raise SystemError("Problems instantiating maas")
 
-
-
-        try:
+        # trying to retrieve dnsaas endpoint
+        if 'mcn.endpoint.forwarder' and 'mcn.endpoint.api' in attributes:
+            logger.debug('DNSaaS IPs were passed via OCCI attributes')
             parameters['dns_ip_address'] = os.environ['DNS_IP'] = attributes['mcn.endpoint.forwarder']
             parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = attributes['mcn.endpoint.api']
-        except:
-            logging.warning("the parameter was not found")
-            dnsaas = False
-        try:
-            type = os.environ['TOPOLOGY'] = attributes['mcn.topology.type']
-            self.topology_type = topology_mapping[type]
-        except Exception:
-            logger.debug("parameter mcn.topology.type not available, using the default topology %s" %self.topology_type)
-            os.environ['TOPOLOGY'] = self.topology_type
+        else:
+            try:
+                logger.debug("DNSaaS IPs were not passed as OCCI attribute, instantiating DNSaaS")
+                self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name)
+                parameters['dns_ip_address'] = os.environ['DNS_IP'] = self.dnsaas.get_forwarders()
+                parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = self.dnsaas.get_address()
+            except:
+                logging.warning("errors while instantiating dnsaas")
+                dnsaas = False
 
+        self.topology_type = topology_mapping[self.location]
         logger.info("deploying template %s" % (self.topology_type,))
+
         # read template...
         f = open(os.path.join(SO_DIR, 'data/topologies', self.topology_type))
-        self.template = f.read()
+        template = f.read()
         f.close()
-        logger.debug("content of the topology %s" % self.template)
+        logger.debug("content of the topology %s" % template)
+
+        # extracting hot template
         try:
-            config = yaml.load(self.template)
+            config = yaml.load(template)
             logger.debug(config)
         except yaml.YAMLError, exc:
             if hasattr(exc, 'problem_mark'):
@@ -127,10 +142,9 @@ class SoExecution(object):
             else:
                 logger.error("Error in configuration file:", exc)
 
-
-
+        # creating the topology object
         try:
-            self.topology = TopologyOrchestrator.create(config)
+            topology = TopologyOrchestrator.create(config)
         except NotFoundException, msg:
             logger.error(msg)
             return
@@ -150,19 +164,20 @@ class SoExecution(object):
             logger.error(msg)
             return
 
-        for si in self.topology.service_instances:
+        for si in topology.service_instances:
             if not dnsaas:
                 si.user_data = ims_util.get_user_data(parameters['maas_ip_address'])
             else:
-                si.user_data = ims_util.get_user_data(parameters['maas_ip_address'],parameters['dnsaas_ip_address'])
+                si.user_data = ims_util.get_user_data(parameters['maas_ip_address'], parameters['dnsaas_ip_address'])
 
+        execution_time = time.time() - start_time
+        ims_util.write_time(execution_time)
 
+        # deploying the topology
         if self.stack_id is None:
-            stack_details = self.deployer.deploy(self.topology)
+            stack_details = self.deployer.deploy(topology)
             self.stack_id = stack_details.id
             logger.info("deployed topology with id %s" % self.stack_id)
-
-
 
     def provision(self):
         """
@@ -183,8 +198,6 @@ class SoExecution(object):
             self.stack_id = None
             if self.maas is not None:
                 util.dispose_maas(self.token, self.maas)
-
-
 
     def state(self):
         """

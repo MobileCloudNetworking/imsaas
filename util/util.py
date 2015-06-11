@@ -48,17 +48,20 @@ def get_endpoint(service_type, endpoint_type=None):
     endpoint = ksclient.get_endpoint(service_type=service_type, endpoint_type=endpoint_type)
     return endpoint
 
-class literal_unicode(unicode): pass
+
+class literal_unicode(unicode):
+    pass
 
 
 def literal_unicode_representer(dumper, data):
     return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
 
+
 def to_json(obj, _indent=4, _separators=(',', ': ')):
         return json.dumps(obj, cls=new_alchemy_encoder(), indent=_indent, separators=_separators)
 
 
-def get_user_data(maas_ip, dnsaas_ip = None):
+def get_user_data(maas_ip, dnsaas_ip=None):
     commands = []
     commands.append(Command("#!/usr/bin/env bash"))
     commands.append(Command("apt-get install -y zabbix-agent;"))
@@ -74,3 +77,9 @@ def get_user_data(maas_ip, dnsaas_ip = None):
         commands.append(Command("EOF"))
 
     return commands
+
+
+def write_time(value):
+    res_file = open('/tmp/results.csv', 'w')
+    res_file.write('%s;' % value)
+    res_file.close()

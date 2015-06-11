@@ -1,0 +1,87 @@
+{
+    "name":"ims",
+    "service_instances": [
+        {
+            "name":"cscfs",
+            "service_type":"cscfs",
+            "flavor":"m1.small",
+            "key":"mcn-key",
+            "location": ["bern"],
+            "relation": ["hss"],
+            "configuration": {
+            },
+            "networks": [
+                {
+                    "name":"mgmt",
+                    "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+                    "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+                    "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
+                    "security_groups": [
+                        "security-group-ims"
+                    ]
+                }
+            ],
+            "policies": [
+            ],
+            "requirements": [
+            ],
+            "user_data": [
+            ]
+        },
+        {
+            "name":"hss",
+            "service_type":"hss",
+            "flavor":"m1.small",
+            "key":"mcn-key",
+            "location": ["bern"],
+            "relation": ["cscfs"],
+            "configuration": {
+            },
+            "networks": [
+                {
+                    "name":"mgmt",
+                    "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+                    "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+                    "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
+                    "security_groups": [
+                        "security-group-ims"
+                    ]
+                }
+            ],
+            "policies": [
+            ],
+            "requirements": [
+            ],
+            "user_data": [
+            ]
+        },
+        {
+            "name":"slf",
+            "service_type":"slf",
+            "flavor":"m1.small",
+            "key":"mcn-key",
+            "location": ["bern"],
+            "relation": ["cscfs", "hss"],
+            "configuration": {
+            },
+            "networks": [
+                {
+                    "name":"mgmt",
+                    "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+                    "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+                    "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
+                    "security_groups": [
+                        "security-group-ims"
+                    ]
+                }
+            ],
+            "policies": [
+            ],
+            "requirements": [
+            ],
+            "user_data": [
+            ]
+        }
+
+    ]
+}

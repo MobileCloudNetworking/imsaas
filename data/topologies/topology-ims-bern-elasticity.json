@@ -4,17 +4,18 @@
     {
       "name":"cscfs",
       "service_type":"cscfs",
-      "flavor":"m1.medium",
-      "image": "cscfs",
-      "key":"mcn-tub",
+      "flavor":"m1.small",
+      "key":"mcn-key",
+      "location": ["bern"],
+      "relation": ["hss"],
       "configuration": {
       },
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
-          "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
-          "fixed_ip": "192.168.9.51",
+          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
           "security_groups": [
             "security-group-ims"
           ]
@@ -31,22 +32,23 @@
       "name":"hss",
       "service_type":"hss",
       "flavor":"m1.small",
-      "image": "hss-1",
-      "key":"mcn-tub",
+      "key":"mcn-key",
+      "location": ["bern"],
+      "relation": ["cscfs"],
       "configuration": {
       },
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
-          "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
+          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
           "security_groups": [
             "security-group-ims"
           ]
         }
       ],
       "policies": [
-
         {
           "name": "msg_scaleup",
           "period": 30,
@@ -87,19 +89,20 @@
       ]
     },
     {
-      "name":"db",
-      "service_type":"db",
-      "flavor":"m1.db",
-      "image": "db-v2.0",
-      "key":"mcn-tub",
+      "name":"slf",
+      "service_type":"slf",
+      "flavor":"m1.small",
+      "key":"mcn-key",
+      "location": ["bern"],
+      "relation": ["cscfs", "hss"],
       "configuration": {
       },
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
-          "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
-          "fixed_ip": "192.168.9.57",
+          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
           "security_groups": [
             "security-group-ims"
           ]
@@ -113,19 +116,20 @@
       ]
     },
     {
-      "name":"slf",
-      "service_type":"slf",
+      "name":"db",
+      "service_type":"db",
+      "location": ["bern"],
       "flavor":"m1.small",
-      "image": "slf",
-      "key":"mcn-tub",
+      "image": "ims-base-r147",
+      "key":"mcn-key",
       "configuration": {
       },
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"7bc6538f-1c7d-4648-88ef-cda5cdfe452e",
-          "private_subnet": "bbf74edd-7521-4177-bda2-3fb3a7e2a5b6",
-          "fixed_ip": "192.168.9.59",
+          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
           "security_groups": [
             "security-group-ims"
           ]
@@ -137,9 +141,7 @@
       ],
       "user_data": [
       ]
-    }
-
-
+    },
 
   ]
 }

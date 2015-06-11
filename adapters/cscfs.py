@@ -181,7 +181,7 @@ class CscfsAdapter(ABCServiceAdapter):
 
         # icscf
         parameters = []
-        parameters.append(config['ips'].get('mgmt'))
+        parameters.append(self.SCSCF_LISTEN)
         parameters.append(self.ICSCF_DIAMETER_PORT)
         parameters.append(self.ICSCF_PORT)
         parameters.append(self.DNS_REALM)
