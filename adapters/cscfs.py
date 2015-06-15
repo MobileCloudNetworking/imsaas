@@ -207,7 +207,7 @@ class CscfsAdapter(ABCServiceAdapter):
 
         # scscf
         parameters = []
-        parameters.append(config['ips'].get('mgmt'))
+        parameters.append(self.SCSCF_LISTEN)
         parameters.append(self.SCSCF_DIAMETER_PORT)
         parameters.append(self.SCSCF_PORT)
         parameters.append(self.DNS_REALM)

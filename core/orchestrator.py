@@ -74,11 +74,6 @@ class SoExecution(object):
         """
         Deploy method
         """
-
-        #start timer for calculating time of execution of this method
-        start_time = time.time()
-
-
         if self.stack_id is not None:
             pass
         dnsaas = True
@@ -170,8 +165,6 @@ class SoExecution(object):
             else:
                 si.user_data = ims_util.get_user_data(parameters['maas_ip_address'], parameters['dnsaas_ip_address'])
 
-        execution_time = time.time() - start_time
-        ims_util.write_time(execution_time)
 
         # deploying the topology
         if self.stack_id is None:
