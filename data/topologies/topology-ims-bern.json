@@ -16,7 +16,6 @@
           "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
           "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
           "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
-          "fixed_ip":"192.168.85.21",
           "security_groups": [
             "security-group-ims"
           ]
@@ -56,7 +55,6 @@
           "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
           "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
           "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
-          "fixed_ip":"192.168.85.22",
           "security_groups": [
             "security-group-ims"
           ]
@@ -89,7 +87,6 @@
           "name":"mgmt",
           "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
           "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
-          "fixed_ip":"192.168.85.23",
           "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
           "security_groups": [
             "security-group-ims"
@@ -97,6 +94,38 @@
         }
       ],
       "policies": [
+        {
+          "name": "msg_scaleup",
+          "period": 30,
+          "alarm": {
+            "meter_name": "system.cpu.util[,idle]",
+            "comparison_operator": "gt",
+            "threshold": 35,
+            "statistic": "avg",
+            "evaluation_periods": 1
+          },
+          "action": {
+            "adjustment_type": "ChangeInCapacity",
+            "scaling_adjustment": 1,
+            "cooldown": 30
+          }
+        },
+        {
+          "name": "msg_scaledown",
+          "period": 30,
+          "alarm": {
+            "meter_name": "system.cpu.util[,idle]",
+            "comparison_operator": "lt",
+            "threshold": 10,
+            "statistic": "avg",
+            "evaluation_periods": 1
+          },
+          "action": {
+            "adjustment_type": "ChangeInCapacity",
+            "scaling_adjustment": -1,
+            "cooldown": 60
+          }
+        }
       ],
       "requirements": [
         {
@@ -129,7 +158,6 @@
           "name":"mgmt",
           "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
           "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
-          "fixed_ip":"192.168.85.24",
           "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
           "security_groups": [
             "security-group-ims"
@@ -169,7 +197,6 @@
           "name":"mgmt",
           "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
           "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
-          "fixed_ip":"192.168.85.25",
           "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
           "security_groups": [
             "security-group-ims"

@@ -82,10 +82,9 @@ class CscfsAdapter(ABCServiceAdapter):
         parameters.append(config['zabbix_ip'])
 
         request = {"parameters": parameters}
-        logger.info(
-            "CSCF adapter, preinit cscfs service, parameters %s, request %s" % (parameters, str(json.dumps(request))))
+        logger.info("preinit cscfs service, parameters %s, request %s" % (parameters, str(json.dumps(request))))
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "icscf")
-        logger.debug("I'm the cscfs adapter, preinit cscfs services, received resp %s" % resp)
+        logger.debug("preinit cscfs services, received resp %s" % resp)
 
         return True
 
@@ -117,9 +116,9 @@ class CscfsAdapter(ABCServiceAdapter):
 
         # create request scscf
         request = {"parameters": parameters}
-        logger.info("I'm the cscfs adapter, install scscf service, parameters %s" % parameters)
+        logger.info("Install scscf service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "scscf")
-        logger.info("I'm the cscfs adapter, installing scscf service, received resp %s" % resp)
+        logger.info("Installing scscf service, received resp %s" % resp)
 
         # pcscf
         parameters = []
@@ -128,9 +127,9 @@ class CscfsAdapter(ABCServiceAdapter):
 
         # create request icscf
         request = {"parameters": parameters}
-        logger.info( "Install pcscf service, parameters %s" % parameters)
+        logger.info("Install pcscf service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "pcscf")
-        logger.info("I'm the cscfs adapter, installing pcscf service, received resp %s" % resp)
+        logger.info("Installing pcscf service, received resp %s" % resp)
 
         return True
 
@@ -151,7 +150,7 @@ class CscfsAdapter(ABCServiceAdapter):
             parameters.append(ext_unit.ips.get('mgmt'))
             request = {"parameters": parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "icscf", "hss")
-            logger.info("I'm the cscfs adapter, resolving dependency with hss service, received resp %s" % resp)
+            logger.info("resolving dependency with hss service, received resp %s" % resp)
 
     def remove_dependency(self, config, ext_service):
         """
@@ -197,9 +196,9 @@ class CscfsAdapter(ABCServiceAdapter):
 
         # create request icscf
         request = {"parameters": parameters}
-        logger.info("I'm the cscfs adapter, install icscf service, parameters %s" % request)
+        logger.info("pre-start icscf service, parameters %s" % request)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preStart", "icscf")
-        logger.info("I'm the cscfs adapter, installing icscf service, received resp %s" % resp)
+        logger.info("pre-start icscf service, received resp %s" % resp)
 
 
         # scscf
@@ -220,9 +219,9 @@ class CscfsAdapter(ABCServiceAdapter):
 
         # create request scscf
         request = {"parameters": parameters}
-        logger.info("Installing scscf service, parameters %s" % parameters)
+        logger.info("pre-start scscf service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preStart", "scscf")
-        logger.info("Installing scscf service, received resp %s" % resp)
+        logger.info("pre-start scscf service, received resp %s" % resp)
 
 
         # pcscf
@@ -236,9 +235,9 @@ class CscfsAdapter(ABCServiceAdapter):
 
         # create request pcscf
         request = {"parameters": parameters}
-        logger.info("Install pcscf service, parameters %s" % parameters)
+        logger.info("pre-start pcscf service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preStart", "pcscf")
-        logger.info("Installing pcscf service, received resp %s" % resp)
+        logger.info("pre-start pcscf service, received resp %s" % resp)
 
         return True
 
@@ -256,25 +255,25 @@ class CscfsAdapter(ABCServiceAdapter):
         parameters = []
         # create request icscf
         request = {"parameters": parameters}
-        logger.info("Install icscf service, parameters %s" % parameters)
+        logger.info("start icscf service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "icscf")
-        logger.info("Installing pcscf service, received resp %s" % resp)
+        logger.info("start pcscf service, received resp %s" % resp)
 
         # scscf
         parameters = []
         # create request scscf
         request = {"parameters": parameters}
-        logger.info("Install scscf service, parameters %s" % parameters)
+        logger.info("start scscf service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "scscf")
-        logger.info("Installing scscf service, received resp %s" % resp)
+        logger.info("start scscf service, received resp %s" % resp)
 
         # pcscf
         parameters = []
         # create request pcscf
         request = {"parameters": parameters}
-        logger.info("Install pcscf service, parameters %s" % parameters)
+        logger.info("start pcscf service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "pcscf")
-        logger.info("Installing pcscf service, received resp %s" % resp)
+        logger.info("start pcscf service, received resp %s" % resp)
 
 
     def terminate(self):

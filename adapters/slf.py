@@ -4,7 +4,9 @@ from interfaces.ServiceAdapter import ServiceAdapter as ABCServiceAdapter
 import httplib
 import json
 import socket, time, datetime
+import logging
 
+logger = logging.getLogger(__name__)
 
 class SlfAdapter(ABCServiceAdapter):
     def __init__(self):
@@ -80,9 +82,9 @@ class SlfAdapter(ABCServiceAdapter):
                 # Issue the socket connect on the host:port
                 sock.connect((config['floating_ips'].get('mgmt'), 8390))
             except Exception, e:
-                print "%s %d closed - Exception thrown when attempting to connect. " % (now_text, 8390)
+                logger.error("%s %d closed - Exception thrown when attempting to connect. " % (now_text, 8390))
             else:
-                print  "%s %d open" % (now_text, 8390)
+                logger.debug("%s %d open" % (now_text, 8390))
                 sock.close()
                 break
             time.sleep(5)
@@ -93,10 +95,10 @@ class SlfAdapter(ABCServiceAdapter):
         parameters.append(config['zabbix_ip'])
 
         request = {"parameters": parameters}
-        print "I'm the slf adapter, preinit slf service, parameters %s, request %s" % (
-            parameters, str(json.dumps(request)))
+        logger.info("preinit slf service, parameters %s, request %s" % (
+            parameters, str(json.dumps(request))))
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "slf")
-        print "I'm the slf adapter, preinit slf services, received resp %s" % resp
+        logger.info("preinit slf services, received resp %s" % resp)
 
         return True
 
@@ -105,18 +107,14 @@ class SlfAdapter(ABCServiceAdapter):
         Creates a new Service based on the config file.
         :return:
         """
-
         self.VAR_HSS_ENTRY='%s.%s' % (config['hostname'], self.DNS_REALM)
         self.VAR_HSS_BIND = config['ips'].get('mgmt')
-
         # hss parameters
         parameters = []
         parameters.append(self.LocalDB)
-
-
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the slf adapter, install slf service, parameters %s" % (request)
+        logger.info("install slf service, parameters %s" % request)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "slf")
         print "I'm the slf adapter, installing slf service, received resp %s" % resp
 
@@ -129,8 +127,8 @@ class SlfAdapter(ABCServiceAdapter):
         print "slf adapter ext_service.service_type %s" %ext_service.service_type
 
         if "hss" in ext_service.service_type:
-        # external dependency with the cscfs
-        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$HSS_NAME\",\"$DNS_REALM\",\"$HSS_PORT\"]}" http://$SLF_MGMT_ADDR:8390/dra/addRelation/hss
+            # external dependency with the cscfs
+            # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$HSS_NAME\",\"$DNS_REALM\",\"$HSS_PORT\"]}" http://$SLF_MGMT_ADDR:8390/dra/addRelation/hss
             parameters = []
             parameters.append(ext_unit.hostname)
             parameters.append(self.DNS_REALM)
@@ -138,7 +136,7 @@ class SlfAdapter(ABCServiceAdapter):
             parameters.append("3868")
             request = {"parameters":parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "slf", "hss")
-            print "I'm the slf adapter, resolving dependency with hss service, received resp %s" %resp
+            logger.info("resolving dependency with hss service, received resp %s" %resp)
 
     def remove_dependency(self, config, ext_service):
         """
@@ -157,7 +155,6 @@ class SlfAdapter(ABCServiceAdapter):
 
         pass
 
-
     def start(self, config):
         """
         Sending start requests to the different components
@@ -171,9 +168,9 @@ class SlfAdapter(ABCServiceAdapter):
         parameters = []
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the slf adapter, install slf service, parameters %s" % (parameters)
+        logger.info("install slf service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "slf")
-        print "I'm the slf adapter, installing slf service, received resp %s" % resp
+        logger.info("installing slf service, received resp %s" % resp)
 
 
     def terminate(self):
@@ -204,7 +201,7 @@ class SlfAdapter(ABCServiceAdapter):
 
 
 if __name__ == '__main__':
-    c = HssAdapter()
+    c = SlfAdapter()
     config = {}
     config['hostname'] = "test"
     config['ips'] = {'mgmt': '160.85.4.54'}

@@ -272,6 +272,7 @@ class Port(object):
         self.private_net_id = private_net_id
         self.private_subnet_id = private_subnet_id
         self.fixed_ip = fixed_ip
+        self.replacement_policy = 'AUTO'
         self.security_groups = security_groups
 
     def dump_to_dict(self):
@@ -281,6 +282,7 @@ class Port(object):
 
         properties = {}
         properties['network_id'] = self.private_net_id
+        properties['replacement_policy'] = self.replacement_policy
         if self.private_subnet_id or self.fixed_ip:
             properties['fixed_ips'] = []
         if self.fixed_ip:

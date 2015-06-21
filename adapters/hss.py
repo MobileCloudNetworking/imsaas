@@ -4,7 +4,9 @@ from interfaces.ServiceAdapter import ServiceAdapter as ABCServiceAdapter
 import httplib
 import json
 import socket, time, datetime
+import logging
 
+logger = logging.getLogger(__name__)
 
 class HssAdapter(ABCServiceAdapter):
     def __init__(self):
@@ -90,9 +92,9 @@ class HssAdapter(ABCServiceAdapter):
                 # Issue the socket connect on the host:port
                 sock.connect((config['floating_ips'].get('mgmt'), 8390))
             except Exception, e:
-                print "%s %d closed - Exception thrown when attempting to connect. " % (now_text, 8390)
+                logger.error( "%s %d closed - Exception thrown when attempting to connect. " % (now_text, 8390))
             else:
-                print  "%s %d open" % (now_text, 8390)
+                logger.info("%s %d open" % (now_text, 8390))
                 sock.close()
                 break
             time.sleep(5)
@@ -103,11 +105,10 @@ class HssAdapter(ABCServiceAdapter):
         parameters.append(config['zabbix_ip'])
 
         request = {"parameters": parameters}
-        print "I'm the hss adapter, preinit hss service, parameters %s, request %s" % (
-            parameters, str(json.dumps(request)))
+        logger.info("preinit hss service, parameters %s, request %s" % (
+            parameters, str(json.dumps(request))))
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "chess")
-        print "I'm the hss adapter, preinit hss services, received resp %s" % resp
-
+        logger.info("preinit hss services, received resp %s" % resp)
         return True
 
     def install(self, config):
@@ -138,10 +139,9 @@ class HssAdapter(ABCServiceAdapter):
 
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the hss adapter, install hss service, parameters %s" % (request)
+        logger.info("install hss service, parameters %s" % (request))
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "chess")
-        print "I'm the hss adapter, installing hss service, received resp %s" % resp
-
+        logger.info("installing hss service, received resp %s" % resp)
 
     def add_dependency(self, config, ext_unit, ext_service):
         """
@@ -157,7 +157,7 @@ class HssAdapter(ABCServiceAdapter):
             parameters = []
             request = {"parameters": parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "icscf")
-            print "I'm the hss adapter, resolving dependency with cscsf service, received resp %s" % resp
+            logger.info("I'm the hss adapter, resolving dependency with cscsf service, received resp %s" % resp)
         if "dra" in ext_service.service_type:
             # external dependency with the cscfs
             # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}"
@@ -165,7 +165,7 @@ class HssAdapter(ABCServiceAdapter):
             parameters = []
             request = {"parameters": parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "icscf")
-            print "I'm the hss adapter, resolving dependency with dra service, received resp %s" % resp
+            logger.info("resolving dependency with dra service, received resp %s" % resp)
         if "db" in ext_service.service_type:
             # external dependency with the cscfs
             # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$DB_IP\"]}"
@@ -175,7 +175,7 @@ class HssAdapter(ABCServiceAdapter):
             parameters.append(ext_unit.ips.get('mgmt'))
             request = {"parameters": parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "db")
-            print "I'm the hss adapter, resolving dependency with db service, received resp %s" % resp
+            logger.info("resolving dependency with db service, received resp %s" % resp)
 
 
     def remove_dependency(self, config, ext_service):
@@ -225,9 +225,9 @@ class HssAdapter(ABCServiceAdapter):
 
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the hss adapter, pre-starting hss service, parameters %s" % (request)
+        logger.info("pre-starting hss service, parameters %s" % request)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preStart", "chess")
-        print "I'm the hss adapter, pre-starting hss service, received resp %s" % resp
+        logger.info("pre-starting hss service, received resp %s" % resp)
 
 
     def start(self, config):
@@ -243,10 +243,9 @@ class HssAdapter(ABCServiceAdapter):
         parameters = []
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the hss adapter, install hss service, parameters %s" % (parameters)
+        logger.info("install hss service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "chess")
-        print "I'm the hss adapter, installing hss service, received resp %s" % resp
-
+        logger.info("installing hss service, received resp %s" % resp)
 
     def terminate(self):
         """
@@ -254,7 +253,6 @@ class HssAdapter(ABCServiceAdapter):
         :return:
         """
         pass
-
 
     def __send_request(self, ip, request, method, vnf, ext_vnf=None):
         """

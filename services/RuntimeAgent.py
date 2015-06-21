@@ -187,67 +187,67 @@ class PolicyThread(threading.Thread):
             time.sleep(5)
             i += 1
 
-    def active_policy_unit(self):
-        logger.debug("Start active_policy check")
-        while not self.is_stopped:
-            logger.debug("Locking policy checking by %s" % self.policy.name)
-            self.lock.acquire()
-            for unit in self.service_instance.units:
-                action = self.policy.action
-                if action.scaling_adjustment > 0:
-                    if (len(self.service_instance.units) + action.scaling_adjustment) > self.service_instance.size.get(
-                            'max'):
-                        logger.warning(
-                            'Check upscaling - Maximum number of unit exceeded for service instance: %s' % self.service_instance.name)
-                        break
-                if action.scaling_adjustment < 0:
-                    if (len(self.service_instance.units) + action.scaling_adjustment) < self.service_instance.size.get(
-                            'min'):
-                        logger.warning(
-                            'Check downscaling - Minimum number of unit exceeded for service instance: %s' % self.service_instance.name)
-                        break
-                if self.service_instance.state != 'UPDATING' and self.check_alarm_unit(unit, self.monitor):
-                    logger.debug('Execute action: %s' % repr(self.policy.action))
-                    if action.adjustment_type == 'ChangeInCapacity':
-                        self.service_instance.state = 'UPDATING'
-                        self.topology.state = 'UPDATING'
-                        if action.scaling_adjustment > 0:
-                            if (len(
-                                    self.service_instance.units) + action.scaling_adjustment) <= self.service_instance.size.get(
-                                    'max'):
-                                for i in range(action.scaling_adjustment):
-                                    _hostname = '%s-%s' % (
-                                        self.service_instance.name, str(len(self.service_instance.units) + 1))
-                                    _state = 'Initialised'
-                                    new_unit = Unit(hostname=_hostname, state=_state)
-                                    self.service_instance.units.append(new_unit)
-                            else:
-                                logger.warning(
-                                    'Maximum number of unit exceeded for service instance: %s' % self.service_instance.name)
-                        else:
-                            if (len(
-                                    self.service_instance.units) + action.scaling_adjustment) >= self.service_instance.size.get(
-                                    'min'):
-                                for i in range(-action.scaling_adjustment):
-                                    self.remove_unit(self.topology, self.service_instance)
-                            else:
-                                logger.warning(
-                                    'Minimum number of unit exceeded for service instance: %s' % self.service_instance.name)
-                        try:
-                            self.db.update(self.topology)
-                        except Exception, msg:
-                            logger.error(msg)
-                            self.topology.state = 'ERROR'
-                            self.topology.ext_id = None
-                        template = self.template_manager.get_template(self.topology)
-                        # logger.debug("Send update to heat template with: \n%s" % template)
-                        self.heat_client.update(stack_id=self.topology.ext_id, template=template)
-                    logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
-                    time.sleep(self.policy.action.cooldown)
-            logger.debug("Release Policy lock by %s" % self.policy.name)
-            self.lock.release()
-            logger.info('Sleeping (evaluation period) for %s seconds' % self.policy.period)
-            time.sleep(self.policy.period)
+    # def active_policy_unit(self):
+    #     logger.debug("Start active_policy check")
+    #     while not self.is_stopped:
+    #         logger.debug("Locking policy checking by %s" % self.policy.name)
+    #         self.lock.acquire()
+    #         for unit in self.service_instance.units:
+    #             action = self.policy.action
+    #             if action.scaling_adjustment > 0:
+    #                 if (len(self.service_instance.units) + action.scaling_adjustment) > self.service_instance.size.get(
+    #                         'max'):
+    #                     logger.warning(
+    #                         'Check upscaling - Maximum number of unit exceeded for service instance: %s' % self.service_instance.name)
+    #                     break
+    #             if action.scaling_adjustment < 0:
+    #                 if (len(self.service_instance.units) + action.scaling_adjustment) < self.service_instance.size.get(
+    #                         'min'):
+    #                     logger.warning(
+    #                         'Check downscaling - Minimum number of unit exceeded for service instance: %s' % self.service_instance.name)
+    #                     break
+    #             if self.service_instance.state != 'UPDATING' and self.check_alarm_unit(unit, self.monitor):
+    #                 logger.debug('Execute action: %s' % repr(self.policy.action))
+    #                 if action.adjustment_type == 'ChangeInCapacity':
+    #                     self.service_instance.state = 'UPDATING'
+    #                     self.topology.state = 'UPDATING'
+    #                     if action.scaling_adjustment > 0:
+    #                         if (len(
+    #                                 self.service_instance.units) + action.scaling_adjustment) <= self.service_instance.size.get(
+    #                                 'max'):
+    #                             for i in range(action.scaling_adjustment):
+    #                                 _hostname = '%s-%s' % (
+    #                                     self.service_instance.name, str(len(self.service_instance.units) + 1))
+    #                                 _state = 'Initialised'
+    #                                 new_unit = Unit(hostname=_hostname, state=_state)
+    #                                 self.service_instance.units.append(new_unit)
+    #                         else:
+    #                             logger.warning(
+    #                                 'Maximum number of unit exceeded for service instance: %s' % self.service_instance.name)
+    #                     else:
+    #                         if (len(
+    #                                 self.service_instance.units) + action.scaling_adjustment) >= self.service_instance.size.get(
+    #                                 'min'):
+    #                             for i in range(-action.scaling_adjustment):
+    #                                 self.remove_unit(self.topology, self.service_instance)
+    #                         else:
+    #                             logger.warning(
+    #                                 'Minimum number of unit exceeded for service instance: %s' % self.service_instance.name)
+    #                     try:
+    #                         self.db.update(self.topology)
+    #                     except Exception, msg:
+    #                         logger.error(msg)
+    #                         self.topology.state = 'ERROR'
+    #                         self.topology.ext_id = None
+    #                     template = self.template_manager.get_template(self.topology)
+    #                     # logger.debug("Send update to heat template with: \n%s" % template)
+    #                     self.heat_client.update(stack_id=self.topology.ext_id, template=template)
+    #                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
+    #                 time.sleep(self.policy.action.cooldown)
+    #         logger.debug("Release Policy lock by %s" % self.policy.name)
+    #         self.lock.release()
+    #         logger.info('Sleeping (evaluation period) for %s seconds' % self.policy.period)
+    #         time.sleep(self.policy.period)
 
     def check_alarm_unit(self, unit, monitoring_service):
         logger.debug("checking for alarms")
@@ -352,12 +352,54 @@ class PolicyThread(threading.Thread):
                     except:
                         self.is_stopped = True
                         self.lock.release()
+                # adding relations between newly added unit and existing units from dependent services
+                self.configure_new_unit(new_unit)
                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
                 time.sleep(self.policy.action.cooldown)
             logger.debug("Release Policy lock from %s" % self.policy.name)
             self.lock.release()
             logger.info('Sleeping (evaluation period) for %s seconds' % self.policy.period)
             time.sleep(self.policy.period)
+
+    def configure_new_unit(self, unit):
+        config = {}
+        config['hostname'] = unit.hostname
+        config['ips'] = unit.ips
+        config['zabbix_ip'] = os.environ['ZABBIX_IP']
+        config['floating_ips'] = unit.floating_ips
+        config['hostname'] = unit.hostname
+        try:
+            logging.info("sending requests to the adapter %s with config" % config)
+            self.service_instance.adapter_instance.preinit(config)
+            self.service_instance.adapter_instance.install(config)
+        except Exception, e:
+            logging.error("error while configuring vnf %s" % e)
+        self.add_relations_after_scaling(config, unit)
+
+        try:
+            self.service_instance.adapter_instance.pre_start(config)
+            self.service_instance.adapter_instance.start(config)
+        except Exception, e:
+            logging.error("error while configuring vnf %s" % e)
+
+    def add_relations_after_scaling(self, config, unit):
+        for ext_service in self.service_instance.relation:
+            service_list = self.db.get_by_name(ServiceInstance, ext_service.name)
+            if len(service_list) == 1:
+                ext_si = service_list[0]
+                for ext_unit in ext_si.units:
+                    ext_unit_config = {}
+                    ext_unit_config['hostname'] = ext_unit.hostname
+                    ext_unit_config['ips'] = ext_unit.ips
+                    ext_unit_config['zabbix_ip'] = os.environ['ZABBIX_IP']
+                    ext_unit_config['floating_ips'] = ext_unit.floating_ips
+                    ext_unit_config['hostname'] = ext_unit.hostname
+                    logging.info(
+                        "sending request add_dependency to the adapter %s with config %s and ext_unit %s" % (
+                            self.service_instance.service_type, config, ext_unit))
+                    self.service_instance.adapter_instance.add_dependency(config, ext_unit, ext_si)
+                    ext_si.adapter_instance = FactoryServiceAdapter.get_agent(ext_si.service_type, ext_si.adapter)
+                    ext_si.adapter_instance.add_dependency(ext_unit_config, unit, self.service_instance)
 
     def check_alarm_si(self):
         logger.debug("Checking for alarms on service instance %s" % self.service_instance.name)

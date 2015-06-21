@@ -5,6 +5,9 @@ import httplib
 import json
 import socket, time, datetime
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DBAdapter(ABCServiceAdapter):
     def __init__(self):
@@ -62,9 +65,9 @@ class DBAdapter(ABCServiceAdapter):
                 # Issue the socket connect on the host:port
                 sock.connect((config['floating_ips'].get('mgmt'), 8390))
             except Exception, e:
-                print "%s %d closed - Exception thrown when attempting to connect. " % (now_text, 8390)
+                logger.error("%s %d closed - Exception thrown when attempting to connect. " % (now_text, 8390))
             else:
-                print  "%s %d open" % (now_text, 8390)
+                logger.debug("%s %d open" % (now_text, 8390))
                 sock.close()
                 break
             time.sleep(5)
@@ -75,10 +78,10 @@ class DBAdapter(ABCServiceAdapter):
         parameters.append(config['zabbix_ip'])
 
         request = {"parameters": parameters}
-        print "I'm the db adapter, preinit db service, parameters %s, request %s" % (
-            parameters, str(json.dumps(request)))
+        logger.info("preinit db service, parameters %s, request %s" % (
+            parameters, str(json.dumps(request))))
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "mysql")
-        print "I'm the slf adapter, preinit slf services, received resp %s" % resp
+        logger.info("preinit db services, received resp %s" % resp)
 
         return True
 
@@ -92,9 +95,9 @@ class DBAdapter(ABCServiceAdapter):
         parameters = []
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the db adapter, install mysql service, sending request %s to ip %s" % (request,config['floating_ips'].get('mgmt'))
+        logger.info("install mysql service, sending request %s to ip %s" % (request,config['floating_ips'].get('mgmt')))
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "mysql")
-        print "I'm the db adapter, installing mysql service, received resp %s" % resp
+        logger.info("installing mysql service, received resp %s" % resp)
 
 
     def add_dependency(self, config, ext_unit, ext_service):
@@ -105,8 +108,8 @@ class DBAdapter(ABCServiceAdapter):
         print "slf adapter ext_service.service_type %s" %ext_service.service_type
 
         if "hss" in ext_service.service_type:
-        # external dependency with the cscfs
-        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$HSS_NAME\",\"$DNS_REALM\",\"$HSS_PORT\"]}" http://$SLF_MGMT_ADDR:8390/dra/addRelation/hss
+            # external dependency with the cscfs
+            # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$HSS_NAME\",\"$DNS_REALM\",\"$HSS_PORT\"]}" http://$SLF_MGMT_ADDR:8390/dra/addRelation/hss
             parameters = []
             parameters.append(self.HSS_DB_NAME)
             parameters.append(self.HSS_DB_USER)
@@ -116,23 +119,20 @@ class DBAdapter(ABCServiceAdapter):
 
             request = {"parameters":parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "mysql", "db")
-            print "I'm the db adapter, resolving dependency with hss service, received resp %s" %resp
+            logger.info("resolving dependency with hss service, received resp %s" %resp)
 
         if "slf" in ext_service.service_type:
-        # external dependency with the cscfs
-        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$HSS_NAME\",\"$DNS_REALM\",\"$HSS_PORT\"]}" http://$SLF_MGMT_ADDR:8390/dra/addRelation/hss
+            # external dependency with the cscfs
+            # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$HSS_NAME\",\"$DNS_REALM\",\"$HSS_PORT\"]}" http://$SLF_MGMT_ADDR:8390/dra/addRelation/hss
             parameters = []
             parameters.append(self.SLF_DB_NAME)
             parameters.append(self.SLF_DB_USER)
             parameters.append(self.SLF_DB_PW)
             parameters.append(ext_unit.ips.get('mgmt'))
             parameters.append(self.SLF_DB_PROVI)
-
-
             request = {"parameters":parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "mysql", "db")
-            print "I'm the db adapter, resolving dependency with slf service, received resp %s" %resp
-
+            logger.info("resolving dependency with slf service, received resp %s" %resp)
 
     def remove_dependency(self, config, ext_service):
         """
@@ -151,7 +151,6 @@ class DBAdapter(ABCServiceAdapter):
 
         pass
 
-
     def start(self, config):
         """
         Sending start requests to the different components
@@ -165,10 +164,9 @@ class DBAdapter(ABCServiceAdapter):
         parameters = []
         # create request hss
         request = {"parameters": parameters}
-        print "I'm the db adapter, start mysql service, parameters %s" % (parameters)
+        logger.info("start mysql service, parameters %s" % parameters)
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "mysql")
-        print "I'm the db adapter, starting mysql service, received resp %s" % resp
-
+        logger.info("starting mysql service, received resp %s" % resp)
 
     def terminate(self):
         """
@@ -176,8 +174,6 @@ class DBAdapter(ABCServiceAdapter):
         :return:
         """
         pass
-
-
 
     def __send_request(self, ip, request, method, vnf, ext_vnf=None):
         """
@@ -196,9 +192,8 @@ class DBAdapter(ABCServiceAdapter):
         """Split a IP address given as string into a 4-tuple of integers."""
         return tuple(int(part) for part in ip.split('.'))
 
-
 if __name__ == '__main__':
-    c = HssAdapter()
+    c = DBAdapter()
     config = {}
     config['hostname'] = "test"
     config['ips'] = {'mgmt': '160.85.4.54'}
