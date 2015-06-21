@@ -63,7 +63,7 @@ def to_json(obj, _indent=4, _separators=(',', ': ')):
 
 def get_user_data(maas_ip, dnsaas_ip=None):
     commands = []
-    commands.append(Command("#!/usr/bin/env bash"))
+    # commands.append(Command("#!/usr/bin/env bash"))
     commands.append(Command("apt-get install -y zabbix-agent;"))
     commands.append(Command(r"sed -i 's/^\(Server[ \t]*\)=[ \t]*[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*.*$/\1 =%s"%maas_ip+"/' /etc/zabbix/zabbix_agentd.conf"))
     commands.append(Command(r"sed -i 's/^\(ServerActive[ \t]*\)=[ \t]*[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*.*$/\1 =%s"%maas_ip+"/' /etc/zabbix/zabbix_agentd.conf"))

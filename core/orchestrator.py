@@ -102,19 +102,21 @@ class SoExecution(object):
                 raise SystemError("Problems instantiating maas")
 
         # trying to retrieve dnsaas endpoint
-        if 'mcn.endpoint.forwarder' and 'mcn.endpoint.api' in attributes:
-            logger.debug('DNSaaS IPs were passed via OCCI attributes')
-            parameters['dns_ip_address'] = os.environ['DNS_IP'] = attributes['mcn.endpoint.forwarder']
-            parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = attributes['mcn.endpoint.api']
-        else:
-            try:
-                logger.debug("DNSaaS IPs were not passed as OCCI attribute, instantiating DNSaaS")
-                self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name)
-                parameters['dns_ip_address'] = os.environ['DNS_IP'] = self.dnsaas.get_forwarders()
-                parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = self.dnsaas.get_address()
-            except:
-                logging.warning("errors while instantiating dnsaas")
-                dnsaas = False
+        # if 'mcn.endpoint.forwarder' and 'mcn.endpoint.api' in attributes:
+        #     logger.debug('DNSaaS IPs were passed via OCCI attributes')
+        #     parameters['dns_ip_address'] = os.environ['DNS_IP'] = attributes['mcn.endpoint.forwarder']
+        #     parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = attributes['mcn.endpoint.api']
+        # else:
+        #     try:
+        #         logger.debug("DNSaaS IPs were not passed as OCCI attribute, instantiating DNSaaS")
+        #         self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name)
+        #         parameters['dns_ip_address'] = os.environ['DNS_IP'] = self.dnsaas.get_forwarders()
+        #         parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = self.dnsaas.get_address()
+        #     except:
+        #         logging.warning("errors while instantiating dnsaas")
+        #         dnsaas = False
+
+        dnsaas = False
 
         self.topology_type = topology_mapping[self.location]
         logger.info("deploying template %s" % (self.topology_type,))
@@ -161,7 +163,7 @@ class SoExecution(object):
 
         for si in topology.service_instances:
             if not dnsaas:
-                si.user_data = ims_util.get_user_data(parameters['maas_ip_address'])
+                si.user_data = si.user_data + (ims_util.get_user_data(parameters['maas_ip_address']))
             else:
                 si.user_data = ims_util.get_user_data(parameters['maas_ip_address'], parameters['dnsaas_ip_address'])
 

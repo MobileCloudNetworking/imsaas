@@ -1,6 +1,6 @@
 {
     "service_type": "dns",
-    "image": "ims-base-r154",
+    "image": "dns-base",
     "adapter": "DNSAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",

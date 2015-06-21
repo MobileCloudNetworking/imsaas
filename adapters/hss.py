@@ -36,7 +36,7 @@ class HssAdapter(ABCServiceAdapter):
         self.VAR_CONSOLE_PORT_BIND_ONE = "0.0.0.0"
         self.VAR_CONSOLE_PORT_BIND_TWO = "0.0.0.0"
         self.VAR_HSS_DNS_REALM = "openepc.test"  # mainly used for dra/slf relation
-        self.VAR_HSS_ENTRY ="hss.%s" % self.VAR_HSS_DNS_REALM  # mainly used for dra/slf relation
+        self.VAR_HSS_ENTRY = "hss.%s" % self.VAR_HSS_DNS_REALM  # mainly used for dra/slf relation
         self.VAR_HSS_PORT = "3868"
         self.VAR_HSS_BIND = "localhost"
         self.VERSION = "5G"
@@ -47,7 +47,7 @@ class HssAdapter(ABCServiceAdapter):
         self.HSS_NAME = "hss"  # most likely the name given by orchestrator (e.g. hss-125683782)
         self.HSS_PORT = "3868"
         # -------------------------------------------------------#
-        #	Parameters for slf relation
+        # Parameters for slf relation
         #--------------------------------------------------------#
         self.SLF_NAME = "slf"
         self.USE_SLF = "true"
@@ -58,6 +58,7 @@ class HssAdapter(ABCServiceAdapter):
         # -------------------------------------------------------#
         self.DNS_REALM = "openepc.test"
         self.DNS_REA_SLASHED = "openepc\\\.test"
+        self.DNS_LISTEN = ""
         self.ICSCF_ENTRY = "icscf.%s" % self.DNS_REALM
         self.SCSCF_ENTRY = "scscf.%s" % self.DNS_REALM
         self.PCSCF_ENTRY = "pcscf.%s" % self.DNS_REALM
@@ -118,7 +119,7 @@ class HssAdapter(ABCServiceAdapter):
         :return:
         """
 
-        self.VAR_HSS_ENTRY='%s.%s' % (config['hostname'], self.DNS_REALM)
+        self.VAR_HSS_ENTRY = '%s.%s' % (config['hostname'], self.DNS_REALM)
         self.VAR_HSS_BIND = config['ips'].get('mgmt')
 
         # hss parameters
@@ -147,31 +148,35 @@ class HssAdapter(ABCServiceAdapter):
         Add the dependency between this service and the external one
         :return:
         """
-        print "hss adapter ext_service.service_type %s" %ext_service.service_type
+        print "hss adapter ext_service.service_type %s" % ext_service.service_type
 
         if "cscfs" in ext_service.service_type:
-        # external dependency with the cscfs
-        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$HSS_MGMT_ADDR:8390/chess/addRelation/icscf
+            # external dependency with the cscfs
+            # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}"
+            #  http://$HSS_MGMT_ADDR:8390/chess/addRelation/icscf
             parameters = []
-            request = {"parameters":parameters}
+            request = {"parameters": parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "icscf")
-            print "I'm the hss adapter, resolving dependency with cscsf service, received resp %s" %resp
+            print "I'm the hss adapter, resolving dependency with cscsf service, received resp %s" % resp
         if "dra" in ext_service.service_type:
-        # external dependency with the cscfs
-        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$HSS_MGMT_ADDR:8390/chess/addRelation/icscf
+            # external dependency with the cscfs
+            # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}"
+            # http://$HSS_MGMT_ADDR:8390/chess/addRelation/icscf
             parameters = []
-            request = {"parameters":parameters}
+            request = {"parameters": parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "icscf")
-            print "I'm the hss adapter, resolving dependency with dra service, received resp %s" %resp
+            print "I'm the hss adapter, resolving dependency with dra service, received resp %s" % resp
         if "db" in ext_service.service_type:
-        # external dependency with the cscfs
-        # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$DB_IP\"]}" http://$HSS_MGMT_ADDR:8390/chess/addRelation/db+
-            self.DB_HOST=ext_unit.ips.get('mgmt')
+            # external dependency with the cscfs
+            # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$DB_IP\"]}"
+            # http://$HSS_MGMT_ADDR:8390/chess/addRelation/db+
+            self.DB_HOST = ext_unit.ips.get('mgmt')
             parameters = []
             parameters.append(ext_unit.ips.get('mgmt'))
-            request = {"parameters":parameters}
+            request = {"parameters": parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "db")
-            print "I'm the hss adapter, resolving dependency with db service, received resp %s" %resp
+            print "I'm the hss adapter, resolving dependency with db service, received resp %s" % resp
+
 
     def remove_dependency(self, config, ext_service):
         """
@@ -195,7 +200,7 @@ class HssAdapter(ABCServiceAdapter):
 
         # hss
 
-        self.VAR_HSS_ENTRY='%s.%s' % (config['hostname'], self.DNS_REALM)
+        self.VAR_HSS_ENTRY = '%s.%s' % (config['hostname'], self.DNS_REALM)
         self.VAR_HSS_BIND = config['ips'].get('mgmt')
 
         # hss parameters

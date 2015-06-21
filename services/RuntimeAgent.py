@@ -1,7 +1,7 @@
 # Copyright 2014 Technische Universitaet Berlin
 # All Rights Reserved.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
@@ -106,7 +106,7 @@ class RuntimeAgent(ABCRuntimeAgent):
                     for policy in service_instance.policies:
                         logger.debug('Creating new PolicyThread for %s' % policy)
                         _policy_thread = PolicyThread(topology=topology, runtime_agent=self, policy=policy,
-                                                          service_instance=service_instance, lock=lock)
+                                                      service_instance=service_instance, lock=lock)
                         logger.debug('Created new PolicyThread for %s' % policy)
                         logger.debug("Starting PolicyThread for: %s" % service_instance.name)
                         _policy_thread.start()
@@ -143,7 +143,7 @@ class RuntimeAgent(ABCRuntimeAgent):
 
 
 class PolicyThread(threading.Thread):
-    def __init__(self, topology,  runtime_agent, policy, service_instance, lock):
+    def __init__(self, topology, runtime_agent, policy, service_instance, lock):
         super(PolicyThread, self).__init__()
         self.policy = policy
         self.service_instance = service_instance
@@ -167,7 +167,7 @@ class PolicyThread(threading.Thread):
         logger.info("Starting policy thread for policy %s" % self.policy.name)
         if self.is_stopped:
             logger.info("Cannot start policy threads. PolicyThreads are stopped.")
-        elif self.topology.state in ['DEPLOYED','UPDATED']:
+        elif self.topology.state in ['DEPLOYED', 'UPDATED']:
             self.start_policy_checker_si()
             logger.info("Started policy thread for policy %s" % self.policy.name)
         else:
@@ -177,7 +177,7 @@ class PolicyThread(threading.Thread):
 
     def wait_until_final_state(self, final_states=[]):
         if len(final_states) == 0:
-            final_states = ['DEPLOYED','UPDATED','ERROR','DELETED']
+            final_states = ['DEPLOYED', 'UPDATED', 'ERROR', 'DELETED']
         units_count = 0
         for service_instance in self.topology.service_instances:
             units_count += len(service_instance.units)
@@ -237,7 +237,7 @@ class PolicyThread(threading.Thread):
                             self.db.update(self.topology)
                         except Exception, msg:
                             logger.error(msg)
-                            self.topology.state='ERROR'
+                            self.topology.state = 'ERROR'
                             self.topology.ext_id = None
                         template = self.template_manager.get_template(self.topology)
                         # logger.debug("Send update to heat template with: \n%s" % template)
@@ -267,7 +267,8 @@ class PolicyThread(threading.Thread):
                     logger.info('Counter %s Trigger the action: %s' % repr(self.counter, self.policy.action))
                     return True
                 else:
-                    logger.info('Not triggering action %s since the counter is still under 3' % repr(self.policy.action))
+                    logger.info(
+                        'Not triggering action %s since the counter is still under 3' % repr(self.policy.action))
                     return False
             else:
                 logger.debug("Check upscaling: item value is lower than threshold")
@@ -367,8 +368,10 @@ class PolicyThread(threading.Thread):
         si_avg = None
         logger.debug("Requesting meter values for service instance: %s" % self.service_instance.name)
         for unit in self.service_instance.units:
-            logger.debug("Requesting meter value for unit with hostname %s, item_name %s, and period: %s" %(unit.hostname,alarm.meter_name,alarm.evaluation_periods))
-            item_value = self.monitor.get_item(res_id=unit.hostname, item_name=alarm.meter_name, kwargs={'period': alarm.evaluation_periods})
+            logger.debug("Requesting meter value for unit with hostname %s, item_name %s, and period: %s" % (
+            unit.hostname, alarm.meter_name, alarm.evaluation_periods))
+            item_value = self.monitor.get_item(res_id=unit.hostname, item_name=alarm.meter_name,
+                                               kwargs={'period': alarm.evaluation_periods})
             logger.debug("Got item value for %s -> %s" % (unit.hostname, item_value))
             if item_value:
                 _sum += item_value
@@ -399,7 +402,8 @@ class PolicyThread(threading.Thread):
                     logger.info('Trigger the action: %s' % repr(self.policy.action))
                     return True
                 else:
-                    logger.info('Not triggering action %s since the counter is still under 3' % repr(self.policy.action))
+                    logger.info(
+                        'Not triggering action %s since the counter is still under 3' % repr(self.policy.action))
                     return False
             else:
                 logger.debug(
@@ -440,7 +444,9 @@ class CheckerThread(threading.Thread):
         self.is_dns_configured = False
         self.novac = NovaClient()
         #self.dns_configurator = ImsDnsClient()
-        self.neutronc = NeutronClient(utilSys.get_endpoint('network', region_name=SysUtil().get_sys_conf()['os_region_name']), utilSys.get_token())
+        self.neutronc = NeutronClient(
+            utilSys.get_endpoint('network', region_name=SysUtil().get_sys_conf()['os_region_name']),
+            utilSys.get_token())
 
     def run(self):
         while not self.is_stopped:
@@ -458,7 +464,6 @@ class CheckerThread(threading.Thread):
                 self.configure_topology()
                 self.is_dns_configured = True
             time.sleep(30)
-
 
     def configure_dns(self):
         for si in self.topology.service_instances:
@@ -486,7 +491,7 @@ class CheckerThread(threading.Thread):
                     logging.info("sending requests to the adapter %s with config" % config)
                     si.adapter_instance.preinit(config)
                     si.adapter_instance.install(config)
-                except Exception,e:
+                except Exception, e:
                     logging.error("error while configuring vnf %s" % e)
 
                 # add relations
@@ -495,20 +500,19 @@ class CheckerThread(threading.Thread):
                     if len(service_list) == 1:
                         ext_si = service_list[0]
                         for ext_unit in ext_si.units:
-                            logging.info("sending request add_dependency to the adapter %s with config %s and ext_unit %s" % (si.service_type, config, ext_unit))
+                            logging.info(
+                                "sending request add_dependency to the adapter %s with config %s and ext_unit %s" % (
+                                si.service_type, config, ext_unit))
                             si.adapter_instance.add_dependency(config, ext_unit, ext_si)
                 try:
                     # TODO add add_relation methods
                     si.adapter_instance.pre_start(config)
                     si.adapter_instance.start(config)
-                except Exception,e:
+                except Exception, e:
                     logging.error("error while configuring vnf %s" % e)
 
-
     def print_test(self, ip):
-        logging.debug("Testing dns entry for test service with ip %s"%ip)
-
-
+        logging.debug("Testing dns entry for test service with ip %s" % ip)
 
     def set_ips(self, unit):
         # Retrieving ports and ips information
@@ -545,7 +549,7 @@ class CheckerThread(threading.Thread):
                 self.db.update(self.topology)
         except Exception, exc:
             logger.exception(exc)
-            self.topology.state='ERROR'
+            self.topology.state = 'ERROR'
             raise
 
         #Get details of resources and update state for each of them
@@ -553,11 +557,11 @@ class CheckerThread(threading.Thread):
             resource_details = self.heatclient.list_resources(self.topology.ext_id)
             logger.debug('Resource details of %s: %s' % (self.topology.ext_name, resource_details))
         except HTTPNotFound, exc:
-            self.topology.state='DELETED'
+            self.topology.state = 'DELETED'
             return
         except Exception, exc:
             logger.exception(exc)
-            self.topology.state='ERROR'
+            self.topology.state = 'ERROR'
 
         #Update all service instance state down to all units
         for service_instance in self.topology.service_instances:
@@ -594,11 +598,11 @@ class CheckerThread(threading.Thread):
                 resource_details = self.heatclient.list_resources(self.topology.ext_id)
                 logger.debug('Resource details of %s: %s' % (self.topology.ext_name, resource_details))
             except HTTPNotFound, exc:
-                self.topology.state='DELETED'
+                self.topology.state = 'DELETED'
                 return
             except Exception, exc:
                 logger.exception(exc)
-                self.topology.state='ERROR'
+                self.topology.state = 'ERROR'
         #Update all unit states
         for unit in service_instance.units:
             self.update_unit_state(unit, resource_details)
@@ -611,7 +615,7 @@ class CheckerThread(threading.Thread):
                 if service_instance.state == 'DEFINED':
                     service_instance.state = unit.state
                 unit_completed = False
-            elif unit.state in ['DEPLOYING','UPDATING']:
+            elif unit.state in ['DEPLOYING', 'UPDATING']:
                 service_instance.state = unit.state
                 unit_completed = False
             elif unit.state == 'DEPLOYED':
@@ -641,11 +645,11 @@ class CheckerThread(threading.Thread):
                 resource_details = self.heatclient.list_resources(self.topology.ext_id)
                 logger.debug('Resource details of %s: %s' % (self.topology.ext_name, resource_details))
             except HTTPNotFound, exc:
-                self.topology.state='DELETED'
+                self.topology.state = 'DELETED'
                 return
             except Exception, exc:
                 logger.exception(exc)
-                self.topology.state='ERROR'
+                self.topology.state = 'ERROR'
         for vm in resource_details:
             if vm.get('resource_type') == "OS::Nova::Server":
                 if vm.get('resource_name') == unit.hostname:
@@ -653,7 +657,8 @@ class CheckerThread(threading.Thread):
                     heat_state = vm.get('resource_status')
                     if heat_state:
                         _new_state = translate(heat_state, HEAT_TO_EMM_STATE)
-                        logger.debug("State of unit %s: translate from %s to %s" % (unit.hostname, heat_state, _new_state))
+                        logger.debug(
+                            "State of unit %s: translate from %s to %s" % (unit.hostname, heat_state, _new_state))
                         if _new_state != unit.state:
                             unit.state = _new_state
                             self.db.update(unit)

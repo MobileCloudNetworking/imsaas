@@ -2,7 +2,8 @@ __author__ = 'gca'
 
 
 from interfaces.ServiceAdapter import ServiceAdapter as ABCServiceAdapter
-import httplib2
+import logging
+
 
 
 class DummyAdapter(ABCServiceAdapter):
