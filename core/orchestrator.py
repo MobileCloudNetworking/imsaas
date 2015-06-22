@@ -56,7 +56,7 @@ class SoExecution(object):
         Constructor
         """
         # by default
-        self.topology_type = "topology-ims-bern.json"
+        self.topology_type = "topology-ims-bern-dns-cscfs.json"
         self.token = token
         self.tenant_name = tenant_name
         self.stack_id = None

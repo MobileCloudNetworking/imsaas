@@ -58,7 +58,3 @@ def create_records(this_ip, dns_server_ip, domains_string):
 
     if os.path.exists('domains'):
         os.remove('domains')
-
-
-if __name__ == "__main__":
-    main()

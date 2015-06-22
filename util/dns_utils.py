@@ -24,11 +24,27 @@ def get_domain_id(domains_v, domain_str):
             return domain["id"];
 
 
+def get_domains(moniker_ip):
+    # headers = {'Content-type': 'application/json'}
+    connection = httplib.HTTPConnection('%s:9001' % moniker_ip)
+    connection.request('GET', '/v1/domains')
+    response = connection.getresponse()
+    return response.read()
+
+
 def download_domains_file(dns_server_ip):
     domains_file = open('domains', 'w')
     cmd = ['wget', '-O', '-', dns_server_ip + ':9001/v1/domains']
     ret = subprocess.call(cmd, stdout=domains_file)
     domains_file.close()
+
+
+def get_records(moniker_ip, domain_id):
+    # headers = {'Content-type': 'application/json'}
+    connection = httplib.HTTPConnection('%s:9001' % moniker_ip)
+    connection.request('GET', '/v1/domains/%s/records' % domain_id)
+    response = connection.getresponse()
+    return response.read()
 
 
 def download_records_file(dns_server_ip, domains_v, domain_str):
@@ -40,7 +56,7 @@ def download_records_file(dns_server_ip, domains_v, domain_str):
 
 
 def extract_domains_from_file(domains_file):
-    domains_v = json.loads(domains_file.read())
+    domains_v = json.loads(domains_file)
     for domain in domains_v["domains"]:
         print domain["name"], domain["id"]
     return domains_v["domains"]
@@ -51,14 +67,6 @@ def extract_records_from_file(records_file):
     for record in records_v["records"]:
         print record["name"], record["id"]
     return records_v["records"]
-
-
-def get_domains(moniker_ip):
-    headers = {'Content-type': 'application/json'}
-    connection = httplib.HTTPConnection('%s:9001' % moniker_ip)
-    connection.request('GET', '/v1/domains', headers)
-    response = connection.getresponse()
-    return response.read()
 
 
 def filter_records_file(records_file_str, names_to_keep_list):

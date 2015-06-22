@@ -18,10 +18,8 @@ def create_records(this_ip, dns_server_ip, domains_string, host_name):
     domains_vec = domains_string.split(" ")
 
     # Prepare 'domains'
-    dns_utils.download_domains_file(dns_server_ip)
-    domains_file = open('domains', 'r')
-    domains = dns_utils.extract_domains_from_file(domains_file)
-    domains_file.close()
+    domains = dns_utils.get_domains(dns_server_ip)
+    domains = dns_utils.extract_domains_from_file(domains)
 
     # Add domain A records, and save it to a file (name equals domain)
     for entry in domains_vec:

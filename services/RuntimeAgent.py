@@ -295,8 +295,12 @@ class PolicyThread(threading.Thread):
                     except:
                         self.is_stopped = True
                         self.lock.release()
-                # adding relations between newly added unit and existing units from dependent services
-                self.configure_new_unit(new_unit)
+                    if action.scaling_adjustment > 0:
+                        # adding relations between newly added unit and existing units from dependent services
+                        self.configure_new_unit(new_unit)
+                    #TODO
+                    # do remove relation
+
                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
                 time.sleep(self.policy.action.cooldown)
             logger.debug("Release Policy lock from %s" % self.policy.name)
@@ -383,7 +387,7 @@ class PolicyThread(threading.Thread):
                     "Check upscaling: avg item value is bigger than threshold for service instance %s." % self.service_instance.name)
                 self.counter += 1
 
-                if self.counter > 4:
+                if self.counter > 1:
                     logger.info('Trigger the action: %s' % repr(self.policy.action))
                     return True
                 else:

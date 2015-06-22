@@ -27,20 +27,20 @@ def create_records(this_ip, dns_server_ip, domains_string):
     for entry in domains_vec:
         dns_utils.add_domain_a_record(dns_server_ip, domains, entry, host_name + '.' + entry, this_ip)
 
-
-    # Download the complete records files
-    for entry in domains_vec:
-        dns_utils.download_records_file(dns_server_ip, domains, entry)
-
-    # Prepare a list of entries relating to our charm
-
-    host_names_fqdn = []
-    for entry in domains_vec:
-        host_names_fqdn.append(host_name + '.' + entry)
-
-    # Delete all entries in all record files not relating to our charm
-    for entry in domains_vec:
-        dns_utils.filter_records_file(entry, host_names_fqdn)
-
-    if os.path.exists('domains'):
-        os.remove('domains')
+    #
+    # # Download the complete records files
+    # for entry in domains_vec:
+    #     dns_utils.download_records_file(dns_server_ip, domains, entry)
+    #
+    # # Prepare a list of entries relating to our charm
+    #
+    # host_names_fqdn = []
+    # for entry in domains_vec:
+    #     host_names_fqdn.append(host_name + '.' + entry)
+    #
+    # # Delete all entries in all record files not relating to our charm
+    # for entry in domains_vec:
+    #     dns_utils.filter_records_file(entry, host_names_fqdn)
+    #
+    # if os.path.exists('domains'):
+    #     os.remove('domains')
