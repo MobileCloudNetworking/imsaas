@@ -28,10 +28,8 @@ def create_records(this_ip, dns_server_ip, domains_string):
         dns_sip_entry_vec.append('_sip._tcp.' + entry)
 
     # 3. Prepare 'domains' file
-    dns_utils.download_domains_file(dns_server_ip)
-    domains_file = open('domains', 'r')
-    domains = dns_utils.extract_domains_from_file(domains_file)
-    domains_file.close()
+    domains = dns_utils.get_domains(dns_server_ip)
+    domains = dns_utils.extract_domains_from_file(domains)
 
     # Add domain SRV records ...
     for domain_name in domains_vec:

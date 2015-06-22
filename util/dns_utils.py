@@ -14,6 +14,7 @@ import time
 
 import shutil
 import re
+import httplib
 
 
 def get_domain_id(domains_v, domain_str):
@@ -50,6 +51,14 @@ def extract_records_from_file(records_file):
     for record in records_v["records"]:
         print record["name"], record["id"]
     return records_v["records"]
+
+
+def get_domains(moniker_ip):
+    headers = {'Content-type': 'application/json'}
+    connection = httplib.HTTPConnection('%s:9001' % moniker_ip)
+    connection.request('GET', '/v1/domains', headers)
+    response = connection.getresponse()
+    return response.read()
 
 
 def filter_records_file(records_file_str, names_to_keep_list):
