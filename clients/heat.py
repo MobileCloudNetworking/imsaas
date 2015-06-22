@@ -25,7 +25,7 @@ import json
 
 
 class Client(object):
-    def __init__(self):
+    def __init__(self, region_name=None):
         heat_args = SysUtil.get_credentials()
         heat_args['token'] = SysUtil.get_token()
         conf = SysUtilObj().get_sys_conf()

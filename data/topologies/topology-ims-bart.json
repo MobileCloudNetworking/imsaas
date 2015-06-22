@@ -85,7 +85,7 @@
       "flavor":"m1.small",
       "key":"mcn-key",
       "location": ["bart"],
-      "relation": ["cscfs", "hss"],
+      "relation": ["db", "dns", "slf"],
       "configuration": {
       },
       "networks": [

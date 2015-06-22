@@ -51,7 +51,7 @@ class SoExecution(object):
     class docs
     """
 
-    def __init__(self, token, tenant_name):
+    def __init__(self, token, tenant_name, location=None):
         """
         Constructor
         """
@@ -61,7 +61,8 @@ class SoExecution(object):
         self.tenant_name = tenant_name
         self.stack_id = None
         self.maas = None
-        self.location = 'bern'
+        if location is None:
+            self.location = 'bern'
         # make sure we can talk to deployer...
         logger.debug("sending request to the url %s" % os.environ['DESIGN_URI'])
 

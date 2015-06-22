@@ -330,6 +330,7 @@ class PolicyThread(threading.Thread):
             logging.error("error while configuring vnf %s" % e)
 
     def add_relations_after_scaling(self, config, unit):
+        logger.info("adding relations after scaling %s" % self.service_instance.name)
         for ext_service in self.service_instance.relation:
             service_list = self.db.get_by_name(ServiceInstance, ext_service.name)
             if len(service_list) == 1:

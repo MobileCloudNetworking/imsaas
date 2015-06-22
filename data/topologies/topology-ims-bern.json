@@ -79,7 +79,7 @@
       "flavor":"m1.small",
       "key":"mcn-key",
       "location": ["bern"],
-      "relation": ["db", "dns"],
+      "relation": ["db", "dns", "slf"],
       "configuration": {
       },
       "networks": [
