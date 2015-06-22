@@ -68,6 +68,7 @@ class SoExecution(object):
         self.conf = sys_util().get_sys_conf()
         logger.debug("instantiating deployer %s" %self.conf['deployer'])
         self.deployer = None
+        self.topology = None
         #self.deployer = util.get_deployer(self.token, url_type='public', tenant_name=self.tenant_name)
 
     def deploy(self, attributes):
@@ -86,20 +87,6 @@ class SoExecution(object):
 
         self.deployer = FactoryAgent().get_agent(self.conf['deployer'])
 
-
-        # trying to retrieve maas endpoint
-        if 'mcn.endpoint.maas' in attributes:
-            logger.debug("MaaS IP was passed as attribute")
-            parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = attributes['mcn.endpoint.maas']
-        else:
-            try:
-                logger.debug("Maas IP was not passed as attribute")
-                self.maas = util.get_maas(self.token, tenant_name=self.tenant_name)
-                parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = self.maas.get_address(self.token)
-                logger.info("maas instantiated with address %s" % os.environ['ZABBIX_IP'])
-            except Exception, e:
-                logger.error("Problems instantiating maas")
-                raise SystemError("Problems instantiating maas")
 
         # trying to retrieve dnsaas endpoint
         # if 'mcn.endpoint.forwarder' and 'mcn.endpoint.api' in attributes:
@@ -141,7 +128,7 @@ class SoExecution(object):
 
         # creating the topology object
         try:
-            topology = TopologyOrchestrator.create(config)
+            self.topology = TopologyOrchestrator.create(config)
         except NotFoundException, msg:
             logger.error(msg)
             return
@@ -161,24 +148,43 @@ class SoExecution(object):
             logger.error(msg)
             return
 
-        for si in topology.service_instances:
-            if not dnsaas:
-                si.user_data = si.user_data + (ims_util.get_user_data(parameters['maas_ip_address']))
-            else:
-                si.user_data = ims_util.get_user_data(parameters['maas_ip_address'], parameters['dnsaas_ip_address'])
-
+        # for si in self.topology.service_instances:
+        #     if not dnsaas:
+        #         si.user_data = si.user_data + (ims_util.get_user_data(parameters['maas_ip_address']))
+        #     else:
+        #         si.user_data = ims_util.get_user_data(parameters['maas_ip_address'], parameters['dnsaas_ip_address'])
+        #
 
         # deploying the topology
         if self.stack_id is None:
-            stack_details = self.deployer.deploy(topology)
+            stack_details = self.deployer.deploy(self.topology)
             self.stack_id = stack_details.id
             logger.info("deployed topology with id %s" % self.stack_id)
 
-    def provision(self):
+    def provision(self, attributes):
         """
         Provision method
         """
-        pass
+        # provisioning the topology
+        parameters = {}
+        # trying to retrieve maas endpoint
+        if 'mcn.endpoint.maas' in attributes:
+            logger.debug("MaaS IP was passed as attribute")
+            parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = attributes['mcn.endpoint.maas']
+        else:
+            try:
+                logger.debug("Maas IP was not passed as attribute")
+                self.maas = util.get_maas(self.token, tenant_name=self.tenant_name)
+                parameters['maas_ip_address'] = os.environ['ZABBIX_IP'] = self.maas.get_address(self.token)
+                logger.info("maas instantiated with address %s" % os.environ['ZABBIX_IP'])
+            except Exception, e:
+                logger.error("Problems instantiating maas")
+                raise SystemError("Problems instantiating maas")
+
+        if self.stack_id is not None:
+            stack_details = self.deployer.provision(self.topology)
+            self.stack_id = stack_details.id
+            logger.info("deployed topology with id %s" % self.stack_id)
 
     def dispose(self):
         """

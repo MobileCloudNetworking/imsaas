@@ -52,7 +52,6 @@ class MyBackend(occi_ext.Backend):
         self.so = ServiceOrchestrator(token, tenant)
         entity.actions = [occi_ext.DEPLOY_ACTION]
 
-
     def retrieve(self, entity, extras):
         if occi_ext.DEPLOY_ACTION in entity.actions:
             entity.attributes['occi.mcn.stack.state'] = 'CREATE_COMPLETE' # Demo
@@ -67,9 +66,10 @@ class MyBackend(occi_ext.Backend):
 
     def update(self, old, new, extras):
         # TODO: attributes would need to be defined by a mixin.
-        logging.info("Received update request with attributes: %s"%new.attributes)
+        # logging.info("Received update request with attributes: %s"%new.attributes)
         old.attributes.update(new.attributes)
-        self.so.so_e.deploy(new.attributes)
+        # self.so.so_e.deploy(new.attributes)
+        self.so.so_e.provision(new.attributes)
 
     def delete(self, entity, extras):
         self.so.so_e.dispose()
@@ -77,7 +77,7 @@ class MyBackend(occi_ext.Backend):
     # Actions
 
     def deploy_me(self, entity, attributes, extras):
-        #self.so.so_e.deploy(attributes)
+        self.so.so_e.deploy(attributes)
         entity.actions = [occi_ext.PROVISION_ACTION]
 
     def provision_me(self, entity, attributes, extras):
@@ -95,3 +95,4 @@ if __name__ == '__main__':
     httpd = make_server('localhost', 8051, application)
     # Wait for a single request, serve it and quit.
     httpd.serve_forever()
+

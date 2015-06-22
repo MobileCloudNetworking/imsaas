@@ -43,6 +43,14 @@ class Deployer(object):
         print "ABC - Deployer.deploy()"
 
     @abstractmethod
+    def provision(self, topology):
+        """
+        Provision the instantiated stack.
+        :return:
+        """
+        print "ABC - Deployer.provision()"
+
+    @abstractmethod
     def dispose(self):
         """
         Disposes an existing stack.

@@ -88,6 +88,10 @@ class Deployer(ABCDeployer):
         #self.register_agent.start()
         return topology
 
+    def provision(self, topology):
+        self.runtime_agent.provision(topology)
+        return topology
+
     def dispose(self, topology):
         # checker_thread = self.checker_thread
         # logger.debug("Get RuntimeAgent for topology %s" % topology.id)

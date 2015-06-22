@@ -87,9 +87,6 @@ class RuntimeAgent(ABCRuntimeAgent):
             return repr(self)
 
         def start(self, topology):
-            #Start the monitoring agent
-            self.monitoring_service.start()
-
             #Start CheckerThread the first time or update topology after restart
             if self.checker_threads.get(topology.id) is None:
                 self.checker_threads[topology.id] = CheckerThread(topology)
@@ -97,6 +94,11 @@ class RuntimeAgent(ABCRuntimeAgent):
                 self.checker_threads[topology.id].start()
             else:
                 self.checker_threads[topology.id].topology = topology
+
+        def provision(self,topology):
+            self.checker_threads[topology.id].provision()
+            #Start the monitoring agent
+            self.monitoring_service.start()
 
             #Start PolicyThreads if needed
             self.policy_threads[topology.id] = []
@@ -137,6 +139,9 @@ class RuntimeAgent(ABCRuntimeAgent):
 
     def start(self, topology):
         self.instance.start(topology)
+
+    def provision(self, topology):
+        self.instance.provision(topology)
 
     def stop(self, _id):
         self.instance.stop(_id)
@@ -187,68 +192,6 @@ class PolicyThread(threading.Thread):
             time.sleep(5)
             i += 1
 
-    # def active_policy_unit(self):
-    #     logger.debug("Start active_policy check")
-    #     while not self.is_stopped:
-    #         logger.debug("Locking policy checking by %s" % self.policy.name)
-    #         self.lock.acquire()
-    #         for unit in self.service_instance.units:
-    #             action = self.policy.action
-    #             if action.scaling_adjustment > 0:
-    #                 if (len(self.service_instance.units) + action.scaling_adjustment) > self.service_instance.size.get(
-    #                         'max'):
-    #                     logger.warning(
-    #                         'Check upscaling - Maximum number of unit exceeded for service instance: %s' % self.service_instance.name)
-    #                     break
-    #             if action.scaling_adjustment < 0:
-    #                 if (len(self.service_instance.units) + action.scaling_adjustment) < self.service_instance.size.get(
-    #                         'min'):
-    #                     logger.warning(
-    #                         'Check downscaling - Minimum number of unit exceeded for service instance: %s' % self.service_instance.name)
-    #                     break
-    #             if self.service_instance.state != 'UPDATING' and self.check_alarm_unit(unit, self.monitor):
-    #                 logger.debug('Execute action: %s' % repr(self.policy.action))
-    #                 if action.adjustment_type == 'ChangeInCapacity':
-    #                     self.service_instance.state = 'UPDATING'
-    #                     self.topology.state = 'UPDATING'
-    #                     if action.scaling_adjustment > 0:
-    #                         if (len(
-    #                                 self.service_instance.units) + action.scaling_adjustment) <= self.service_instance.size.get(
-    #                                 'max'):
-    #                             for i in range(action.scaling_adjustment):
-    #                                 _hostname = '%s-%s' % (
-    #                                     self.service_instance.name, str(len(self.service_instance.units) + 1))
-    #                                 _state = 'Initialised'
-    #                                 new_unit = Unit(hostname=_hostname, state=_state)
-    #                                 self.service_instance.units.append(new_unit)
-    #                         else:
-    #                             logger.warning(
-    #                                 'Maximum number of unit exceeded for service instance: %s' % self.service_instance.name)
-    #                     else:
-    #                         if (len(
-    #                                 self.service_instance.units) + action.scaling_adjustment) >= self.service_instance.size.get(
-    #                                 'min'):
-    #                             for i in range(-action.scaling_adjustment):
-    #                                 self.remove_unit(self.topology, self.service_instance)
-    #                         else:
-    #                             logger.warning(
-    #                                 'Minimum number of unit exceeded for service instance: %s' % self.service_instance.name)
-    #                     try:
-    #                         self.db.update(self.topology)
-    #                     except Exception, msg:
-    #                         logger.error(msg)
-    #                         self.topology.state = 'ERROR'
-    #                         self.topology.ext_id = None
-    #                     template = self.template_manager.get_template(self.topology)
-    #                     # logger.debug("Send update to heat template with: \n%s" % template)
-    #                     self.heat_client.update(stack_id=self.topology.ext_id, template=template)
-    #                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
-    #                 time.sleep(self.policy.action.cooldown)
-    #         logger.debug("Release Policy lock by %s" % self.policy.name)
-    #         self.lock.release()
-    #         logger.info('Sleeping (evaluation period) for %s seconds' % self.policy.period)
-    #         time.sleep(self.policy.period)
-
     def check_alarm_unit(self, unit, monitoring_service):
         logger.debug("checking for alarms")
         alarm = self.policy.alarm
@@ -263,7 +206,7 @@ class PolicyThread(threading.Thread):
                 # hack for demo
                 self.counter += 1
 
-                if self.counter > 4:
+                if self.counter > 1:
                     logger.info('Counter %s Trigger the action: %s' % repr(self.counter, self.policy.action))
                     return True
                 else:
@@ -501,11 +444,17 @@ class CheckerThread(threading.Thread):
                     for unit in si.units:
                         if len(unit.ports) == 0:
                             self.set_ips(unit)
-            if self.topology.state == 'DEPLOYED' and not self.is_dns_configured:
+            # if self.topology.state == 'DEPLOYED' and not self.is_dns_configured:
                 #self.configure_dns()
-                self.configure_topology()
-                self.is_dns_configured = True
+                # self.configure_topology()
+                # self.is_dns_configured = True
             time.sleep(30)
+
+    def provision(self):
+        if self.topology.state == 'DEPLOYED' and not self.is_dns_configured:
+            # self.configure_dns()
+            self.configure_topology()
+            self.is_dns_configured = True
 
     def configure_dns(self):
         for si in self.topology.service_instances:
