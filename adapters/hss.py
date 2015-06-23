@@ -31,7 +31,7 @@ class HssAdapter(ABCServiceAdapter):
         # 0 means we are not using a local database
         # ensure the database service is installed
         # and configured before starting this service
-        self.LocalDB = "1"
+        self.LocalDB = "0"
 
         self.VAR_CONSOLE_PORT_ONE = "10003"
         self.VAR_CONSOLE_PORT_TWO = "10000"
