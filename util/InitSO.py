@@ -28,7 +28,7 @@ PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
 __author__ = 'gca'
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 class InitSO:
 

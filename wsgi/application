@@ -14,13 +14,8 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
 import os
-import logging
 
-
-from util.SysUtil import SysUtil
-from util.InitSO import InitSO
 try:
     virtenv = os.environ.get('OPENSHIFT_PYTHON_DIR', '.') + '/virtenv/'
     virtualenv = os.path.join(virtenv, 'bin/activate_this.py')
@@ -30,10 +25,10 @@ except IOError:
 #
 # IMPORTANT: Put any additional includes below this line.  If placed above this
 # line, it's possible required libraries won't be in your searchable path
-
+import logging
+from util.SysUtil import SysUtil
+from util.InitSO import InitSO
 from core.orchestrator import ServiceOrchestrator
-
-
 from sdk.mcn import occi_ext
 PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
 
@@ -82,7 +77,6 @@ class MyBackend(occi_ext.Backend):
 
     def provision_me(self, entity, attributes, extras):
         entity.actions = []
-
 
 
 application = occi_ext.Application(MyBackend())

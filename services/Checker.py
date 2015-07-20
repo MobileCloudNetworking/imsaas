@@ -359,7 +359,7 @@ def checkKey(key):
 def checkSize(size={}):
     if size.get('def'):
         if isinstance(size.get('def'), (long, int)):
-            if size.get('def') > 0:
+            if size.get('def') >= 0:
                 logger.debug("default size \"%s\" is valid." % size.get('def'))
             else:
                 raise InvalidInputException("default size:\"%s\" must be bigger than 0." % size.get('def'))
@@ -369,7 +369,7 @@ def checkSize(size={}):
         raise NotDefinedException("default size is not defined.")
     if size.get('min'):
         if isinstance(size.get('min'), (long, int)):
-            if size.get('min') > 0:
+            if size.get('min') >= 0:
                 logger.debug("minimal size \"%s\" is valid." % size.get('min'))
             else:
                 raise InvalidInputException(
@@ -380,7 +380,7 @@ def checkSize(size={}):
         raise NotDefinedException("minimal size is not defined.")
     if size.get('max'):
         if isinstance(size.get('max'), (long, int)):
-            if size.get('max') > 0:
+            if size.get('max') >= 0:
                 logger.debug("maximal size \"%s\" is valid." % size.get('max'))
             else:
                 raise InvalidInputException(
@@ -616,9 +616,6 @@ def checkService(service):
         logger.debug("Check size of service \"%s\"." % service.service_type)
         if service.size:
             checkSize(service.size)
-        else:
-            raise NotDefinedException("size is not defined.")
-
         # check networks
         logger.debug("Check networks of service \"%s\"." % service.service_type)
         for network in service.networks:

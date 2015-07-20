@@ -1,0 +1,145 @@
+{
+  "name":"ims",
+  "service_instances": [
+    {
+      "name":"cscfs",
+      "service_type":"cscfs",
+      "flavor":"m1.small",
+      "key":"mcn-key",
+      "location": ["bern"],
+      "relation": ["hss","dns"],
+      "configuration": {
+      },
+      "networks": [
+        {
+          "name":"mgmt",
+          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
+          "security_groups": [
+            "security-group-ims"
+          ]
+        }
+      ],
+      "policies": [
+      ],
+      "requirements": [
+      ],
+      "user_data": [
+      ]
+    },
+    {
+      "name":"db",
+      "service_type":"db",
+      "location": ["bern"],
+      "flavor":"m1.small",
+      "key":"mcn-key",
+      "relation": ["hss"],
+      "configuration": {
+      },
+      "networks": [
+        {
+          "name":"mgmt",
+          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
+          "security_groups": [
+            "security-group-ims"
+          ]
+        }
+      ],
+      "policies": [
+      ],
+      "requirements": [
+      ],
+      "user_data": [
+      ]
+    },
+    {
+      "name":"hss",
+      "service_type":"hss",
+      "flavor":"m1.small",
+      "key":"mcn-key",
+      "location": ["bern"],
+      "relation": ["db", "slf","dns"],
+      "configuration": {
+      },
+      "networks": [
+        {
+          "name":"mgmt",
+          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
+          "security_groups": [
+            "security-group-ims"
+          ]
+        }
+      ],
+      "policies": [
+        {
+          "name": "msg_scaleup",
+          "period": 30,
+          "alarm": {
+            "meter_name": "system.cpu.util[,idle]",
+            "comparison_operator": "gt",
+            "threshold": 35,
+            "statistic": "avg",
+            "evaluation_periods": 1
+          },
+          "action": {
+            "adjustment_type": "ChangeInCapacity",
+            "scaling_adjustment": 1,
+            "cooldown": 30
+          }
+        },
+        {
+          "name": "msg_scaledown",
+          "period": 30,
+          "alarm": {
+            "meter_name": "system.cpu.util[,idle]",
+            "comparison_operator": "lt",
+            "threshold": 10,
+            "statistic": "avg",
+            "evaluation_periods": 1
+          },
+          "action": {
+            "adjustment_type": "ChangeInCapacity",
+            "scaling_adjustment": -1,
+            "cooldown": 60
+          }
+        }
+      ],
+      "requirements": [
+      ],
+      "user_data": [
+      ]
+    },
+    {
+      "name":"slf",
+      "service_type":"slf",
+      "flavor":"m1.small",
+      "key":"mcn-key",
+      "location": ["bern"],
+      "relation": ["cscfs", "hss","dns"],
+      "configuration": {
+      },
+      "networks": [
+        {
+          "name":"mgmt",
+          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
+          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
+          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
+          "security_groups": [
+            "security-group-ims"
+          ]
+        }
+      ],
+      "policies": [
+      ],
+      "requirements": [
+      ],
+      "user_data": [
+      ]
+    }
+  ]
+}

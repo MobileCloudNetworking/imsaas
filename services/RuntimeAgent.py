@@ -29,9 +29,7 @@ import util.SysUtil as utilSys
 from clients.heat import Client as HeatClient
 from clients.neutron import Client as NeutronClient
 from clients.nova import Client as NovaClient
-
 from util.IMSDNSConfigurator import ImsDnsClient
-
 
 __author__ = 'mpa'
 
@@ -95,8 +93,8 @@ class RuntimeAgent(ABCRuntimeAgent):
             else:
                 self.checker_threads[topology.id].topology = topology
 
-        def provision(self,topology):
-            self.checker_threads[topology.id].provision()
+        def provision(self, topology, dnsaas=None):
+            self.checker_threads[topology.id].provision(dnsaas)
             #Start the monitoring agent
             self.monitoring_service.start()
 
@@ -140,8 +138,8 @@ class RuntimeAgent(ABCRuntimeAgent):
     def start(self, topology):
         self.instance.start(topology)
 
-    def provision(self, topology):
-        self.instance.provision(topology)
+    def provision(self, topology, dnsaas=None):
+        self.instance.provision(topology, dnsaas)
 
     def stop(self, _id):
         self.instance.stop(_id)
@@ -431,9 +429,10 @@ class CheckerThread(threading.Thread):
         self.topology = topology
         self.db = DatabaseManager()
         self.is_stopped = False
-        self.is_dns_configured = False
+        self.is_dnsaas = False
+        self.dnsaas = None
         self.novac = NovaClient()
-        #self.dns_configurator = ImsDnsClient()
+        self.dns_configurator = None
         self.neutronc = NeutronClient(
             utilSys.get_endpoint('network', region_name=SysUtil().get_sys_conf()['os_region_name']),
             utilSys.get_token())
@@ -449,25 +448,14 @@ class CheckerThread(threading.Thread):
                     for unit in si.units:
                         if len(unit.ports) == 0:
                             self.set_ips(unit)
-            # if self.topology.state == 'DEPLOYED' and not self.is_dns_configured:
-                #self.configure_dns()
-                # self.configure_topology()
-                # self.is_dns_configured = True
             time.sleep(30)
 
-    def provision(self):
-        if self.topology.state == 'DEPLOYED' and not self.is_dns_configured:
-            # self.configure_dns()
+    def provision(self, dnsaas):
+        if dnsaas is not None:
+            self.dns_configurator = ImsDnsClient(dnsaas)
+            self.is_dnsaas = True
+        if self.topology.state == 'DEPLOYED':
             self.configure_topology()
-            self.is_dns_configured = True
-
-    def configure_dns(self):
-        for si in self.topology.service_instances:
-            for unit in si.units:
-                try:
-                    self.dns_configurator.configure_dns_entry(si.service_type, unit.hostname)(unit.ips['mgmt'])
-                except:
-                    logging.debug("this service instance is not needed in the dns")
 
     def configure_topology(self):
         for si in self.topology.service_instances:
@@ -492,16 +480,23 @@ class CheckerThread(threading.Thread):
 
                 # add relations
                 for ext_service in si.relation:
-                    service_list = self.db.get_by_name(ServiceInstance, ext_service.name)
-                    if len(service_list) == 1:
-                        ext_si = service_list[0]
-                        for ext_unit in ext_si.units:
-                            logging.info(
-                                "sending request add_dependency to the adapter %s with config %s and ext_unit %s" % (
-                                si.service_type, config, ext_unit))
-                            si.adapter_instance.add_dependency(config, ext_unit, ext_si)
+                    logger.debug("solving dependencies between si %s and external service %s" %(si.name, ext_service.name,))
+                    if ext_service.name == 'dns' and self.is_dnsaas is True:
+                        ext_unit = Unit(hostname=None, state='INITIALISING')
+                        ext_si = ServiceInstance(name='dns', service_type='dns', state='INITIALISING', image='test', flavor='test', size={})
+                        ext_unit.ips['mgmt'] = os.environ['DNSAAS_IP']
+                        self.dns_configurator.configure_dns_entry(si.service_type)(unit.ips['mgmt'], unit.hostname)
+                        si.adapter_instance.add_dependency(config, ext_unit, ext_si)
+                    else:
+                        service_list = self.db.get_by_name(ServiceInstance, ext_service.name)
+                        if len(service_list) == 1:
+                            ext_si = service_list[0]
+                            for ext_unit in ext_si.units:
+                                logging.info(
+                                    "sending request add_dependency to the adapter %s with config %s and ext_unit %s" % (
+                                    si.service_type, config, ext_unit))
+                                si.adapter_instance.add_dependency(config, ext_unit, ext_si)
                 try:
-                    # TODO add add_relation methods
                     si.adapter_instance.pre_start(config)
                     si.adapter_instance.start(config)
                 except Exception, e:

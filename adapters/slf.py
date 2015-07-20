@@ -143,6 +143,7 @@ class SlfAdapter(ABCServiceAdapter):
             parameters = []
             parameters.append(ext_unit.ips.get('mgmt'))
             parameters.append(self.DNS_REALM)
+            parameters.append(config['ips'].get('mgmt'))
             request = {"parameters":parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "slf", "dns")
             logger.info("resolving dependency with dns service, received resp %s" %resp)
