@@ -1,13 +1,13 @@
 {
-    "service_type": "hss",
+    "service_type": "dra",
     "image": "ims-5g-bin-r177",
-    "adapter": "HssAdapter",
+    "adapter": "DraAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",
     "configuration": {
     },
     "size": {
-        "max": 2,
+        "max": 1,
         "def": 1,
         "min": 1
     }

@@ -137,6 +137,10 @@ class DNSAdapter(ABCServiceAdapter):
             # add relation with all cscfs services
             logger.info("adding dns records for slf components")
             add_dns_slf.create_records(ext_unit.ips.get('mgmt'), config['floating_ips'].get('mgmt'), self.realm)
+        if "dra" in ext_service.service_type:
+            # add relation with all cscfs services
+            logger.info("adding dns records for slf components")
+            add_dns_slf.create_records(ext_unit.ips.get('mgmt'), config['floating_ips'].get('mgmt'), self.realm)
 
 
 
