@@ -1,6 +1,6 @@
 {
     "service_type": "slf",
-    "image": "slf-base-r155",
+    "image": "slf-base-r167",
     "adapter": "SlfAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",
