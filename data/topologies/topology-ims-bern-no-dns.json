@@ -7,7 +7,7 @@
       "flavor":"m1.small",
       "key":"mcn-key",
       "location": ["bern"],
-      "relation": ["hss", "dns"],
+      "relation": ["hss","dns"],
       "configuration": {
       },
       "networks": [
@@ -24,20 +24,8 @@
       "policies": [
       ],
       "requirements": [
-        {
-            "name":"$DNS_IP",
-            "parameter":"private_ip",
-            "source":"dns",
-            "obj_name": "mgmt"
-        }
       ],
       "user_data": [
-          "#!/bin/bash -v",
-          "cat << EOF > /etc/resolv.conf",
-          "search epc.mnc001.mcc001.3gppnetwork.org",
-          "domain epc.mnc001.mcc001.3gppnetwork.org",
-          "nameserver $DNS_IP",
-          "EOF"
       ]
     },
     {
@@ -65,12 +53,6 @@
       "requirements": [
       ],
       "user_data": [
-          "#!/bin/bash -v",
-          "cat << EOF > /etc/resolv.conf",
-          "search epc.mnc001.mcc001.3gppnetwork.org",
-          "domain epc.mnc001.mcc001.3gppnetwork.org",
-          "nameserver $DNS_IP",
-          "EOF"
       ]
     },
     {
@@ -79,7 +61,7 @@
       "flavor":"m1.small",
       "key":"mcn-key",
       "location": ["bern"],
-      "relation": ["db", "dns", "slf"],
+      "relation": ["db", "slf","dns"],
       "configuration": {
       },
       "networks": [
@@ -128,68 +110,17 @@
         }
       ],
       "requirements": [
-        {
-            "name":"$DNS_IP",
-            "parameter":"private_ip",
-            "source":"dns",
-            "obj_name": "mgmt"
-        }
       ],
       "user_data": [
-          "#!/bin/bash -v",
-          "cat << EOF > /etc/resolv.conf",
-          "search epc.mnc001.mcc001.3gppnetwork.org",
-          "domain epc.mnc001.mcc001.3gppnetwork.org",
-          "nameserver $DNS_IP",
-          "EOF"
       ]
     },
     {
       "name":"slf",
-      "service_type":"dra",
+      "service_type":"slf",
       "flavor":"m1.small",
       "key":"mcn-key",
       "location": ["bern"],
-      "relation": ["cscfs", "hss", "dns"],
-      "configuration": {
-      },
-      "networks": [
-        {
-          "name":"mgmt",
-          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
-          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
-          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
-          "security_groups": [
-            "security-group-ims"
-          ]
-        }
-      ],
-      "policies": [
-      ],
-      "requirements": [
-        {
-            "name":"$DNS_IP",
-            "parameter":"private_ip",
-            "source":"dns",
-            "obj_name": "mgmt"
-        }
-      ],
-      "user_data": [
-          "#!/bin/bash -v",
-          "cat << EOF > /etc/resolv.conf",
-          "search epc.mnc001.mcc001.3gppnetwork.org",
-          "domain epc.mnc001.mcc001.3gppnetwork.org",
-          "nameserver $DNS_IP",
-          "EOF"
-      ]
-    },
-    {
-      "name":"dns",
-      "service_type":"dns",
-      "flavor":"m1.small",
-      "key":"mcn-key",
-      "location": ["bern"],
-      "relation": ["cscfs", "hss", "slf"],
+      "relation": ["cscfs", "hss","dns"],
       "configuration": {
       },
       "networks": [
@@ -210,6 +141,5 @@
       "user_data": [
       ]
     }
-
   ]
 }

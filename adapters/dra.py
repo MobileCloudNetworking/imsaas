@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class SlfAdapter(ABCServiceAdapter):
+class DraAdapter(ABCServiceAdapter):
     def __init__(self):
         """
         Initializes a new ServiceAdapter.
@@ -23,11 +23,11 @@ class SlfAdapter(ABCServiceAdapter):
         # and configured before starting this service
         self.LocalDB = "1"
 
-        self.SLF_NAME = "slf"
+        self.DRA_NAME = "slf"
         self.USE_SLF = "false"
-        self.SLF_PORT = "13868"
+        self.DRA_PORT = "13868"
 
-        self.VAR_SLF_BIND = "localhost"
+        self.VAR_DRA_BIND = "localhost"
         self.VERSION = "5G"
         # -------------------------------------------------------#
         #	Parameters for dns relation
@@ -48,10 +48,10 @@ class SlfAdapter(ABCServiceAdapter):
         # Parameters for cscfs relation
         # -------------------------------------------------------#
         self.SCSCF_NAME = "scscf"
-        self.SCSCF_PORT = "6060"
+        self.SCSCF_PORT = "3870"
         self.SCSCF_LISTEN = "0.0.0.0"
         self.ICSCF_NAME = "icscf"
-        self.ICSCF_PORT = "5060"
+        self.ICSCF_PORT = "3869"
         self.ICSCF_ENTRY = "icscf.%s" % self.DNS_REALM
         self.SCSCF_ENTRY = "scscf.%s" % self.DNS_REALM
         self.PCSCF_ENTRY = "pcscf.%s" % self.DNS_REALM
@@ -62,12 +62,12 @@ class SlfAdapter(ABCServiceAdapter):
         self.DB_IP = ""
 
         self.DEFAULT_ROUTE = self.HSS_ENTRY
-        self.SLF_ENTRY = "%s.%s" % (self.SLF_NAME, self.DNS_REALM)
+        self.DRA_ENTRY = "%s.%s" % (self.DRA_NAME, self.DNS_REALM)
 
     def preinit(self, config):
         """
         sends the preinit method based on the received config parameters
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"mgmt=$ICSCF_MGMT_ADDR\",\"$ZABBIX_IP\"]}" http://$ICSCF_MGMT_ADDR:8390/icscf/preinit
+        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"mgmt=$ICSCF_MGMT_ADDR\",\"$ZABBIX_IP\"]}" http://$ICSCF_MGMT_ADDR:8390/dra/preinit
 
         :return:
         """
@@ -97,8 +97,8 @@ class SlfAdapter(ABCServiceAdapter):
         request = {"parameters": parameters}
         logger.info("preinit slf service, parameters %s, request %s" % (
             parameters, str(json.dumps(request))))
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "slf")
-        logger.info("preinit slf services, received resp %s" % resp)
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "dra")
+        logger.info("preinit dra services, received resp %s" % resp)
 
         return True
 
@@ -107,16 +107,14 @@ class SlfAdapter(ABCServiceAdapter):
         Creates a new Service based on the config file.
         :return:
         """
-        self.VAR_HSS_ENTRY='%s.%s' % (config['hostname'], self.DNS_REALM)
-        self.VAR_HSS_BIND = config['ips'].get('mgmt')
-        # hss parameters
+        # dra parameters
         parameters = []
         parameters.append(self.LocalDB)
-        # create request hss
+        # create request dra
         request = {"parameters": parameters}
         logger.info("install slf service, parameters %s" % request)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "slf")
-        print "I'm the slf adapter, installing slf service, received resp %s" % resp
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "install", "dra")
+        print "Dra adapter, installing dra service, received resp %s" % resp
 
 
     def add_dependency(self, config, ext_unit, ext_service):
@@ -124,27 +122,26 @@ class SlfAdapter(ABCServiceAdapter):
         Add the dependency between this service and the external one
         :return:
         """
-
         if "hss" in ext_service.service_type:
             # external dependency with the cscfs
             # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$HSS_NAME\",\"$DNS_REALM\",\"$HSS_PORT\"]}" http://$SLF_MGMT_ADDR:8390/dra/addRelation/hss
             parameters = []
-            parameters.append(ext_unit.hostname)
+            parameters.append(ext_unit.hostname+"."+self.DNS_REALM)
             parameters.append(self.DNS_REALM)
-            parameters.append("3868")
+            parameters.append(self.HSS_PORT)
             request = {"parameters":parameters}
-            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "slf", "hss")
+            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "dra", "hss")
             logger.info("resolving dependency with hss service, received resp %s" %resp)
         if "dns" in ext_service.service_type:
             # external dependency with the cscfs
             # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$DNS_IP\",\"$DNS_REALM\",\"$DNS_LISTEN\"]}"
-            # http://$HSS_MGMT_ADDR:8390/chess/addRelation/dns
+            # http://$DRA_MGMT_ADDR:8390/dra/addRelation/dns
             parameters = []
             parameters.append(ext_unit.ips.get('mgmt'))
             parameters.append(self.DNS_REALM)
             parameters.append(config['ips'].get('mgmt'))
             request = {"parameters":parameters}
-            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "slf", "dns")
+            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "dra", "dns")
             logger.info("resolving dependency with dns service, received resp %s" %resp)
 
     def remove_dependency(self, config, ext_service):
@@ -157,30 +154,49 @@ class SlfAdapter(ABCServiceAdapter):
     def pre_start(self, config):
         """
         Send the pre-start request
+        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[\"$DNS_REALM\",\"$DRA_ENTRY\",\"$HSS_ENTRY\",
+        \"$HSS_PORT\",\"$ICSCF_ENTRY\",\"$SCSCF_ENTRY\",\"$ICSCF_PORT\",\"$SCSCF_PORT\",\"$DRA_PORT\",
+        \"$DRA_MGMT_ADDR\"]}" http://$DRA_MGMT_ADDR:8390/dra/preStart
 
         :param config:
         :return:
         """
+        # dra parameters
+        parameters = []
+        parameters.append(self.DNS_REALM)
+        parameters.append(self.DRA_ENTRY)
+        parameters.append(self.HSS_ENTRY)
+        parameters.append(self.HSS_PORT)
+        parameters.append(self.ICSCF_ENTRY)
+        parameters.append(self.SCSCF_ENTRY)
+        parameters.append(self.ICSCF_PORT)
+        parameters.append(self.SCSCF_PORT)
+        parameters.append(self.DRA_PORT)
+        parameters.append(config['ips'].get('mgmt'))
+        # create request dra
+        request = {"parameters": parameters}
+        logger.info("pre-starting dra service, parameters %s" % request)
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preStart", "dra")
+        logger.info("pre-starting dra service, received resp %s" % resp)
 
         pass
 
     def start(self, config):
         """
         Sending start requests to the different components
-        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$HSS_MGMT_ADDR:8390/chess/start
+        curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":[]}" http://$DRA_MGMT_ADDR:8390/dra/start
 
         :param config:
         :return:
         """
 
-        # hss
+        # dra
         parameters = []
-        # create request hss
+        # create request dra
         request = {"parameters": parameters}
         logger.info("install slf service, parameters %s" % parameters)
-        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "slf")
+        resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "start", "dra")
         logger.info("installing slf service, received resp %s" % resp)
-
 
     def terminate(self):
         """
@@ -188,8 +204,6 @@ class SlfAdapter(ABCServiceAdapter):
         :return:
         """
         pass
-
-
 
     def __send_request(self, ip, request, method, vnf, ext_vnf=None):
         """
@@ -203,23 +217,8 @@ class SlfAdapter(ABCServiceAdapter):
         response = connection.getresponse()
         return (response.read())
 
-
     def __split_ip(self, ip):
         """Split a IP address given as string into a 4-tuple of integers."""
         return tuple(int(part) for part in ip.split('.'))
-
-
-if __name__ == '__main__':
-    c = SlfAdapter()
-    config = {}
-    config['hostname'] = "test"
-    config['ips'] = {'mgmt': '160.85.4.54'}
-    config['floating_ips'] = {'mgmt': '160.85.4.54'}
-    # config['ips'] = {'mgmt':'localhost'}
-    config['zabbix_ip'] = '192.168.5.5'
-    c.preinit(config)
-    # c.install(config)
-    # c.pre_start(config)
-    c.start(config)
 
 

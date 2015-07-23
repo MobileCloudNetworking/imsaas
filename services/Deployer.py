@@ -88,8 +88,8 @@ class Deployer(ABCDeployer):
         #self.register_agent.start()
         return topology
 
-    def provision(self, topology):
-        self.runtime_agent.provision(topology)
+    def provision(self, topology, dnsaas=None):
+        self.runtime_agent.provision(topology, dnsaas)
         return topology
 
     def dispose(self, topology):

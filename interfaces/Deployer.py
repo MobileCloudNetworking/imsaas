@@ -43,7 +43,7 @@ class Deployer(object):
         print "ABC - Deployer.deploy()"
 
     @abstractmethod
-    def provision(self, topology):
+    def provision(self, topology, dnsaas):
         """
         Provision the instantiated stack.
         :return:

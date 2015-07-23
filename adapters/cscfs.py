@@ -151,6 +151,17 @@ class CscfsAdapter(ABCServiceAdapter):
             request = {"parameters": parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "icscf", "hss")
             logger.info("resolving dependency with hss service, received resp %s" % resp)
+        if "dns" in ext_service.service_type:
+            # external dependency with the cscfs
+            # curl -X POST -H "Content-Type:application/json" -d "{\"parameters\":
+            # [\"$DNS_IP\",\"$DNS_REALM\",\"$DNS_LISTEN\"]}" http://$ICSCF_MGMT_ADDR:8390/chess/addRelation/dns
+            parameters = []
+            parameters.append(ext_unit.ips.get('mgmt'))
+            parameters.append(self.DNS_REALM)
+            parameters.append(config['ips'].get('mgmt'))
+            request = {"parameters": parameters}
+            resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "icscf", "dns")
+            logger.info("resolving dependency with dns service, received resp %s" % resp)
 
     def remove_dependency(self, config, ext_service):
         """

@@ -307,6 +307,7 @@ class Topology(Base):
     detailed_state = Column(String(300))
     service_instances = relationship('ServiceInstance', cascade='all, delete-orphan', lazy='select')
 
+
     def __init__(self, name, state, detailed_state=None, service_instances=[], ext_id=None, ext_name=None):
         self.id = None
         self.name = name
