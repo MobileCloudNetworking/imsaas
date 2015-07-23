@@ -41,7 +41,6 @@ class MyBackend(occi_ext.Backend):
     def create(self, entity, extras):
         token = extras['token']
         tenant = extras['tenant_name']
-        logging.basicConfig(format='%(asctime)s_%(process)d:%(pathname)s:%(lineno)d [%(levelname)s] %(message)s',level=logging.DEBUG)
         SysUtil().init_sys()
         InitSO()
         self.so = ServiceOrchestrator(token, tenant)
