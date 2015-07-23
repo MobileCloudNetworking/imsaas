@@ -132,22 +132,16 @@ class SoExecution():
         if TOPOLOGY_MAPPING[self.location].get('dnsaas') is 'True':
             logger.debug("DNSaaS enabled")
             # trying to retrieve dnsaas endpoint
-            if 'mcn.endpoint.api' in attributes:
-                logger.debug("DNSaaS IP was passed as attribute")
-                parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = attributes['mcn.endpoint.api']
-
+            self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name)
+            dnsaas_ip = self.dnsaas.get_address()
+            dnsaas_forwarders = self.dnsaas.get_forwarders()
+            if dnsaas_ip is not None:
+                parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = dnsaas_forwarders
+                logger.info("dnsaas instantiated with address %s" % dnsaas_forwarders)
             else:
-                logger.debug("DNSaaS IP was not passed as attribute")
-                self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name)
-                dnsaas_ip = self.dnsaas.get_address()
-                dnsaas_forwarders = self.dnsaas.get_forwarders()
-                if dnsaas_ip is not None:
-                    parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = dnsaas_forwarders
-                    logger.info("dnsaas instantiated with address %s" % dnsaas_forwarders)
-                else:
-                    logger.error("dnsaas instantiation got some issues, "
-                                "terminating the provisioning method")
-                    return 42
+                logger.error("dnsaas instantiation got some issues, "
+                            "terminating the provisioning method")
+                return 42
         else:
             logger.debug("DNSaaS disabled")
         # trying to retrieve maas endpoint
