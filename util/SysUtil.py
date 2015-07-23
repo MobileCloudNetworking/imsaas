@@ -77,22 +77,22 @@ class SysUtil:
             #update existing networks
             for net in nets:
                 nets = db.get_by_name(Network, net.name)
-                if len(nets) >= 1:
-                    existing_net = nets[0]
-                    net.id = existing_net.id
-                    for subnet in net.subnets:
-                        for existing_subnet in existing_net.subnets:
-                            if subnet.name == existing_subnet.name:
-                                subnet.id = existing_subnet.id
-                                existing_subnet = subnet
-                                db.update(existing_subnet)
-                    existing_net = net
-                    db.update(existing_net)
-                else:
-                    try:
-                        db.persist(net)
-                    except IntegrityError, exc:
-                        logger.warning('Network \"%s\" is already persisted on the Database.' % net.name)
+                # if len(nets) >= 1:
+                #     existing_net = nets[0]
+                #     net.id = existing_net.id
+                #     for subnet in net.subnets:
+                #         for existing_subnet in existing_net.subnets:
+                #             if subnet.name == existing_subnet.name:
+                #                 subnet.id = existing_subnet.id
+                #                 existing_subnet = subnet
+                #                 db.update(existing_subnet)
+                #     existing_net = net
+                #     db.update(existing_net)
+                # else:
+                try:
+                    db.persist(net)
+                except IntegrityError, exc:
+                    logger.warning('Network \"%s\" is already persisted on the Database.' % net.name)
             #Persist and update keys on database
             keys = get_keys()
             #remove old keys
