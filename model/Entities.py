@@ -451,12 +451,12 @@ class Subnet(Base):
     __tablename__ = 'Subnet'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
+    name = Column(String(50))
     cidr = Column(String(50))
     network_id = Column(Integer, ForeignKey('Network.id'))
     start_ip = Column(String(50))
     end_ip = Column(String(50))
-    ext_id = Column(String(50))
+    ext_id = Column(String(50), unique=True)
 
     def __init__(self, name, ext_id, cidr, start_ip, end_ip):
         self.id = None
@@ -487,10 +487,10 @@ class Network(Base):
     id = Column(Integer, primary_key=True)
     # This colum is unique because of heat issue: in case of 2 or more Network with the same name in the HOT,
     # heat randomly pick up a Network
-    name = Column(String(50), unique=True)
+    name = Column(String(50))
     public = Column(Boolean)
     subnets = relationship('Subnet', cascade="all, delete, delete-orphan", lazy='immediate')
-    ext_id = Column(String(50))
+    ext_id = Column(String(50), unique=True)
 
     def __init__(self, name, ext_id, public=False, subnets=[]):
         self.id = None
