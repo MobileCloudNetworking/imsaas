@@ -17,7 +17,7 @@ __author__ = 'giuseppe'
 
 import os
 import logging
-import yaml
+import yaml,time
 
 from emm_exceptions.NotFoundException import NotFoundException
 from emm_exceptions.NotUniqueException import NotUniqueException
@@ -62,7 +62,7 @@ class SoExecution():
         self.maas = None
         self.dnsaas = None
         if location is None:
-            self.location = 'bern'
+            self.location = 'bern-no-dns'
         self.conf = sys_util().get_sys_conf()
         self.deployer = None
         self.topology = None
@@ -120,6 +120,7 @@ class SoExecution():
         # deploying the topology
         if self.stack_id is None:
             stack_details = self.deployer.deploy(self.topology)
+            time.sleep(10)
             self.stack_id = stack_details.id
             logger.info("deployed topology with id %s" % self.stack_id)
 
