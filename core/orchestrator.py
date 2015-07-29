@@ -17,7 +17,7 @@ __author__ = 'giuseppe'
 
 import os
 import logging
-import yaml,time
+import yaml, time
 
 from emm_exceptions.NotFoundException import NotFoundException
 from emm_exceptions.NotUniqueException import NotUniqueException
@@ -216,5 +216,4 @@ class ServiceOrchestrator(object):
     def __init__(self, token, tenant_name):
         os.environ['OS_AUTH_TOKEN'] = token
         self.so_e = SoExecution(token, tenant_name)
-
 

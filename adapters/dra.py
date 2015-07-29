@@ -32,8 +32,7 @@ class DraAdapter(ABCServiceAdapter):
         # -------------------------------------------------------#
         #	Parameters for dns relation
         # -------------------------------------------------------#
-        self.DNS_REALM = "openepc.test"
-        self.DNS_REA_SLASHED = "openepc\\\.test"
+        self.DNS_REALM = "epc.mnc001.mcc001.3gppnetwork.org"
         self.DNS_LISTEN = ""
         self.DNS_IP = ""
         # -------------------------------------------------------#

@@ -37,7 +37,7 @@ class HssAdapter(ABCServiceAdapter):
         self.VAR_CONSOLE_PORT_TWO = "10000"
         self.VAR_CONSOLE_PORT_BIND_ONE = "0.0.0.0"
         self.VAR_CONSOLE_PORT_BIND_TWO = "0.0.0.0"
-        self.VAR_HSS_DNS_REALM = "openepc.test"  # mainly used for dra/slf relation
+        self.VAR_HSS_DNS_REALM = "epc.mnc001.mcc001.3gppnetwork.org"  # mainly used for dra/slf relation
         self.VAR_HSS_ENTRY = "hss.%s" % self.VAR_HSS_DNS_REALM  # mainly used for dra/slf relation
         self.VAR_HSS_PORT = "3868"
         self.VAR_HSS_BIND = "localhost"
@@ -58,8 +58,7 @@ class HssAdapter(ABCServiceAdapter):
         # -------------------------------------------------------#
         #	Parameters for dns relation
         # -------------------------------------------------------#
-        self.DNS_REALM = "openepc.test"
-        self.DNS_REA_SLASHED = "openepc\\\.test"
+        self.DNS_REALM = "epc.mnc001.mcc001.3gppnetwork.org"
         self.DNS_LISTEN = ""
         self.ICSCF_ENTRY = "icscf.%s" % self.DNS_REALM
         self.SCSCF_ENTRY = "scscf.%s" % self.DNS_REALM

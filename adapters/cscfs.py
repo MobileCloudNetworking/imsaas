@@ -42,8 +42,8 @@ class CscfsAdapter(ABCServiceAdapter):
         # -------------------------------------------------------#
         #	Parameters for dns relation
         # -------------------------------------------------------#
-        self.DNS_REALM = "openepc.test"
-        self.DNS_REA_SLASHED = "openepc\\\.test"
+        self.DNS_REALM = "epc.mnc001.mcc001.3gppnetwork.org"
+        self.DNS_REA_SLASHED = "epc\\\.mnc001\\\.mcc001\\\.3gppnetwork\\\.org"
         self.ICSCF_ENTRY = "icscf.%s" % self.DNS_REALM
         self.SCSCF_ENTRY = "scscf.%s" % self.DNS_REALM
         self.PCSCF_ENTRY = "pcscf.%s" % self.DNS_REALM
