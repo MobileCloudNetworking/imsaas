@@ -108,6 +108,7 @@ class ImsDnsClient(object):
         return {
             'hss': self.create_records_hss,
             'slf': self.create_records_slf,
+            'dra': self.create_records_slf,
             'cscfs': self.create_records_cscfs,
             'test': self.create_records_test,
         }[service_type]

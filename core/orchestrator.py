@@ -17,7 +17,7 @@ __author__ = 'giuseppe'
 
 import os
 import logging
-import yaml
+import yaml, time
 
 from emm_exceptions.NotFoundException import NotFoundException
 from emm_exceptions.NotUniqueException import NotUniqueException
@@ -120,6 +120,7 @@ class SoExecution():
         # deploying the topology
         if self.stack_id is None:
             stack_details = self.deployer.deploy(self.topology)
+            time.sleep(10)
             self.stack_id = stack_details.id
             logger.info("deployed topology with id %s" % self.stack_id)
 
@@ -132,8 +133,7 @@ class SoExecution():
         if TOPOLOGY_MAPPING[self.location].get('dnsaas') is 'True':
             logger.debug("DNSaaS enabled")
             # trying to retrieve dnsaas endpoint
-            try:
-                self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name)
+            self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name)
             dnsaas_ip = self.dnsaas.get_address()
             dnsaas_forwarders = self.dnsaas.get_forwarders()
             if dnsaas_ip is not None:
@@ -216,5 +216,4 @@ class ServiceOrchestrator(object):
     def __init__(self, token, tenant_name):
         os.environ['OS_AUTH_TOKEN'] = token
         self.so_e = SoExecution(token, tenant_name)
-
 
