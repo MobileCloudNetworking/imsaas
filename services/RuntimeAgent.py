@@ -93,13 +93,15 @@ class RuntimeAgent(ABCRuntimeAgent):
             else:
                 self.checker_threads[topology.id].topology = topology
 
+            #Initialise PolicyThreads if needed
+            self.policy_threads[topology.id] = []
+
         def provision(self, topology, dnsaas=None):
             self.checker_threads[topology.id].provision(dnsaas)
             #Start the monitoring agent
             self.monitoring_service.start()
 
             #Start PolicyThreads if needed
-            self.policy_threads[topology.id] = []
             try:
                 for service_instance in topology.service_instances:
                     lock = threading.Lock()

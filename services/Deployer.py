@@ -101,8 +101,10 @@ class Deployer(ABCDeployer):
         topology.state = 'DELETING'
         self.db.update(topology)
         if self.runtime_agent:
+            logger.debug("found runtime agent instance, performing a stop of topology %s" %topology.id)
             self.runtime_agent.stop(topology.id)
             try:
+                logger.debug("Sending request to heatclient to delete topology")
                 stack_details = self.heatclient.delete(topology.ext_id)
             except HTTPNotFound, exc:
                 exc.message = 'Topology \"%s\" was not found on OpenStack anymore. (%s)' % (topology.name, exc.message)
