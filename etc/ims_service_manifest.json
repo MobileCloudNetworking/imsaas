@@ -1,0 +1,11 @@
+{
+    "service_type": "http://schemas.mobile-cloud-networking.eu/occi/sm#ims-test",
+    "service_description": "End-to-end service",
+    "service_attributes": {
+        "mcn.endpoint.pgw_u-sgw_u": "immutable",
+        "mcn.endpoint.mme-pgw_c-sgw_c": "immutable"
+    },
+    "service_endpoint": "http://127.0.0.1:8888/test/",
+    "depends_on": [
+    ]
+}
