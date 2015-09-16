@@ -122,6 +122,7 @@ class TemplateManager(object):
         db = DatabaseManager()
         for service_instance in topology.service_instances:
             for network_instance in service_instance.networks:
+                logger.debug('creating output entries for service %s and network %s' % (service_instance.name, network_instance.name))
                 if network_instance.public_net:
                     _public_network_names = [_network.name for _network in db.get_all(Network) if
                                              _network.ext_id == network_instance.public_net]
@@ -138,17 +139,64 @@ class TemplateManager(object):
                         _private_network_name = _private_network_names[0]
                     else:
                         logger.debug('ERROR: Cannot find network with id %s in Table Network' % network_instance.net)
+
                 for unit in service_instance.units:
+                    # if network_instance.public_net and _public_network_name:
+                    #     output = {}
+                    #     output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 1]}
+                    #     output['description'] = 'Public IP of %s.' % unit.hostname
+                    #     outputs['mcn.endpoint.%s' % unit.hostname] = output
+                    # elif network_instance.private_net and _private_network_name:
+                    #     output = {}
+                    #     output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 0]}
+                    #     output['description'] = 'Private IP of %s.' % unit.hostname
+                    #     outputs['mcn.endpoint.%s' % unit.hostname] = output
                     if network_instance.public_net and _public_network_name:
+                        logger.debug('adding output entry for unit %s and network %s ' % (unit.hostname, network_instance.public_net))
                         output = {}
-                        output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 1]}
+                        floating_name = '%s-floating_ip-1' % unit.hostname
+                        output['value'] = {'get_attr': [floating_name,
+                                                        'floating_ip_address']}
                         output['description'] = 'Public IP of %s.' % unit.hostname
                         outputs['mcn.endpoint.%s' % unit.hostname] = output
                     elif network_instance.private_net and _private_network_name:
+                        logger.debug('adding output entry for unit %s and network %s ' % (unit.hostname, network_instance.private_net))
                         output = {}
-                        output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 0]}
+                        port_name = '%s-port-1' % unit.hostname
+                        output['value'] = {'get_attr': [port_name, 'fixed_ips',
+                                                        0, 'ip_address']}
                         output['description'] = 'Private IP of %s.' % unit.hostname
                         outputs['mcn.endpoint.%s' % unit.hostname] = output
+
+                    if network_instance.public_net and _public_network_name:
+                        network_type = "public"
+                        output = {}
+                        floating_name = '%s-floating_ip-1' % unit.hostname
+                        output['value'] = {'get_attr': [floating_name,
+                                                        'floating_ip_address']}
+                        output['description'] = '%s ip of %s in %s.' % (
+                            network_type.capitalize(),
+                            unit.hostname,
+                            network_instance.name)
+
+                        outputs['mcn.endpoint.%s.%s.%s' % (unit.hostname,
+                                                           network_instance.name,
+                                                           network_type)] = output
+                    if network_instance.private_net and _private_network_name:
+                        network_type = "private"
+                        output = {}
+                        floating_name = '%s-port-1' % unit.hostname
+                        output['value'] = {'get_attr': [floating_name,
+                                                        'fixed_ips']}
+                        output['description'] = '%s ip of %s in %s.' % (
+                            network_type.capitalize(),
+                            unit.hostname,
+                            network_instance.name)
+
+                        outputs['mcn.endpoint.%s.%s.%s' % (unit.hostname,
+                                                           network_instance.name,
+                                                           network_type)] = output
+
         template['outputs'] = outputs
 
         yaml.add_representer(unicode, lambda dumper, value: dumper.represent_scalar(u'tag:yaml.org,2002:str', value))

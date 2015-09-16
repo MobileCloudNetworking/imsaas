@@ -21,7 +21,10 @@ from heatclient.client import Client as HeatClient
 from heatclient.common import utils
 from heatclient.common import template_utils
 import heatclient.exc as exc
-import json
+import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Client(object):
@@ -165,3 +168,35 @@ class Client(object):
         print "env: %s" % env
         print "env files: %s" % env_files
         return env, env_files
+
+    def set_ips(self, unit, ext_id):
+        """
+        Sets the fixed- and floating-ips of the given unit.
+
+        :param unit: the to be processed unit
+        :param ext_id: id of the stack containing the unit
+        """
+
+        timeout = time.time() + 60*5
+        while True:
+            template = self.client.stacks.get(ext_id).to_dict()
+            if u'outputs' in template or time.time() > timeout:
+                logger.debug("outputs: " + str(template['outputs']))
+                break
+            else:
+                time.sleep(10)
+
+        for ip in template['outputs']:
+            if ip['output_key'].split('.')[2] == unit.hostname:
+                if ip['output_key'].endswith('public'):
+                    k = ip['output_key'].split('.')[-2]
+                    unit.floating_ips[k] = ip['output_value']
+                    logger.debug(ip['output_value'] + " is a floating ip")
+
+                elif ip['output_key'].endswith('private'):
+                    k = ip['output_key'].split('.')[-2]
+                    unit.ips[k] = ip['output_value'][0]['ip_address']
+                    logger.debug(ip['output_value'][0]['ip_address'] + " is a fixed ip")
+
+        logger.debug("ips: " + str(unit.ips))
+        logger.debug("floating_ips: " + str(unit.floating_ips))

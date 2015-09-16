@@ -507,12 +507,31 @@ class CheckerThread(threading.Thread):
     def print_test(self, ip):
         logging.debug("Testing dns entry for test service with ip %s" % ip)
 
+    # def set_ips(self, unit):
+    #     # Retrieving ports and ips information
+    #     if not self.topology.state == 'ERROR':
+    #         logger.debug('Setting ips for unit %s.' % unit.hostname)
+    #     if not self.topology.state == 'ERROR' and unit.ext_id:
+    #         self.novac.set_ips(unit)
+    #         self.db.update(unit)
+    #         ports = self.neutronc.get_ports(unit)
+    #         for port in ports:
+    #             port.unit_id = unit.id
+    #             self.db.persist(port)
+    #         unit.ports = ports
+    #         self.db.update(unit)
+    #         logger.debug("Ports: ")
+    #         for port in unit.ports:
+    #             logger.debug(port)
+    #     return unit
+
     def set_ips(self, unit):
         # Retrieving ports and ips information
         if not self.topology.state == 'ERROR':
-            logger.debug('Setting ips for unit %s.' % unit.hostname)
+            logger.error('ERROR Setting ips for unit %s.' % unit.hostname)
         if not self.topology.state == 'ERROR' and unit.ext_id:
-            self.novac.set_ips(unit)
+            #self.novac.set_ips(unit)
+            self.heatclient.set_ips(unit, self.topology.ext_id)
             self.db.update(unit)
             ports = self.neutronc.get_ports(unit)
             for port in ports:

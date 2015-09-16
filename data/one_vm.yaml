@@ -5,9 +5,9 @@ resources:
     type: OS::Nova::Server
     properties:
       key_name: mcn-key
-      image: 'Ubuntu 12.04 LTS'
+      image: 'ubuntu-14.04.1'
       flavor: m1.small
-      networks: [{"uuid":3ca22fef-a010-459a-bb55-2d6e766315aa,"network":mgmt}]
+      networks: [{"network":mgmt}]
       #user_data: {"Fn::Base64": "#!/bin/bash -v\n/opt/aws/bin/cfn-init\n" }
 outputs:
   instance_ip:
