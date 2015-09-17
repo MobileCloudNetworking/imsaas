@@ -195,8 +195,8 @@ class Client(object):
 
                 elif ip['output_key'].endswith('private'):
                     k = ip['output_key'].split('.')[-2]
-                    unit.ips[k] = ip['output_value'][0]['ip_address']
-                    logger.debug(ip['output_value'][0]['ip_address'] + " is a fixed ip")
+                    unit.ips[k] = ip['output_value']
+                    logger.debug(ip['output_value'] + " is a fixed ip")
 
         logger.debug("ips: " + str(unit.ips))
         logger.debug("floating_ips: " + str(unit.floating_ips))

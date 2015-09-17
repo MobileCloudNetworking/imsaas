@@ -141,61 +141,33 @@ class TemplateManager(object):
                         logger.debug('ERROR: Cannot find network with id %s in Table Network' % network_instance.net)
 
                 for unit in service_instance.units:
-                    # if network_instance.public_net and _public_network_name:
-                    #     output = {}
-                    #     output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 1]}
-                    #     output['description'] = 'Public IP of %s.' % unit.hostname
-                    #     outputs['mcn.endpoint.%s' % unit.hostname] = output
-                    # elif network_instance.private_net and _private_network_name:
-                    #     output = {}
-                    #     output['value'] = {'get_attr': [unit.hostname, 'networks', _private_network_name, 0]}
-                    #     output['description'] = 'Private IP of %s.' % unit.hostname
-                    #     outputs['mcn.endpoint.%s' % unit.hostname] = output
+
                     if network_instance.public_net and _public_network_name:
+                        network_type = "public"
                         logger.debug('adding output entry for unit %s and network %s ' % (unit.hostname, network_instance.public_net))
                         output = {}
                         floating_name = '%s-floating_ip-1' % unit.hostname
                         output['value'] = {'get_attr': [floating_name,
                                                         'floating_ip_address']}
                         output['description'] = 'Public IP of %s.' % unit.hostname
-                        outputs['mcn.endpoint.%s' % unit.hostname] = output
-                    elif network_instance.private_net and _private_network_name:
+                        # outputs['mcn.endpoint.%s' % unit.hostname] = output
+                        outputs['mcn.endpoint.%s.%s.%s' % (unit.hostname,
+                                                           network_instance.name,
+                                                           network_type)] = output
+
+                    if network_instance.private_net and _private_network_name:
+                        network_type = "private"
                         logger.debug('adding output entry for unit %s and network %s ' % (unit.hostname, network_instance.private_net))
                         output = {}
                         port_name = '%s-port-1' % unit.hostname
                         output['value'] = {'get_attr': [port_name, 'fixed_ips',
                                                         0, 'ip_address']}
                         output['description'] = 'Private IP of %s.' % unit.hostname
-                        outputs['mcn.endpoint.%s' % unit.hostname] = output
-
-                    if network_instance.public_net and _public_network_name:
-                        network_type = "public"
-                        output = {}
-                        floating_name = '%s-floating_ip-1' % unit.hostname
-                        output['value'] = {'get_attr': [floating_name,
-                                                        'floating_ip_address']}
-                        output['description'] = '%s ip of %s in %s.' % (
-                            network_type.capitalize(),
-                            unit.hostname,
-                            network_instance.name)
-
+                        # outputs['mcn.endpoint.%s' % unit.hostname] = output
                         outputs['mcn.endpoint.%s.%s.%s' % (unit.hostname,
                                                            network_instance.name,
                                                            network_type)] = output
-                    if network_instance.private_net and _private_network_name:
-                        network_type = "private"
-                        output = {}
-                        floating_name = '%s-port-1' % unit.hostname
-                        output['value'] = {'get_attr': [floating_name,
-                                                        'fixed_ips']}
-                        output['description'] = '%s ip of %s in %s.' % (
-                            network_type.capitalize(),
-                            unit.hostname,
-                            network_instance.name)
 
-                        outputs['mcn.endpoint.%s.%s.%s' % (unit.hostname,
-                                                           network_instance.name,
-                                                           network_type)] = output
 
         template['outputs'] = outputs
 
