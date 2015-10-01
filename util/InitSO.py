@@ -23,7 +23,7 @@ from core.ServiceOrchestrator import ServiceOrchestrator
 
 
 
-PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
+PATH = os.environ.get('BUNDLE_DIR', '.')
 
 
 __author__ = 'gca'

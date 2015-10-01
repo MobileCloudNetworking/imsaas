@@ -1,0 +1,17 @@
+{
+    "service_type": "http://schemas.mobile-cloud-networking.eu/occi/sm#ims",
+    "service_description": "This is the IMS service type",
+    "service_attributes": {
+	"mcn.endpoint.cscfs-1": "immutable",
+	"mcn.endpoint.db-1": "immutable",
+	"mcn.endpoint.slf-1": "immutable",
+	"mcn.endpoint.hss-1": "immutable",
+	"mcn.endpoint.hss-2": "immutable",
+	"mcn.endpoint.maas": "",
+	"mcn.endpoint.forwarder": "",
+	"mcn.endpoint.api": "",
+	"mcn.topology.type": ""
+    },
+    "service_endpoint": "http://127.0.0.1:8888/ims/",
+    "depends_on": []
+}

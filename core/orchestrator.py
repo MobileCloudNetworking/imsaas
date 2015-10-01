@@ -34,7 +34,7 @@ from sdk.mcn import util
 
 logger = logging.getLogger(__name__)
 
-SO_DIR = os.environ.get('OPENSHIFT_REPO_DIR', '.')
+SO_DIR = os.environ.get('BUNDLE_DIR', '.')
 
 TOPOLOGY_MAPPING = {
     'standalone': {'topology_type': 'topology_ims_standalone.json', 'dnsaas': 'False'},

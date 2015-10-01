@@ -9,7 +9,7 @@ from model.Entities import Configuration, new_alchemy_encoder, Network, Key, Ima
 import FactoryAgent as FactoryAgent
 
 
-PATH = os.environ.get('OPENSHIFT_REPO_DIR', '.')
+PATH = os.environ.get('BUNDLE_DIR', '.')
 
 
 __author__ = 'lto'
