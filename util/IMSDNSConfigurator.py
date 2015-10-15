@@ -27,8 +27,9 @@ class ImsDnsClient(object):
                                   record_data="10 50 \"s\" \"SIP+D2U\" \"\" _sip._udp", token=self.tokenID,
                                   priority=10)
         self.dnsaas.create_record(domain_name=self.__domain_name, record_name="", record_type='NAPTR',
-                                  record_data="20 50 \"s\" \"SIP+D2U\" \"\" _sip._udp", token=self.tokenID,
+                                  record_data="20 50 \"s\" \"SIP+D2U\" \"\" _sip._tcp", token=self.tokenID,
                                   priority=10)
+
         logger.info("Initialized the IMS DNS Client")
 
     def create_records_cscfs(self, cscfs_ip, hostname=None):
@@ -66,11 +67,11 @@ class ImsDnsClient(object):
                                   "0 5060 icscf.epc.mnc001.mcc001.3gppnetwork.org.", token=self.tokenID, priority=1)
         self.dnsaas.create_record(self.__domain_name, "_sip._tcp.icscf", "SRV",
                                   "0 5060 icscf.epc.mnc001.mcc001.3gppnetwork.org.", token=self.tokenID, priority=1)
-        self.dnsaas.create_record(self.__domain_name, "_sip._udp.epc", "SRV",
+        self.dnsaas.create_record(self.__domain_name, "_sip._udp", "SRV",
                                   "0 5060 epc.mnc001.mcc001.3gppnetwork.org.", token=self.tokenID, priority=1)
         self.dnsaas.create_record(self.__domain_name, "_sip._tcp", "SRV",
                                   "0 5060 epc.mnc001.mcc001.3gppnetwork.org.", token=self.tokenID, priority=1)
-        self.dnsaas.create_record(self.__domain_name, "_sip.epc", "SRV",
+        self.dnsaas.create_record(self.__domain_name, "_sip", "SRV",
                                   "0 5060 epc.mnc001.mcc001.3gppnetwork.org.", token=self.tokenID, priority=1)
         # TODO change
         self.dnsaas.create_record(domain_name=self.__domain_name, record_name='', record_type='A',
@@ -112,3 +113,5 @@ class ImsDnsClient(object):
             'cscfs': self.create_records_cscfs,
             'test': self.create_records_test,
         }[service_type]
+
+

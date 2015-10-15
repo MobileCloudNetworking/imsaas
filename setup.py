@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='IMSServiceOrchestrator',
     version='3.1',
-    packages=['core', 'test', 'util', 'wsgi', 'model', 'services', 'interfaces', 'clients', 'emm_exceptions'],
+    packages=['adapters', 'core', 'test', 'util', 'wsgi', 'model', 'services', 'interfaces', 'clients', 'emm_exceptions'],
 #    install_requires=[
 #      'python-heatclient',
 #       'python-novaclient',
