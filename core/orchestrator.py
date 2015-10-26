@@ -133,7 +133,7 @@ class SoExecution():
         if TOPOLOGY_MAPPING[self.location].get('dnsaas') is 'True':
             logger.debug("DNSaaS enabled")
             # trying to retrieve dnsaas endpoint
-            self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name)
+            self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name, mcn_endpoint_api=attributes['mcn.endpoint.api'])
             dnsaas_ip = self.dnsaas.get_address()
             dnsaas_forwarders = self.dnsaas.get_forwarders()
             if dnsaas_ip is not None:
