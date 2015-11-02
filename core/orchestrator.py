@@ -28,7 +28,9 @@ from core.TopologyOrchestrator import TopologyOrchestrator
 
 from util.FactoryAgent import FactoryAgent
 from util.SysUtil import SysUtil as sys_util
+from util.dnsaasclient import DNSaaSClientAction
 from sdk.mcn import util
+
 # from sm.so import service_orchestrator
 # from sm.so.service_orchestrator import LOG
 
@@ -133,9 +135,10 @@ class SoExecution():
         if TOPOLOGY_MAPPING[self.location].get('dnsaas') is 'True':
             logger.debug("DNSaaS enabled")
             # trying to retrieve dnsaas endpoint
-            self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name, mcn_endpoint_api=attributes['mcn.endpoint.api'])
-            dnsaas_ip = self.dnsaas.get_address()
-            dnsaas_forwarders = self.dnsaas.get_forwarders()
+            #self.dnsaas = util.get_dnsaas(self.token, tenant_name=self.tenant_name, mcn_endpoint_api=attributes['mcn.endpoint.api'])
+            dnsaas_ip = attributes['mcn.endpoint.api']
+            dnsaas_forwarders = attributes['mcn.endpoint.forwarder']
+            self.dnsaas = DNSaaSClientAction(dnsaas_ip, self.token)
             if dnsaas_ip is not None:
                 parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = dnsaas_forwarders
                 logger.info("dnsaas instantiated with address %s" % dnsaas_forwarders)

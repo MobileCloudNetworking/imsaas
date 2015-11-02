@@ -120,7 +120,7 @@
       "flavor":"m1.small",
       "key":"mcn-key",
       "location": ["bern"],
-      "relation": ["cscfs", "hss","dns"],
+      "relation": ["cscfs","hss","dns"],
       "configuration": {
       },
       "networks": [

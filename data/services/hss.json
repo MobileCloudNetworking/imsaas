@@ -1,6 +1,6 @@
 {
     "service_type": "hss",
-    "image": "ims-5g-bin-r177",
+    "image": "ims-5g-hss-r198",
     "adapter": "HssAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",
