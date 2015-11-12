@@ -17,6 +17,7 @@
 import logging
 import threading
 import time, os, thread
+import graypy, json
 from heatclient.exc import HTTPNotFound
 from services.DatabaseManager import DatabaseManager
 from core.TopologyOrchestrator import TopologyOrchestrator
@@ -33,7 +34,20 @@ from util.IMSDNSConfigurator import ImsDnsClient
 
 __author__ = 'mpa'
 
+# only used for graylog
+def config_logger(log_level=logging.DEBUG):
+    logging.basicConfig(format='%(threadName)s \t %(levelname)s %(asctime)s: \t%(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S %p',
+                        log_level=log_level)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(log_level)
+    gray_handler = graypy.GELFHandler('log.cloudcomplab.ch', 12201)
+    logger.addHandler(gray_handler)
+    return logger
+
+
 logger = logging.getLogger(__name__)
+glogger = config_logger()
 
 HEAT_TO_EMM_STATE = {'CREATE_IN_PROGRESS': 'DEPLOYING',
                      'CREATE_COMPLETE': 'DEPLOYED',
@@ -257,6 +271,17 @@ class PolicyThread(threading.Thread):
                     self.service_instance.state = 'UPDATING'
                     self.topology.state = 'UPDATING'
                     if action.scaling_adjustment > 0:
+                        logger.info("executing scaling out action ")
+                        infoDict = {
+                            'so_id': 'idnotusefulhere',
+                            'sm_name': 'imsaas',
+                            'so_phase': 'update',
+                            'phase_event': 'start',
+                            'response_time': 0,
+                            'tenant': 'mcntub'
+                        }
+                        tmpJSON = json.dumps(infoDict)
+                        glogger.debug(tmpJSON)
                         if (len(
                                 self.service_instance.units) + action.scaling_adjustment) <= self.service_instance.size.get(
                                 'max'):
@@ -272,6 +297,7 @@ class PolicyThread(threading.Thread):
                             logger.warning(
                                 'Maximum number of unit exceeded for service instance: %s' % self.service_instance.name)
                     else:
+                        logger.info("executing scaling in action ")
                         if (len(
                                 self.service_instance.units) + action.scaling_adjustment) >= self.service_instance.size.get(
                                 'min'):
@@ -285,8 +311,10 @@ class PolicyThread(threading.Thread):
                     template = self.template_manager.get_template(self.topology)
                     # logger.debug("Send update to heat template with: \n%s" % template)
                     try:
+                        logger.info("updating the heat template including new units")
                         self.heat_client.update(stack_id=self.topology.ext_id, template=template)
                         self.wait_until_final_state()
+                        logger.info("wait until final state function executed")
                         if not self.topology.state == 'DEPLOYED':
                             logger.error(
                                 "ERROR: Something went wrong. Seems to be an error. Topology state -> %s" % self.topology.state)
@@ -295,12 +323,15 @@ class PolicyThread(threading.Thread):
                     except:
                         self.is_stopped = True
                         self.lock.release()
+                    logger.info("entering provisioning phase")
                     if action.scaling_adjustment > 0:
+                        logger.info("provisioning new unit after scaling operation")
                         # adding relations between newly added unit and existing units from dependent services
                         self.configure_new_unit(new_unit)
+                    else:
+                        logger.info("provisioning the new unit after scaling operation")
                     #TODO
                     # do remove relation
-
                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
                 time.sleep(self.policy.action.cooldown)
             logger.debug("Release Policy lock from %s" % self.policy.name)
@@ -309,6 +340,7 @@ class PolicyThread(threading.Thread):
             time.sleep(self.policy.period)
 
     def configure_new_unit(self, unit):
+        logging.info("configuring new unit with hostname" % unit.hostname)
         config = {}
         config['hostname'] = unit.hostname
         config['ips'] = unit.ips
@@ -332,22 +364,30 @@ class PolicyThread(threading.Thread):
     def add_relations_after_scaling(self, config, unit):
         logger.info("adding relations after scaling %s" % self.service_instance.name)
         for ext_service in self.service_instance.relation:
-            service_list = self.db.get_by_name(ServiceInstance, ext_service.name)
-            if len(service_list) == 1:
-                ext_si = service_list[0]
-                for ext_unit in ext_si.units:
-                    ext_unit_config = {}
-                    ext_unit_config['hostname'] = ext_unit.hostname
-                    ext_unit_config['ips'] = ext_unit.ips
-                    ext_unit_config['zabbix_ip'] = os.environ['ZABBIX_IP']
-                    ext_unit_config['floating_ips'] = ext_unit.floating_ips
-                    ext_unit_config['hostname'] = ext_unit.hostname
-                    logging.info(
-                        "sending request add_dependency to the adapter %s with config %s and ext_unit %s" % (
-                            self.service_instance.service_type, config, ext_unit))
-                    self.service_instance.adapter_instance.add_dependency(config, ext_unit, ext_si)
-                    ext_si.adapter_instance = FactoryServiceAdapter.get_agent(ext_si.service_type, ext_si.adapter)
-                    ext_si.adapter_instance.add_dependency(ext_unit_config, unit, self.service_instance)
+            logger.debug("solving dependencies between si %s and external service %s" %(self.service_instance.name, ext_service.name,))
+            if ext_service.name == 'dns' and self.is_dnsaas is True:
+                ext_unit = Unit(hostname=None, state='INITIALISING')
+                ext_si = ServiceInstance(name='dns', service_type='dns', state='INITIALISING', image='test', flavor='test', size={})
+                ext_unit.ips['mgmt'] = os.environ['DNSAAS_IP']
+                self.dns_configurator.configure_dns_entry(self.service_instance.service_type)(unit.ips['mgmt'], unit.hostname)
+                self.service_instance.adapter_instance.add_dependency(config, ext_unit, ext_si)
+            else:
+                service_list = self.db.get_by_name(ServiceInstance, ext_service.name)
+                if len(service_list) == 1:
+                    ext_si = service_list[0]
+                    for ext_unit in ext_si.units:
+                        ext_unit_config = {}
+                        ext_unit_config['hostname'] = ext_unit.hostname
+                        ext_unit_config['ips'] = ext_unit.ips
+                        ext_unit_config['zabbix_ip'] = os.environ['ZABBIX_IP']
+                        ext_unit_config['floating_ips'] = ext_unit.floating_ips
+                        ext_unit_config['hostname'] = ext_unit.hostname
+                        logging.info(
+                            "sending request add_dependency to the adapter %s with config %s and ext_unit %s" % (
+                                self.service_instance.service_type, config, ext_unit))
+                        self.service_instance.adapter_instance.add_dependency(config, ext_unit, ext_si)
+                        ext_si.adapter_instance = FactoryServiceAdapter.get_agent(ext_si.service_type, ext_si.adapter)
+                        ext_si.adapter_instance.add_dependency(ext_unit_config, unit, self.service_instance)
 
     def check_alarm_si(self):
         logger.debug("Checking for alarms on service instance %s" % self.service_instance.name)

@@ -141,6 +141,7 @@ class SoExecution():
             self.dnsaas = DNSaaSClientAction(dnsaas_ip, self.token)
             if dnsaas_ip is not None:
                 parameters['dnsaas_ip_address'] = os.environ['DNSAAS_IP'] = dnsaas_forwarders
+                os.environ['DNSAAS_API'] = dnsaas_ip
                 logger.info("dnsaas instantiated with address %s" % dnsaas_forwarders)
             else:
                 logger.error("dnsaas instantiation got some issues, "

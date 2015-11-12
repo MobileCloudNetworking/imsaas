@@ -1,6 +1,6 @@
 {
     "service_type": "db",
-    "image": "ims-base-r164",
+    "image": "ims-5g-bin-r177",
     "adapter": "DBAdapter",
     "flavor": "m1.small",
     "key":"mcn-key",
