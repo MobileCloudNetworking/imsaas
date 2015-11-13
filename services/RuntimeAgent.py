@@ -325,13 +325,14 @@ class PolicyThread(threading.Thread):
                         self.lock.release()
                     logger.info("entering provisioning phase")
                     if action.scaling_adjustment > 0:
-                        logger.info("provisioning new unit after scaling operation")
+                        logger.info("provisioning new unit after scaling out operation")
                         # adding relations between newly added unit and existing units from dependent services
                         self.configure_new_unit(new_unit)
                     else:
-                        logger.info("provisioning the new unit after scaling operation")
-                    #TODO
-                    # do remove relation
+                        logger.info("provisioning the unit after scaling in operation")
+                        # TODO
+                        # self.configure_after_scalin(removed_unit)
+
                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
                 time.sleep(self.policy.action.cooldown)
             logger.debug("Release Policy lock from %s" % self.policy.name)
@@ -340,7 +341,7 @@ class PolicyThread(threading.Thread):
             time.sleep(self.policy.period)
 
     def configure_new_unit(self, unit):
-        logging.info("configuring new unit with hostname" % unit.hostname)
+        logging.info("configuring new unit with hostname %s" % unit.hostname)
         config = {}
         config['hostname'] = unit.hostname
         config['ips'] = unit.ips
