@@ -18,7 +18,7 @@ class ImsDnsClient(object):
         # In case of a standalone topology we need to create also the domains
         self.dnsaas.create_domain(domain_name=self.__domain_name, email=self.__admin_email, ttl=3600,
                                   token=self.tokenID)
-        logger.info("Initialized the DNS")
+        logger.info("Created domain using DNSaaS client")
 
         self.dnsaas.create_record(domain_name=self.__domain_name, record_name='ns', record_type='A',
                                   record_data=self.dns_ip, token=self.tokenID)
@@ -34,7 +34,7 @@ class ImsDnsClient(object):
         logger.info("Initialized the IMS DNS Client")
 
     def create_records_cscfs(self, cscfs_ip, hostname=None):
-        logger.debug("Creating records for the cscfs %s"%cscfs_ip)
+        logger.info("Creating records for the cscfs %s"%cscfs_ip)
         self.__create_records_icscf(cscfs_ip)
         self.__create_records_pcscf(cscfs_ip)
         self.__create_records_scscf(cscfs_ip)

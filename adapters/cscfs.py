@@ -84,7 +84,7 @@ class CscfsAdapter(ABCServiceAdapter):
         request = {"parameters": parameters}
         logger.info("preinit cscfs service, parameters %s, request %s" % (parameters, str(json.dumps(request))))
         resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "preinit", "icscf")
-        logger.debug("preinit cscfs services, received resp %s" % resp)
+        logger.info("preinit cscfs services, received resp %s" % resp)
 
         return True
 

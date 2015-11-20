@@ -7,7 +7,7 @@
     "configuration": {
     },
     "size": {
-        "max": 2,
+        "max": 3,
         "def": 1,
         "min": 1
     }

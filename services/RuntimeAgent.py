@@ -102,7 +102,7 @@ class RuntimeAgent(ABCRuntimeAgent):
             #Start CheckerThread the first time or update topology after restart
             if self.checker_threads.get(topology.id) is None:
                 self.checker_threads[topology.id] = CheckerThread(topology)
-                logger.debug("Starting CheckerThread")
+                logger.info("Starting CheckerThread")
                 self.checker_threads[topology.id].start()
             else:
                 self.checker_threads[topology.id].topology = topology
@@ -122,7 +122,7 @@ class RuntimeAgent(ABCRuntimeAgent):
                     for policy in service_instance.policies:
                         logger.debug('Creating new PolicyThread for %s' % policy)
                         _policy_thread = PolicyThread(topology=topology, runtime_agent=self, policy=policy,
-                                                      service_instance=service_instance, lock=lock)
+                                                      service_instance=service_instance, lock=lock, dnsaas=dnsaas)
                         logger.debug('Created new PolicyThread for %s' % policy)
                         logger.debug("Starting PolicyThread for: %s" % service_instance.name)
                         _policy_thread.start()
@@ -162,7 +162,7 @@ class RuntimeAgent(ABCRuntimeAgent):
 
 
 class PolicyThread(threading.Thread):
-    def __init__(self, topology, runtime_agent, policy, service_instance, lock):
+    def __init__(self, topology, runtime_agent, policy, service_instance, lock, dnsaas):
         super(PolicyThread, self).__init__()
         self.policy = policy
         self.service_instance = service_instance
@@ -171,8 +171,10 @@ class PolicyThread(threading.Thread):
         self.runtime_agent = runtime_agent
         self.monitor = runtime_agent.monitoring_service
         self.lock = lock
-
-        # hack for avoiding autoscaling at startup
+        if dnsaas is not None:
+            self.is_dnsaas = True
+        else:
+            self.is_dnsaas = False
         self.counter = 0
         self.is_stopped = False
         conf = SysUtil().get_sys_conf()
@@ -220,7 +222,7 @@ class PolicyThread(threading.Thread):
                 # hack for demo
                 self.counter += 1
 
-                if self.counter > 1:
+                if self.counter > 5:
                     logger.info('Counter %s Trigger the action: %s' % repr(self.counter, self.policy.action))
                     return True
                 else:
@@ -272,7 +274,7 @@ class PolicyThread(threading.Thread):
                     self.topology.state = 'UPDATING'
                     if action.scaling_adjustment > 0:
                         logger.info("executing scaling out action ")
-                        infoDict = {
+                        info = {
                             'so_id': 'idnotusefulhere',
                             'sm_name': 'imsaas',
                             'so_phase': 'update',
@@ -280,8 +282,9 @@ class PolicyThread(threading.Thread):
                             'response_time': 0,
                             'tenant': 'mcntub'
                         }
-                        tmpJSON = json.dumps(infoDict)
-                        glogger.debug(tmpJSON)
+                        self.start_time = time.time()
+                        info_json = json.dumps(info)
+                        glogger.debug(info_json)
                         if (len(
                                 self.service_instance.units) + action.scaling_adjustment) <= self.service_instance.size.get(
                                 'max'):
@@ -331,7 +334,7 @@ class PolicyThread(threading.Thread):
                     else:
                         logger.info("provisioning the unit after scaling in operation")
                         # TODO
-                        # self.configure_after_scalin(removed_unit)
+                        # self.configure_after_scaling (removed_unit)
 
                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
                 time.sleep(self.policy.action.cooldown)
@@ -361,6 +364,17 @@ class PolicyThread(threading.Thread):
             self.service_instance.adapter_instance.start(config)
         except Exception, e:
             logging.error("error while configuring vnf %s" % e)
+        response_time = time.time() - self.start_time
+        info = {
+            'so_id': 'idnotusefulhere',
+            'sm_name': 'imsaas',
+            'so_phase': 'update',
+            'phase_event': 'done',
+            'response_time': response_time,
+            'tenant': 'mcntub'
+        }
+        info_json = json.dumps(info)
+        glogger.debug(info_json)
 
     def add_relations_after_scaling(self, config, unit):
         logger.info("adding relations after scaling %s" % self.service_instance.name)
@@ -497,8 +511,10 @@ class CheckerThread(threading.Thread):
         if dnsaas is not None:
             self.dns_configurator = ImsDnsClient(dnsaas)
             self.is_dnsaas = True
-        if self.topology.state == 'DEPLOYED':
-            self.configure_topology()
+        while not self.topology.state == 'DEPLOYED':
+            logger.info('topology not yet in status deployed, currently %s' % self.topology.state)
+            time.sleep(5)
+        self.configure_topology()
 
     def configure_topology(self):
         for si in self.topology.service_instances:
@@ -512,7 +528,7 @@ class CheckerThread(threading.Thread):
                     config['floating_ips'] = unit.floating_ips
                     config['hostname'] = unit.hostname
                 except:
-                    logging.debug("there was an issue getting the config for the vnf")
+                    logging.error("there was an issue getting the config for the vnf")
 
                 try:
                     logging.info("sending requests to the adapter %s with config" % config)
@@ -523,7 +539,7 @@ class CheckerThread(threading.Thread):
 
                 # add relations
                 for ext_service in si.relation:
-                    logger.debug("solving dependencies between si %s and external service %s" %(si.name, ext_service.name,))
+                    logger.info("solving dependencies between si %s and external service %s" %(si.name, ext_service.name,))
                     if ext_service.name == 'dns' and self.is_dnsaas is True:
                         ext_unit = Unit(hostname=None, state='INITIALISING')
                         ext_si = ServiceInstance(name='dns', service_type='dns', state='INITIALISING', image='test', flavor='test', size={})
@@ -592,7 +608,7 @@ class CheckerThread(threading.Thread):
         #get stack details and set the topology state
         try:
             stack_details = self.heatclient.show(stack_id=self.topology.ext_id)
-            logger.debug('Stack details of %s: %s' % (self.topology.ext_name, stack_details))
+            #logger.debug('Stack details of %s: %s' % (self.topology.ext_name, stack_details))
             old_state = self.topology.state
             old_detailed_state = self.topology.detailed_state
             if stack_details:
@@ -608,7 +624,7 @@ class CheckerThread(threading.Thread):
         #Get details of resources and update state for each of them
         try:
             resource_details = self.heatclient.list_resources(self.topology.ext_id)
-            logger.debug('Resource details of %s: %s' % (self.topology.ext_name, resource_details))
+            #logger.debug('Resource details of %s: %s' % (self.topology.ext_name, resource_details))
         except HTTPNotFound, exc:
             self.topology.state = 'DELETED'
             return
