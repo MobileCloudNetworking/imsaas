@@ -137,7 +137,7 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def remove(self, obj):
         try:
-            logger.info('Removing Object: %s' % obj)
+            logger.info('Removing Object: %s' % id(obj))
             self.instance.remove(obj)
             self.instance.session.commit()
             logger.debug('Removed Object: %s' % obj)
@@ -151,7 +151,7 @@ class DatabaseManager(ABCDatabaseManager):
     @synchronized
     def update(self, obj):
         try:
-            logger.info('Updating Object: %s' % obj)
+            logger.info('Updating Object: %s' % id(obj))
             obj = self.instance.update(obj)
             self.instance.session.commit()
             logger.debug('Updated Object: %s' % obj)

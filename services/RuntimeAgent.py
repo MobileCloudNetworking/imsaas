@@ -173,6 +173,7 @@ class PolicyThread(threading.Thread):
         self.lock = lock
         if dnsaas is not None:
             self.is_dnsaas = True
+            self.dns_configurator = ImsDnsClient(dnsaas)
         else:
             self.is_dnsaas = False
         self.counter = 0
@@ -227,7 +228,7 @@ class PolicyThread(threading.Thread):
                     return True
                 else:
                     logger.info(
-                        'Not triggering action %s since the counter is still under 3' % repr(self.policy.action))
+                        'Not triggering action %s since the counter is still under 5 (%s)' % (repr(self.policy.action), self.counter))
                     return False
             else:
                 logger.debug("Check upscaling: item value is lower than threshold")
@@ -334,7 +335,9 @@ class PolicyThread(threading.Thread):
                     else:
                         logger.info("provisioning the unit after scaling in operation")
                         # TODO
-                        # self.configure_after_scaling (removed_unit)
+                        self.configure_after_scaling(removed_unit(self.topology,
+                                                                  self.service_instance))
+
 
                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
                 time.sleep(self.policy.action.cooldown)
@@ -404,6 +407,22 @@ class PolicyThread(threading.Thread):
                         ext_si.adapter_instance = FactoryServiceAdapter.get_agent(ext_si.service_type, ext_si.adapter)
                         ext_si.adapter_instance.add_dependency(ext_unit_config, unit, self.service_instance)
 
+    def configure_after_scaling(self, unit):
+        logging.info("removing unit with hostname %s" % unit.hostname)
+        self.remove_relations_after_scaling(unit)
+
+    def remove_relations_after_scaling(self, unit):
+        logging.info("removing relations after scaling %s" %
+                     self.service_instance.name)
+        for service in self.service_instance.units:
+            logger.info("removing relation between %s and %s" %
+                         (unit.hostname, service.hostname))
+            if service.name == 'slf':
+                config = {'floating_ips': service.floating_ips}
+                self.service_instance.adapter_instance.\
+                    remove_dependency(config, service, unit)
+        self.dns_configurator.remove_record_hss(unit.ips['mgmt'], unit.hostname)
+
     def check_alarm_si(self):
         logger.debug("Checking for alarms on service instance %s" % self.service_instance.name)
         alarm = self.policy.alarm
@@ -443,12 +462,13 @@ class PolicyThread(threading.Thread):
                     "Check upscaling: avg item value is bigger than threshold for service instance %s." % self.service_instance.name)
                 self.counter += 1
 
-                if self.counter > 1:
+                if self.counter > 5:
                     logger.info('Trigger the action: %s' % repr(self.policy.action))
                     return True
                 else:
                     logger.info(
-                        'Not triggering action %s since the counter is still under 3' % repr(self.policy.action))
+                        'Not triggering action %s since the counter is still under 5 (%s)' % (repr(self.policy.action),
+                                                                                              self.counter))
                     return False
             else:
                 logger.debug(
@@ -493,6 +513,7 @@ class CheckerThread(threading.Thread):
         self.neutronc = NeutronClient(
             utilSys.get_endpoint('network', region_name=SysUtil().get_sys_conf()['os_region_name']),
             utilSys.get_token())
+        self.dns_configurator = None
 
     def run(self):
         while not self.is_stopped:

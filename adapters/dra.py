@@ -143,12 +143,25 @@ class DraAdapter(ABCServiceAdapter):
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "dra", "dns")
             logger.info("resolving dependency with dns service, received resp %s" %resp)
 
-    def remove_dependency(self, config, ext_service):
+    def remove_dependency(self, config, ext_unit, ext_service):
         """
         Remove the dependency between this service and the external one
         :return:
         """
-        pass
+        if "hss" in ext_service.service_type:
+            # external dependency with the cscfs
+            # curl -X POST -H "Content-Type:application/json" -d \
+            # "{\"parameters\":[\"$HSS_NAME\",\"$DNS_REALM\"]}" \
+            # http://$SLF_MGMT_ADDR:8390/dra/removeRelation/hss
+            parameters = []
+            parameters.append(ext_unit.hostname)
+            parameters.append(self.DNS_REALM)
+            request = {"parameters": parameters}
+            resp = self.__send_request(config['floating_ips'].get('mgmt'),
+                                       request, "removeRelation", "slf", "hss")
+            logger.info("resolving dependency with hss service, received resp %s" % resp)
+
+
 
     def pre_start(self, config):
         """
