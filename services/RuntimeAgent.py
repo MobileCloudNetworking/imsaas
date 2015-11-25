@@ -335,8 +335,7 @@ class PolicyThread(threading.Thread):
                     else:
                         logger.info("provisioning the unit after scaling in operation")
                         # TODO
-                        self.configure_after_scaling(removed_unit(self.topology,
-                                                                  self.service_instance))
+                        self.configure_after_scaling(removed_unit)
 
 
                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
