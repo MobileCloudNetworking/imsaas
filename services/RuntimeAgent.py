@@ -414,14 +414,29 @@ class PolicyThread(threading.Thread):
     def remove_relations_after_scaling(self, unit):
         logging.info("removing relations after scaling %s" %
                      self.service_instance.name)
-        for service in self.service_instance.units:
-            logger.info("removing relation between %s and %s" %
-                         (unit.hostname, service.hostname))
-            if service.name == 'slf':
-                config = {'floating_ips': service.floating_ips}
-                self.service_instance.adapter_instance.\
-                    remove_dependency(config, service, unit)
-        self.dns_configurator.remove_record_hss(unit.ips['mgmt'], unit.hostname)
+        config = {}
+        config['hostname'] = unit.hostname
+        config['ips'] = unit.ips
+        config['zabbix_ip'] = os.environ['ZABBIX_IP']
+        config['floating_ips'] = unit.floating_ips
+        config['hostname'] = unit.hostname
+        for ext_service in self.service_instance.relation:
+            if ext_service.name == 'dns' and self.is_dnsaas is True:
+                self.dns_configurator.remove_record_hss(unit.ips['mgmt'], unit.hostname)
+            else:
+                service_list = self.db.get_by_name(ServiceInstance, ext_service.name)
+                if len(service_list) == 1:
+                    ext_si = service_list[0]
+                    for ext_unit in ext_si.units:
+                        ext_unit_config = {}
+                        ext_unit_config['hostname'] = ext_unit.hostname
+                        ext_unit_config['ips'] = ext_unit.ips
+                        ext_unit_config['zabbix_ip'] = os.environ['ZABBIX_IP']
+                        ext_unit_config['floating_ips'] = ext_unit.floating_ips
+                        ext_unit_config['hostname'] = ext_unit.hostname
+                        self.service_instance.adapter_instance.remove_dependency(unit, ext_unit, ext_si)
+                        ext_si.adapter_instance = FactoryServiceAdapter.get_agent(ext_si.service_type, ext_si.adapter)
+                        ext_si.adapter_instance.remove_dependency(ext_unit_config, unit, self.service_instance)
 
     def check_alarm_si(self):
         logger.debug("Checking for alarms on service instance %s" % self.service_instance.name)
