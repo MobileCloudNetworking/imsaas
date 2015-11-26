@@ -2,7 +2,7 @@
     "service_type": "dra",
     "image": "ims-5g-bin-r177",
     "adapter": "DraAdapter",
-    "flavor": "m1.small",
+    "flavor": "m1.medium",
     "key":"mcn-key",
     "configuration": {
     },

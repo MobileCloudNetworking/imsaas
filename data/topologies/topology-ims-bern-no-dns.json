@@ -117,7 +117,7 @@
     {
       "name":"slf",
       "service_type":"dra",
-      "flavor":"m1.small",
+      "flavor":"m1.medium",
       "key":"mcn-key",
       "location": ["bern"],
       "relation": ["cscfs","hss","dns"],
