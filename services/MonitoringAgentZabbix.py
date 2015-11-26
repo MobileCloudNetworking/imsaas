@@ -75,6 +75,12 @@ class MonitoringAgentZabbix(ABCMonitoringAgent):
         except Exception as e:
             print "ERROR: User metric not found"
 
+        # If a node got added but did not publish any meterings yet, item.get
+        # returns 0 which breaks the scaling so we force set it.
+        # TODO: fix this
+        if item_value == u'0':
+            item_value = 100
+
         logger.debug("Idle value received %s" % item_value)
         item_value = 100 - float(item_value)
         logger.debug("real cpu usage %s" % item_value)
