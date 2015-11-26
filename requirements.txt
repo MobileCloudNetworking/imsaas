@@ -5,3 +5,4 @@ python-ceilometerclient
 python-neutronclient
 bottle
 sqlalchemy==0.9.8
+graypy
