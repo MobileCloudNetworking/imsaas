@@ -144,7 +144,7 @@ class DNSAdapter(ABCServiceAdapter):
 
 
 
-    def remove_dependency(self, config, ext_service):
+    def remove_dependency(self, config, ext_unit, ext_service):
         """
         Remove the dependency between this service and the external one
         :return:

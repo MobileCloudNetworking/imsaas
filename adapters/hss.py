@@ -187,7 +187,7 @@ class HssAdapter(ABCServiceAdapter):
             resp = self.__send_request(config['floating_ips'].get('mgmt'), request, "addRelation", "chess", "dns")
             logger.info("resolving dependency with db service, received resp %s" % resp)
 
-    def remove_dependency(self, config, ext_service):
+    def remove_dependency(self, config, ext_unit, ext_service):
         """
         Remove the dependency between this service and the external one
         :return:
