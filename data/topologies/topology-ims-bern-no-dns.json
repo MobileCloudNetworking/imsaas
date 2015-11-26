@@ -78,18 +78,18 @@
       "policies": [
         {
           "name": "msg_scaleup",
-          "period": 30,
+          "period": 20,
           "alarm": {
             "meter_name": "system.cpu.util[,idle]",
             "comparison_operator": "gt",
-            "threshold": 35,
+            "threshold": 25,
             "statistic": "avg",
             "evaluation_periods": 1
           },
           "action": {
             "adjustment_type": "ChangeInCapacity",
             "scaling_adjustment": 1,
-            "cooldown": 30
+            "cooldown": 160
           }
         },
         {
@@ -105,7 +105,7 @@
           "action": {
             "adjustment_type": "ChangeInCapacity",
             "scaling_adjustment": -1,
-            "cooldown": 60
+            "cooldown": 120
           }
         }
       ],

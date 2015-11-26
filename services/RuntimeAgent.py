@@ -314,6 +314,9 @@ class PolicyThread(threading.Thread):
                     topology = self.db.update(self.topology)
                     template = self.template_manager.get_template(self.topology)
                     # logger.debug("Send update to heat template with: \n%s" % template)
+                    if action.scaling_adjustment <= 0:
+                        logger.info("provisioning the unit after scaling in operation")
+                        self.configure_after_scaling(removed_unit)
                     try:
                         logger.info("updating the heat template including new units")
                         self.heat_client.update(stack_id=self.topology.ext_id, template=template)
@@ -332,11 +335,6 @@ class PolicyThread(threading.Thread):
                         logger.info("provisioning new unit after scaling out operation")
                         # adding relations between newly added unit and existing units from dependent services
                         self.configure_new_unit(new_unit)
-                    else:
-                        logger.info("provisioning the unit after scaling in operation")
-                        # TODO
-                        self.configure_after_scaling(removed_unit)
-
 
                 logger.info('Sleeping (cooldown) for %s seconds' % self.policy.action.cooldown)
                 time.sleep(self.policy.action.cooldown)

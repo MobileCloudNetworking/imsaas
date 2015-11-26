@@ -105,7 +105,7 @@ class ImsDnsClient(object):
         logger.info("Deleting records for the hss %s with domain name %s, "
                     % (hss_ip, self.__domain_name))
         self.dnsaas.delete_record(domain_name=self.__domain_name,
-                                  record_name=hss_hostname, record_type='A')
+                                  record_name=hss_hostname, record_type='A', token=self.tokenID)
 
 
     def create_records_slf(self, slf_ip, hostname=None):
