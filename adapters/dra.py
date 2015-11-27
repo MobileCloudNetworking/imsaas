@@ -158,7 +158,7 @@ class DraAdapter(ABCServiceAdapter):
             parameters.append(self.DNS_REALM)
             request = {"parameters": parameters}
             resp = self.__send_request(config['floating_ips'].get('mgmt'),
-                                       request, "removeRelation", "slf", "hss")
+                                       request, "removeRelation", "dra", "hss")
             logger.info("resolving dependency with hss service, received resp %s" % resp)
 
 

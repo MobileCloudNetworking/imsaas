@@ -82,14 +82,14 @@
           "alarm": {
             "meter_name": "system.cpu.util[,idle]",
             "comparison_operator": "gt",
-            "threshold": 25,
+            "threshold": 35,
             "statistic": "avg",
             "evaluation_periods": 1
           },
           "action": {
             "adjustment_type": "ChangeInCapacity",
             "scaling_adjustment": 1,
-            "cooldown": 160
+            "cooldown": 60
           }
         },
         {
@@ -105,7 +105,7 @@
           "action": {
             "adjustment_type": "ChangeInCapacity",
             "scaling_adjustment": -1,
-            "cooldown": 120
+            "cooldown": 60
           }
         }
       ],

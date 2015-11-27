@@ -223,12 +223,12 @@ class PolicyThread(threading.Thread):
                 # hack for demo
                 self.counter += 1
 
-                if self.counter > 5:
+                if self.counter > 1:
                     logger.info('Counter %s Trigger the action: %s' % repr(self.counter, self.policy.action))
                     return True
                 else:
                     logger.info(
-                        'Not triggering action %s since the counter is still under 5 (%s)' % (repr(self.policy.action), self.counter))
+                        'Not triggering action %s since the counter is still under 1 (%s)' % (repr(self.policy.action), self.counter))
                     return False
             else:
                 logger.debug("Check upscaling: item value is lower than threshold")
@@ -322,7 +322,7 @@ class PolicyThread(threading.Thread):
                         self.heat_client.update(stack_id=self.topology.ext_id, template=template)
                         self.wait_until_final_state()
                         logger.info("wait until final state function executed")
-                        if not self.topology.state == 'DEPLOYED':
+                        if self.topology.state not in ['DEPLOYED', 'UPDATED']:
                             logger.error(
                                 "ERROR: Something went wrong. Seems to be an error. Topology state -> %s" % self.topology.state)
                             self.lock.release()
@@ -474,12 +474,12 @@ class PolicyThread(threading.Thread):
                     "Check upscaling: avg item value is bigger than threshold for service instance %s." % self.service_instance.name)
                 self.counter += 1
 
-                if self.counter > 5:
+                if self.counter > 1:
                     logger.info('Trigger the action: %s' % repr(self.policy.action))
                     return True
                 else:
                     logger.info(
-                        'Not triggering action %s since the counter is still under 5 (%s)' % (repr(self.policy.action),
+                        'Not triggering action %s since the counter is still under 1 (%s)' % (repr(self.policy.action),
                                                                                               self.counter))
                     return False
             else:
