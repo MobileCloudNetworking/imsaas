@@ -13,9 +13,9 @@
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"3b3abdbf-1a0c-4ba6-b605-d10638f402ef",
-          "private_subnet": "b3dc0024-2bae-4c56-921d-02b1bdb24c1d",
-          "public_net": "af0a7405-6d57-4971-a18c-dde9a556aa7c",
+          "private_net":"a2b2d26c-01da-43bc-88d6-3c889a4fffdd",
+          "private_subnet": "f2559594-29fa-438b-9650-52252ac37f91",
+          "public_net": "77e659dd-f1b4-430c-ac6f-d92ec0137c85",
           "security_groups": [
             "security-group-ims"
           ]
@@ -40,9 +40,9 @@
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"3b3abdbf-1a0c-4ba6-b605-d10638f402ef",
-          "private_subnet": "b3dc0024-2bae-4c56-921d-02b1bdb24c1d",
-          "public_net": "af0a7405-6d57-4971-a18c-dde9a556aa7c",
+          "private_net":"a2b2d26c-01da-43bc-88d6-3c889a4fffdd",
+          "private_subnet": "f2559594-29fa-438b-9650-52252ac37f91",
+          "public_net": "77e659dd-f1b4-430c-ac6f-d92ec0137c85",
           "security_groups": [
             "security-group-ims"
           ]
@@ -67,9 +67,9 @@
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"3b3abdbf-1a0c-4ba6-b605-d10638f402ef",
-          "private_subnet": "b3dc0024-2bae-4c56-921d-02b1bdb24c1d",
-          "public_net": "af0a7405-6d57-4971-a18c-dde9a556aa7c",
+          "private_net":"a2b2d26c-01da-43bc-88d6-3c889a4fffdd",
+          "private_subnet": "f2559594-29fa-438b-9650-52252ac37f91",
+          "public_net": "77e659dd-f1b4-430c-ac6f-d92ec0137c85",
           "security_groups": [
             "security-group-ims"
           ]
@@ -126,9 +126,9 @@
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"3b3abdbf-1a0c-4ba6-b605-d10638f402ef",
-          "private_subnet": "b3dc0024-2bae-4c56-921d-02b1bdb24c1d",
-          "public_net": "af0a7405-6d57-4971-a18c-dde9a556aa7c",
+          "private_net":"a2b2d26c-01da-43bc-88d6-3c889a4fffdd",
+          "private_subnet": "f2559594-29fa-438b-9650-52252ac37f91",
+          "public_net": "77e659dd-f1b4-430c-ac6f-d92ec0137c85",
           "security_groups": [
             "security-group-ims"
           ]

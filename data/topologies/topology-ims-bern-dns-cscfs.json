@@ -13,9 +13,9 @@
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
-          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
-          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
+          "private_net":"3b3abdbf-1a0c-4ba6-b605-d10638f402ef",
+          "private_subnet": "b3dc0024-2bae-4c56-921d-02b1bdb24c1d",
+          "public_net": "af0a7405-6d57-4971-a18c-dde9a556aa7c",
           "security_groups": [
             "security-group-ims"
           ]
@@ -52,9 +52,9 @@
       "networks": [
         {
           "name":"mgmt",
-          "private_net":"367d1aba-c539-46e1-8047-65c28283d9c9",
-          "private_subnet": "fe3ca710-133d-496c-af44-83028bbc4c5d",
-          "public_net": "fde9f17b-eb51-4d4b-a474-deb583d03d86",
+          "private_net":"3b3abdbf-1a0c-4ba6-b605-d10638f402ef",
+          "private_subnet": "b3dc0024-2bae-4c56-921d-02b1bdb24c1d",
+          "public_net": "af0a7405-6d57-4971-a18c-dde9a556aa7c",
           "security_groups": [
             "security-group-ims"
           ]
