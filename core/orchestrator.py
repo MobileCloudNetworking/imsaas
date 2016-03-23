@@ -45,6 +45,7 @@ TOPOLOGY_MAPPING = {
     'bern': {'topology_type':'topology-ims-bern.json','dnsaas': 'False'},
     'bart': {'topology_type': 'topology-ims-bart.json','dnsaas': 'False'},
     'bern-no-dns': {'topology_type': 'topology-ims-bern-no-dns.json', 'dnsaas': 'True'},
+    'bart-no-dns': {'topology_type': 'topology-ims-bart-no-dns.json', 'dnsaas': 'True'},
 }
 
 
@@ -64,7 +65,7 @@ class SoExecution():
         self.maas = None
         self.dnsaas = None
         if location is None:
-            self.location = 'bern-no-dns'
+            self.location = 'bart-no-dns'
         self.conf = sys_util().get_sys_conf()
         self.deployer = None
         self.topology = None
